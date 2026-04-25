@@ -1,0 +1,133 @@
+﻿<Page x:Class="Printinvest_WPF_app.Views.Pages.CatalogPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:vm="clr-namespace:Printinvest_WPF_app.ViewModels"
+      xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+      mc:Ignorable="d"
+      Title="CatalogPage"
+      Background="{DynamicResource ContentBackgroundBrush}">
+
+    <Page.DataContext>
+        <vm:CatalogViewModel />
+    </Page.DataContext>
+    <ScrollViewer>
+        <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок -->
+        <TextBlock Grid.Row="0"
+                   Text="{DynamicResource CatalogTitle}"
+                   FontSize="24"
+                   FontWeight="Bold"
+                   Foreground="{DynamicResource TextBrush}"
+                   Margin="0,0,0,10"/>
+        
+
+        <!-- Фильтры -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBox Width="200"
+                     Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,0,5,0">
+                <TextBox.Resources>
+                    <VisualBrush x:Key="PlaceholderBrush" AlignmentX="Left" AlignmentY="Center" Stretch="None">
+                        <VisualBrush.Visual>
+                            <TextBlock Text="{DynamicResource SearchPlaceholder}"
+                                       Foreground="Gray"
+                                       Margin="6,0,0,0"/>
+                        </VisualBrush.Visual>
+                    </VisualBrush>
+                </TextBox.Resources>
+                <TextBox.Style>
+                    <Style TargetType="TextBox">
+                        <Style.Triggers>
+                            <Trigger Property="Text" Value="">
+                                <Setter Property="Background" Value="{StaticResource PlaceholderBrush}"/>
+                            </Trigger>
+                            <Trigger Property="Text" Value="{x:Null}">
+                                <Setter Property="Background" Value="{StaticResource PlaceholderBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBox.Style>
+            </TextBox>
+            <Button Content="{DynamicResource SearchButton}"
+                    Command="{Binding LoadItemsCommand}"
+                    Margin="5,0,5,0"/>
+            <Button Content="✖"
+                    Command="{Binding ClearSearchCommand}"
+                    Width="30"
+                    Margin="5,0,10,0"/>
+            <ComboBox ItemsSource="{Binding Filters}"
+                      SelectedItem="{Binding SelectedFilter}"
+                      Width="100"
+                      Margin="10,0,0,0">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Converter={StaticResource FilterNameConverter}}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+
+        <!-- Список товаров и услуг -->
+        <ListView Grid.Row="2"
+                  ItemsSource="{Binding Items}"
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                  Background="{DynamicResource ContentBackgroundBrush}">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="MouseLeftButtonUp">
+                    <i:InvokeCommandAction Command="{Binding ViewItemDetailsCommand}"
+                                           PassEventArgsToCommand="True"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="{DynamicResource TextBoxBorderColor}"
+                BorderThickness="1"
+                CornerRadius="5"
+                Margin="5"
+                Width="200"
+                Background="{DynamicResource ContentBackgroundBrush}">
+                            <StackPanel Margin="10">
+                                <TextBlock Text="{Binding Name}"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource TextBrush}" />
+                                <TextBlock Text="{Binding Path=., Converter={StaticResource ItemTypeConverter}}"
+                           Foreground="{DynamicResource NavTextBrush}"
+                           FontStyle="Italic" />
+                                <TextBlock Text="{Binding Description}"
+                           TextWrapping="Wrap"
+                           MaxHeight="50"
+                           Foreground="{DynamicResource TextBrush}" />
+                                <TextBlock Text="{Binding Price, StringFormat='{}Цена: {0:F2} BYN'}"
+                           Foreground="{DynamicResource TextBrush}"
+                           Margin="0,5,0,5" />
+                                <Image Source="{Binding Photo, Converter={StaticResource ByteArrayToImageConverter}, FallbackValue={StaticResource DefaultProductImage}}"
+                       Height="100"
+                       Margin="0,5,0,5"
+                       Stretch="Uniform" />
+                                <Button Content="{DynamicResource AddToCartButton}"
+                        Command="{Binding DataContext.AddToCartCommand, RelativeSource={RelativeSource AncestorType={x:Type ListView}}}"
+                        CommandParameter="{Binding}"
+                        Margin="0,5,0,0"
+                        Width="100"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+    </Grid>
+    </ScrollViewer>
+</Page>

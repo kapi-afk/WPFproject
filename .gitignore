@@ -1,0 +1,15 @@
+# Visual Studio
+.vs/
+bin/
+obj/
+*.user
+*.suo
+
+# System files
+Thumbs.db
+Desktop.ini
+
+# Database files
+*.mdf
+*.ldf
+*.db

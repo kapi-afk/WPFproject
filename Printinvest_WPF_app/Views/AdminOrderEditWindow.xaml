@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window x:Class="Printinvest_WPF_app.Views.AdminOrderEditWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Управление заявкой"
+        Height="620"
+        Width="520"
+        MinHeight="520"
+        MinWidth="520"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource ContentBackgroundBrush}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20">
+            <TextBlock Text="Управление заявкой"
+                       FontSize="22"
+                       FontWeight="Bold"
+                       Margin="0,0,0,18"/>
+
+            <TextBlock Text="Описание неисправности" Margin="0,0,0,4"/>
+            <TextBlock Text="{Binding SelectedOrder.ProblemDescription}"
+                       TextWrapping="Wrap"
+                       Margin="0,0,0,12"/>
+
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="18" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Телефон клиента" Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding SelectedOrder.ContactPhone}" Margin="0,0,0,12"/>
+                    <TextBlock Text="Способ передачи" Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding SelectedOrder.DeliveryMethod, TargetNullValue=Самовывоз}" Margin="0,0,0,12"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Email клиента" Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding SelectedOrder.User.Email, TargetNullValue=Не указан}" Margin="0,0,0,12"/>
+                    <TextBlock Text="Адрес курьера" Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding SelectedOrder.DeliveryAddress, TargetNullValue=Не требуется}"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,12"/>
+                </StackPanel>
+            </Grid>
+
+            <TextBlock Text="Назначить мастера" Margin="0,0,0,4"/>
+            <ComboBox ItemsSource="{Binding Masters}"
+                      SelectedItem="{Binding SelectedMaster}"
+                      DisplayMemberPath="Name"
+                      Margin="0,0,0,12"/>
+
+            <TextBlock Text="Статус заявки" Margin="0,0,0,4"/>
+            <ComboBox ItemsSource="{Binding OrderStatuses}"
+                      SelectedItem="{Binding SelectedOrderStatus}"
+                      ItemTemplate="{StaticResource OrderStatusTemplate}"
+                      Margin="0,0,0,18"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0"
+                        Content="Сохранить изменения"
+                        Click="Save_Click"/>
+                <Button Grid.Column="2"
+                        Content="Удалить заявку"
+                        Click="Delete_Click"/>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</Window>

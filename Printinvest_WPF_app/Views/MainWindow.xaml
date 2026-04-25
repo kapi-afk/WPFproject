@@ -1,0 +1,76 @@
+﻿<Window x:Class="Printinvest_WPF_app.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Printinvest_WPF_app.ViewModels"
+        Background="{DynamicResource ContentBackgroundBrush}"
+        Foreground="{DynamicResource TextBrush}"
+        Title="{Binding WindowTitle}" Height="500" Width="900" WindowState="Maximized"
+        MinWidth="1220" MinHeight="760">
+
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Навигационная панель -->
+        <StackPanel x:Name="NavPanel" Style="{StaticResource NavPanelStyle}">
+            <Grid Height="{Binding ActualHeight, ElementName=NavPanel}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Кнопка-бургер всегда видна -->
+                <ToggleButton Grid.Row="0"
+                              Style="{StaticResource MenuToggleStyle}"
+                              Content="☰"
+                              Command="{Binding ToggleNavCommand}" />
+
+                <!-- Кнопки всегда видимы -->
+                <StackPanel Grid.Row="1">
+                    <!-- Кнопки с PNG-иконками -->
+                    <Button Style="{StaticResource NavButtonStyle}"
+                            Tag="pack://application:,,,/Assets/profile.png"
+                            Content="{DynamicResource NavProfile}"
+                            Command="{Binding NavigateProfileCommand}"/>
+                    <Button Style="{StaticResource NavButtonStyle}"
+                            Tag="pack://application:,,,/Assets/cart.png"
+                            Content="{DynamicResource NavCart}"
+                            Command="{Binding NavigateCartCommand}"/>
+
+                    <Separator Margin="8"/>
+                    <Button Style="{StaticResource NavButtonStyle}"
+                            Tag="pack://application:,,,/Assets/theme.png"
+                            Content="{DynamicResource ChangeTheme}"
+                            Command="{Binding ChangeThemeCommand}"/>
+                    <Button Style="{StaticResource NavButtonStyle}"
+                            Tag="pack://application:,,,/Assets/language.png"
+                            Content="{DynamicResource ChangeLanguage}"
+                            Command="{Binding ChangeLanguageCommand}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2"
+                            Margin="0,0,0,44">
+                    <Separator Margin="8"
+                               Visibility="{Binding IsAdminOrMasterAuthenticated, Converter={StaticResource BoolToVis}}"/>
+                    <Button Style="{StaticResource NavButtonStyle}"
+                            Tag="pack://application:,,,/Assets/profile.png"
+                            Content="{DynamicResource LogoutButton}"
+                            Command="{Binding LogoutCommand}"
+                            Visibility="{Binding IsAdminOrMasterAuthenticated, Converter={StaticResource BoolToVis}}"/>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+
+        <!-- Основной контент -->
+        <Frame Grid.Column="1"
+               NavigationUIVisibility="Hidden"
+               Content="{Binding CurrentPage}" />
+    </Grid>
+</Window>
