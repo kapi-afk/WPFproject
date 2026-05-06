@@ -63,9 +63,25 @@ namespace Printinvest_WPF_app.Repositories
         public void Add(Order order)
         {
             AssignBestMasterIfNeeded(order);
+            NormalizeEstimatedCosts(order);
+            NormalizePaymentState(order);
+            if (order.Status == OrderStatus.Completed)
+            {
+                order.CompletedAt = order.CompletedAt ?? order.CreatedAt;
+            }
+            else
+            {
+                order.CompletedAt = null;
+            }
             order.UpdatedAt = order.CreatedAt;
             _context.Orders.Add(order);
             _context.SaveChanges();
+
+            if (string.IsNullOrWhiteSpace(order.PublicNumber))
+            {
+                order.PublicNumber = OrderPublicNumberService.GetOrCreate(order);
+                _context.SaveChanges();
+            }
         }
 
         public void Update(Order order)
@@ -76,6 +92,16 @@ namespace Printinvest_WPF_app.Repositories
                 .Select(item => item.Status)
                 .FirstOrDefault();
 
+            NormalizeEstimatedCosts(order);
+            NormalizePaymentState(order);
+            if (order.Status == OrderStatus.Completed)
+            {
+                order.CompletedAt = order.CompletedAt ?? DateTime.Now;
+            }
+            else
+            {
+                order.CompletedAt = null;
+            }
             order.UpdatedAt = DateTime.Now;
             _context.Orders.Update(order);
             _context.SaveChanges();
@@ -83,7 +109,8 @@ namespace Printinvest_WPF_app.Repositories
             if (previousStatus != order.Status)
             {
                 var updatedOrder = GetById(order.Id);
-                OrderEmailService.TrySendOrderStatusChangedEmail(updatedOrder, previousStatus);
+                var emailSnapshot = CreateEmailSnapshot(updatedOrder);
+                Task.Run(() => OrderEmailService.TrySendOrderStatusChangedEmail(emailSnapshot, previousStatus));
             }
         }
 
@@ -95,6 +122,25 @@ namespace Printinvest_WPF_app.Repositories
                 _context.Orders.Remove(order);
                 _context.SaveChanges();
             }
+        }
+
+        public void EnsurePublicNumbers()
+        {
+            var ordersToUpdate = _context.Orders
+                .Where(order => string.IsNullOrWhiteSpace(order.PublicNumber))
+                .ToList();
+
+            if (!ordersToUpdate.Any())
+            {
+                return;
+            }
+
+            foreach (var order in ordersToUpdate)
+            {
+                order.PublicNumber = OrderPublicNumberService.GetOrCreate(order);
+            }
+
+            _context.SaveChanges();
         }
 
         private void AssignBestMasterIfNeeded(Order order)
@@ -119,6 +165,99 @@ namespace Printinvest_WPF_app.Repositories
 
             order.AssignedMasterId = master.Id;
             order.Status = OrderStatus.Assigned;
+        }
+
+        private static void NormalizeEstimatedCosts(Order order)
+        {
+            if (order == null)
+            {
+                return;
+            }
+
+            order.EstimatedPartsCost = order.EstimatedPartsCost < 0 ? 0 : order.EstimatedPartsCost;
+            order.MasterWorkCost = order.MasterWorkCost < 0 ? 0 : order.MasterWorkCost;
+
+            if (order.EstimatedPartsCost == 0 &&
+                order.MasterWorkCost == 0 &&
+                order.EstimatedRepairCost > 0)
+            {
+                order.EstimatedPartsCost = order.EstimatedRepairCost;
+            }
+
+            order.EstimatedRepairCost = order.EstimatedPartsCost + order.MasterWorkCost;
+        }
+
+        private static void NormalizePaymentState(Order order)
+        {
+            if (order == null)
+            {
+                return;
+            }
+
+            order.PaymentMethod = string.IsNullOrWhiteSpace(order.PaymentMethod)
+                ? Order.OnSitePaymentMethod
+                : order.PaymentMethod.Trim();
+
+            if (!order.IsOnlinePayment)
+            {
+                order.IsOnlinePaymentCompleted = false;
+                order.OnlinePaymentPaidAt = null;
+                return;
+            }
+
+            if (order.OnlinePaymentPaidAt.HasValue)
+            {
+                order.IsOnlinePaymentCompleted = true;
+            }
+
+            if (order.IsOnlinePaymentCompleted)
+            {
+                order.OnlinePaymentPaidAt = order.OnlinePaymentPaidAt ?? DateTime.Now;
+            }
+            else
+            {
+                order.OnlinePaymentPaidAt = null;
+            }
+        }
+
+        private static Order CreateEmailSnapshot(Order source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            return new Order
+            {
+                Id = source.Id,
+                PublicNumber = source.PublicNumber,
+                DeviceType = source.DeviceType,
+                DeviceBrand = source.DeviceBrand,
+                DeviceModel = source.DeviceModel,
+                Status = source.Status,
+                PaymentMethod = source.PaymentMethod,
+                IsOnlinePaymentCompleted = source.IsOnlinePaymentCompleted,
+                OnlinePaymentPaidAt = source.OnlinePaymentPaidAt,
+                EstimatedPartsCost = source.EstimatedPartsCost,
+                MasterWorkCost = source.MasterWorkCost,
+                EstimatedRepairCost = source.EstimatedRepairCost,
+                User = source.User == null
+                    ? null
+                    : new User
+                    {
+                        Id = source.User.Id,
+                        Name = source.User.Name,
+                        Email = source.User.Email
+                    },
+                AssignedMaster = source.AssignedMaster == null
+                    ? null
+                    : new User
+                    {
+                        Id = source.AssignedMaster.Id,
+                        Name = source.AssignedMaster.Name,
+                        Email = source.AssignedMaster.Email
+                    }
+            };
         }
     }
 

@@ -12,109 +12,122 @@
         <vm:RegisterViewModel />
     </Page.DataContext>
 
-    <Grid>
-        <Border Width="500"
-                Padding="32"
-                CornerRadius="20"
-                Background="#F8FAFC"
-                BorderBrush="#D9E2EC"
-                BorderThickness="1"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center">
-            <StackPanel>
-                <TextBlock Text="Регистрация"
-                           FontSize="32"
-                           FontWeight="Bold"
-                           Foreground="{DynamicResource TextBrush}"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,10"/>
+    <Page.Resources>
+        <Style x:Key="ValidationTextBoxStyle"
+               TargetType="TextBox"
+               BasedOn="{StaticResource AuthInputStyle}">
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="True">
+                    <Setter Property="BorderBrush" Value="#C62828"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
 
-                <TextBlock Text="Публичная регистрация создает учетную запись клиента."
-                           TextWrapping="Wrap"
-                           Foreground="#5B6B7F"
-                           TextAlignment="Center"
-                           Margin="0,0,0,24"/>
+        <Style x:Key="ValidationPasswordBoxStyle"
+               TargetType="PasswordBox"
+               BasedOn="{StaticResource AuthPasswordStyle}">
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="True">
+                    <Setter Property="BorderBrush" Value="#C62828"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ValidationMessageStyle"
+               TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#C62828"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="4,-8,0,12"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+    </Page.Resources>
+
+    <Grid>
+        <Border Style="{StaticResource AuthCardStyle}">
+            <StackPanel Height="729">
+                <TextBlock Text="Регистрация"
+                           Style="{StaticResource PageTitleStyle}"
+                           HorizontalAlignment="Center"/>
+
+                <TextBlock Text="Фамилия"
+                           Style="{StaticResource AuthLabelStyle}"/>
+                <TextBox Text="{Binding LastName, UpdateSourceTrigger=PropertyChanged}"
+                         Tag="{Binding HasLastNameError}"
+                         Style="{StaticResource ValidationTextBoxStyle}"/>
+                <TextBlock Text="{Binding LastNameValidationMessage}"
+                           Style="{StaticResource ValidationMessageStyle}"
+                           Visibility="{Binding HasLastNameError, Converter={StaticResource BoolToVis}}"/>
 
                 <TextBlock Text="Имя"
-                           FontSize="14"
-                           Foreground="#64748B"
-                           Margin="0,0,0,6"/>
-                <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
-                         Width="380"
-                         Height="44"
-                         FontSize="16"
-                         VerticalContentAlignment="Center"
-                         HorizontalAlignment="Center"
-                         Margin="0,0,0,12"/>
+                           Style="{StaticResource AuthLabelStyle}"/>
+                <TextBox Text="{Binding FirstName, UpdateSourceTrigger=PropertyChanged}"
+                         Tag="{Binding HasFirstNameError}"
+                         Style="{StaticResource ValidationTextBoxStyle}"/>
+                <TextBlock Text="{Binding FirstNameValidationMessage}"
+                           Style="{StaticResource ValidationMessageStyle}"
+                           Visibility="{Binding HasFirstNameError, Converter={StaticResource BoolToVis}}"/>
+
+                <TextBlock Text="Отчество"
+                           Style="{StaticResource AuthLabelStyle}"/>
+                <TextBox Text="{Binding MiddleName, UpdateSourceTrigger=PropertyChanged}"
+                         Tag="{Binding HasMiddleNameError}"
+                         Style="{StaticResource ValidationTextBoxStyle}"/>
+                <TextBlock Text="{Binding MiddleNameValidationMessage}"
+                           Style="{StaticResource ValidationMessageStyle}"
+                           Visibility="{Binding HasMiddleNameError, Converter={StaticResource BoolToVis}}"/>
 
                 <TextBlock Text="Логин"
-                           FontSize="14"
-                           Foreground="#64748B"
-                           Margin="0,0,0,6"/>
+                           Style="{StaticResource AuthLabelStyle}"/>
                 <TextBox Text="{Binding Login, UpdateSourceTrigger=PropertyChanged}"
-                         Width="380"
-                         Height="44"
-                         FontSize="16"
-                         VerticalContentAlignment="Center"
-                         HorizontalAlignment="Center"
-                         Margin="0,0,0,12"/>
+                         Tag="{Binding HasLoginValidationError}"
+                         Style="{StaticResource ValidationTextBoxStyle}"/>
+                <TextBlock Text="{Binding LoginValidationMessage}"
+                           Style="{StaticResource ValidationMessageStyle}"
+                           Visibility="{Binding HasLoginValidationError, Converter={StaticResource BoolToVis}}"/>
 
                 <TextBlock Text="Электронная почта"
-                           FontSize="14"
-                           Foreground="#64748B"
-                           Margin="0,0,0,6"/>
+                           Style="{StaticResource AuthLabelStyle}"/>
                 <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
-                         Width="380"
-                         Height="44"
-                         FontSize="16"
-                         VerticalContentAlignment="Center"
-                         HorizontalAlignment="Center"
-                         Margin="0,0,0,8"/>
-                <TextBlock Text="На эту почту будут приходить уведомления о смене статуса заявки."
-                           TextWrapping="Wrap"
-                           Foreground="#5B6B7F"
-                           Margin="0,0,0,12"/>
+                         Tag="{Binding HasEmailError}"
+                         Style="{StaticResource ValidationTextBoxStyle}"/>
+                <TextBlock Text="{Binding EmailValidationMessage}"
+                           Style="{StaticResource ValidationMessageStyle}"
+                           Visibility="{Binding HasEmailError, Converter={StaticResource BoolToVis}}"/>
 
                 <TextBlock Text="Пароль"
-                           FontSize="14"
-                           Foreground="#64748B"
-                           Margin="0,0,0,6"/>
+                           Style="{StaticResource AuthLabelStyle}"/>
                 <PasswordBox x:Name="PasswordBox"
                              PasswordChar="*"
-                             Width="380"
-                             Height="44"
-                             FontSize="16"
-                             Padding="10,0"
-                             VerticalContentAlignment="Center"
-                             HorizontalAlignment="Center"
-                             Margin="0,0,0,12"/>
+                             Tag="{Binding HasPasswordError}"
+                             Style="{StaticResource ValidationPasswordBoxStyle}"/>
+                <TextBlock Text="{Binding PasswordValidationMessage}"
+                           Style="{StaticResource ValidationMessageStyle}"
+                           Visibility="{Binding HasPasswordError, Converter={StaticResource BoolToVis}}"/>
 
                 <TextBlock Text="Подтверждение пароля"
-                           FontSize="14"
-                           Foreground="#64748B"
-                           Margin="0,0,0,6"/>
+                           Style="{StaticResource AuthLabelStyle}"/>
                 <PasswordBox x:Name="ConfirmPasswordBox"
                              PasswordChar="*"
-                             Width="380"
-                             Height="44"
-                             FontSize="16"
-                             Padding="10,0"
-                             VerticalContentAlignment="Center"
-                             HorizontalAlignment="Center"
+                             Tag="{Binding HasConfirmPasswordError}"
+                             Style="{StaticResource ValidationPasswordBoxStyle}"
                              Margin="0,0,0,16"/>
+                <TextBlock Text="{Binding ConfirmPasswordValidationMessage}"
+                           Style="{StaticResource ValidationMessageStyle}"
+                           Visibility="{Binding HasConfirmPasswordError, Converter={StaticResource BoolToVis}}"/>
 
                 <Button Content="Создать аккаунт"
                         Command="{Binding RegisterCommand}"
-                        Width="200"
-                        Height="42"
-                        HorizontalAlignment="Center"
-                        Margin="0,0,0,16"/>
+                        Style="{StaticResource AuthPrimaryButtonStyle}"
+                        Margin="0,10,0,16"/>
 
                 <TextBlock Text="{Binding ErrorMessage}"
                            Foreground="#C62828"
                            TextWrapping="Wrap"
                            TextAlignment="Center"
-                           Margin="0,0,0,14"/>
+                           Margin="0,0,0,14"
+                           Visibility="{Binding HasErrorMessage, Converter={StaticResource BoolToVis}}"/>
 
                 <TextBlock HorizontalAlignment="Center">
                     <Hyperlink Command="{Binding NavigateToLoginCommand}">

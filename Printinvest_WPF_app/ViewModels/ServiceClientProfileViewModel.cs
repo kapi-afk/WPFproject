@@ -2,12 +2,14 @@
 using Printinvest_WPF_app.Models;
 using Printinvest_WPF_app.Repositories;
 using Printinvest_WPF_app.Utilities;
+using Printinvest_WPF_app.Views;
 using Printinvest_WPF_app.Views.Pages;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net.Mail;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 
@@ -17,6 +19,7 @@ namespace Printinvest_WPF_app.ViewModels
     {
         private const string OtherOption = "Другое";
 
+        private readonly UserRepository _userRepository;
         private readonly OrderRepository _orderRepository;
         private readonly CommentRepository _commentRepository;
         private readonly Dictionary<string, string[]> _brandCatalog = new Dictionary<string, string[]>
@@ -95,11 +98,19 @@ namespace Printinvest_WPF_app.ViewModels
         };
         private User _currentUser;
         private bool _isEditing;
+        private string _editName;
+        private string _editLogin;
+        private string _editEmail;
+        private string _editNameValidationMessage;
+        private string _editLoginValidationMessage;
+        private string _editEmailValidationMessage;
         private bool _isCreateOrderFormVisible;
+        private bool _hasAttemptedProfileSave;
         private string _newReviewText;
         private ObservableCollection<Order> _orders;
         private ObservableCollection<Comment> _reviews;
         private string _newOrderDeviceType;
+        private string _customDeviceType;
         private string _newOrderDeviceBrand;
         private string _newOrderDeviceModel;
         private string _newOrderProblemDescription;
@@ -107,6 +118,7 @@ namespace Printinvest_WPF_app.ViewModels
         private string _newOrderDeliveryAddress;
         private string _newOrderContactPhone;
         private string _newOrderClientComment;
+        private string _newOrderPaymentMethod;
         private string _selectedBrandOption;
         private string _customBrand;
         private string _selectedModelOption;
@@ -115,6 +127,12 @@ namespace Printinvest_WPF_app.ViewModels
         private string _customProblemDescription;
         private byte[] _newOrderProblemPhoto;
         private string _newOrderProblemPhotoName;
+        private bool _showOrderValidationErrors;
+
+        private bool AreRepositoriesReady =>
+            _orderRepository != null &&
+            _commentRepository != null &&
+            RepositoryManager.Users != null;
 
         public User CurrentUser
         {
@@ -133,6 +151,64 @@ namespace Printinvest_WPF_app.ViewModels
             get => _isEditing;
             set => SetProperty(ref _isEditing, value);
         }
+
+        public string EditName
+        {
+            get => _editName;
+            set
+            {
+                if (SetProperty(ref _editName, value) && IsEditing)
+                {
+                    ValidateEditName(_hasAttemptedProfileSave);
+                }
+            }
+        }
+
+        public string EditLogin
+        {
+            get => _editLogin;
+            set
+            {
+                if (SetProperty(ref _editLogin, value) && IsEditing)
+                {
+                    ValidateEditLogin(_hasAttemptedProfileSave);
+                }
+            }
+        }
+
+        public string EditEmail
+        {
+            get => _editEmail;
+            set
+            {
+                if (SetProperty(ref _editEmail, value) && IsEditing)
+                {
+                    ValidateEditEmail(_hasAttemptedProfileSave);
+                }
+            }
+        }
+
+        public string EditNameValidationMessage
+        {
+            get => _editNameValidationMessage;
+            private set => SetValidationMessage(ref _editNameValidationMessage, value, nameof(EditNameValidationMessage), nameof(HasEditNameValidationError));
+        }
+
+        public string EditLoginValidationMessage
+        {
+            get => _editLoginValidationMessage;
+            private set => SetValidationMessage(ref _editLoginValidationMessage, value, nameof(EditLoginValidationMessage), nameof(HasEditLoginValidationError));
+        }
+
+        public string EditEmailValidationMessage
+        {
+            get => _editEmailValidationMessage;
+            private set => SetValidationMessage(ref _editEmailValidationMessage, value, nameof(EditEmailValidationMessage), nameof(HasEditEmailValidationError));
+        }
+
+        public bool HasEditNameValidationError => !string.IsNullOrWhiteSpace(EditNameValidationMessage);
+        public bool HasEditLoginValidationError => !string.IsNullOrWhiteSpace(EditLoginValidationMessage);
+        public bool HasEditEmailValidationError => !string.IsNullOrWhiteSpace(EditEmailValidationMessage);
 
         public bool IsCreateOrderFormVisible
         {
@@ -182,15 +258,14 @@ namespace Printinvest_WPF_app.ViewModels
             "Принтер",
             "Другое"
         };
+        public ObservableCollection<string> PaymentMethods { get; } = new ObservableCollection<string>
+        {
+            Order.OnSitePaymentMethod,
+            Order.OnlinePaymentMethod
+        };
         public ObservableCollection<string> BrandOptions { get; } = new ObservableCollection<string>();
         public ObservableCollection<string> ModelOptions { get; } = new ObservableCollection<string>();
         public ObservableCollection<string> ProblemOptions { get; } = new ObservableCollection<string>();
-        public ObservableCollection<string> DeliveryMethods { get; } = new ObservableCollection<string>
-        {
-            "Самовывоз",
-            "Курьер"
-        };
-
         public string NewOrderDeviceType
         {
             get => _newOrderDeviceType;
@@ -200,6 +275,19 @@ namespace Printinvest_WPF_app.ViewModels
                 {
                     RefreshBrandOptions();
                     RefreshProblemOptions();
+                    NotifyOrderValidationStateChanged();
+                }
+            }
+        }
+
+        public string CustomDeviceType
+        {
+            get => _customDeviceType;
+            set
+            {
+                if (SetProperty(ref _customDeviceType, value))
+                {
+                    NotifyOrderValidationStateChanged();
                 }
             }
         }
@@ -207,19 +295,37 @@ namespace Printinvest_WPF_app.ViewModels
         public string NewOrderDeviceBrand
         {
             get => _newOrderDeviceBrand;
-            set => SetProperty(ref _newOrderDeviceBrand, value);
+            set
+            {
+                if (SetProperty(ref _newOrderDeviceBrand, value))
+                {
+                    NotifyOrderValidationStateChanged();
+                }
+            }
         }
 
         public string NewOrderDeviceModel
         {
             get => _newOrderDeviceModel;
-            set => SetProperty(ref _newOrderDeviceModel, value);
+            set
+            {
+                if (SetProperty(ref _newOrderDeviceModel, value))
+                {
+                    NotifyOrderValidationStateChanged();
+                }
+            }
         }
 
         public string NewOrderProblemDescription
         {
             get => _newOrderProblemDescription;
-            set => SetProperty(ref _newOrderProblemDescription, value);
+            set
+            {
+                if (SetProperty(ref _newOrderProblemDescription, value))
+                {
+                    NotifyOrderValidationStateChanged();
+                }
+            }
         }
 
         public string NewOrderDeliveryMethod
@@ -234,6 +340,8 @@ namespace Printinvest_WPF_app.ViewModels
                     {
                         NewOrderDeliveryAddress = string.Empty;
                     }
+
+                    NotifyOrderValidationStateChanged();
                 }
             }
         }
@@ -241,7 +349,13 @@ namespace Printinvest_WPF_app.ViewModels
         public string NewOrderDeliveryAddress
         {
             get => _newOrderDeliveryAddress;
-            set => SetProperty(ref _newOrderDeliveryAddress, value);
+            set
+            {
+                if (SetProperty(ref _newOrderDeliveryAddress, value))
+                {
+                    NotifyOrderValidationStateChanged();
+                }
+            }
         }
 
         public bool IsCourierDeliverySelected => NewOrderDeliveryMethod == "Курьер";
@@ -249,13 +363,38 @@ namespace Printinvest_WPF_app.ViewModels
         public string NewOrderContactPhone
         {
             get => _newOrderContactPhone;
-            set => SetProperty(ref _newOrderContactPhone, value);
+            set
+            {
+                if (SetProperty(ref _newOrderContactPhone, value))
+                {
+                    NotifyOrderValidationStateChanged();
+                }
+            }
         }
 
         public string NewOrderClientComment
         {
             get => _newOrderClientComment;
             set => SetProperty(ref _newOrderClientComment, value);
+        }
+
+        public string NewOrderPaymentMethod
+        {
+            get => _newOrderPaymentMethod;
+            set
+            {
+                if (SetProperty(ref _newOrderPaymentMethod, value))
+                {
+                    OnPropertyChanged(nameof(NewOrderIsOnlinePayment));
+                    NotifyOrderValidationStateChanged();
+                }
+            }
+        }
+
+        public bool NewOrderIsOnlinePayment
+        {
+            get => string.Equals(NewOrderPaymentMethod, Order.OnlinePaymentMethod, System.StringComparison.Ordinal);
+            set => NewOrderPaymentMethod = value ? Order.OnlinePaymentMethod : Order.OnSitePaymentMethod;
         }
 
         public string SelectedBrandOption
@@ -352,6 +491,7 @@ namespace Printinvest_WPF_app.ViewModels
         public bool IsCustomBrandVisible => SelectedBrandOption == OtherOption;
         public bool IsCustomModelVisible => SelectedModelOption == OtherOption;
         public bool IsCustomProblemVisible => SelectedProblemOption == OtherOption;
+        public bool IsCustomDeviceTypeVisible => NewOrderDeviceType == OtherOption;
 
         public byte[] NewOrderProblemPhoto
         {
@@ -380,9 +520,33 @@ namespace Printinvest_WPF_app.ViewModels
 
         public bool HasSelectedProblemPhoto => NewOrderProblemPhoto != null && NewOrderProblemPhoto.Length > 0;
         public string NewOrderProblemPhotoStatus => HasSelectedProblemPhoto ? $"Фото выбрано: {NewOrderProblemPhotoName}" : "Фото не добавлено";
+        public bool ShowOrderValidationErrors
+        {
+            get => _showOrderValidationErrors;
+            private set
+            {
+                if (SetProperty(ref _showOrderValidationErrors, value))
+                {
+                    NotifyOrderValidationStateChanged();
+                }
+            }
+        }
+
+        public bool IsNewOrderDeviceTypeInvalid => ShowOrderValidationErrors && string.IsNullOrWhiteSpace(ResolveOptionValue(NewOrderDeviceType, CustomDeviceType));
+        public bool IsNewOrderDeviceBrandInvalid => ShowOrderValidationErrors && string.IsNullOrWhiteSpace(NewOrderDeviceBrand);
+        public bool IsNewOrderDeviceModelInvalid => ShowOrderValidationErrors && string.IsNullOrWhiteSpace(NewOrderDeviceModel);
+        public bool IsNewOrderProblemDescriptionInvalid => ShowOrderValidationErrors && string.IsNullOrWhiteSpace(NewOrderProblemDescription);
+        public bool IsNewOrderContactPhoneInvalid => ShowOrderValidationErrors && !IsValidPhoneNumber(NewOrderContactPhone);
+        public bool HasOrderValidationErrors =>
+            IsNewOrderDeviceTypeInvalid ||
+            IsNewOrderDeviceBrandInvalid ||
+            IsNewOrderDeviceModelInvalid ||
+            IsNewOrderProblemDescriptionInvalid ||
+            IsNewOrderContactPhoneInvalid;
 
         public ICommand ToggleEditCommand { get; }
         public ICommand SaveCommand { get; }
+        public ICommand CancelEditCommand { get; }
         public ICommand ChangePhotoCommand { get; }
         public ICommand LogoutCommand { get; }
         public ICommand AddReviewCommand { get; }
@@ -393,9 +557,11 @@ namespace Printinvest_WPF_app.ViewModels
         public ICommand SelectProblemPhotoCommand { get; }
         public ICommand RemoveProblemPhotoCommand { get; }
         public ICommand ToggleOrderDetailsCommand { get; }
+        public ICommand PayOrderOnlineCommand { get; }
 
         public ServiceClientProfileViewModel()
         {
+            _userRepository = RepositoryManager.Users;
             _orderRepository = RepositoryManager.Orders;
             _commentRepository = RepositoryManager.Comments;
             CurrentUser = SessionManager.CurrentUser ?? new User { Name = "Guest", Login = "guest", Role = UserRole.Client };
@@ -405,6 +571,7 @@ namespace Printinvest_WPF_app.ViewModels
 
             ToggleEditCommand = new RelayCommand(ToggleEdit);
             SaveCommand = new RelayCommand(SaveProfile);
+            CancelEditCommand = new RelayCommand(CancelEdit);
             ChangePhotoCommand = new RelayCommand(ChangePhoto);
             LogoutCommand = new RelayCommand(Logout);
             AddReviewCommand = new RelayCommand(AddReview);
@@ -415,19 +582,36 @@ namespace Printinvest_WPF_app.ViewModels
             SelectProblemPhotoCommand = new RelayCommand(SelectProblemPhoto);
             RemoveProblemPhotoCommand = new RelayCommand(RemoveProblemPhoto);
             ToggleOrderDetailsCommand = new RelayCommandSec(ToggleOrderDetails);
+            PayOrderOnlineCommand = new RelayCommandSec(PayOrderOnline);
 
-            LoadData();
+            if (AreRepositoriesReady)
+            {
+                LoadData();
+            }
         }
 
         private void LoadData()
         {
+            if (!AreRepositoriesReady)
+            {
+                Reviews = new ObservableCollection<Comment>();
+                Orders = new ObservableCollection<Order>();
+                return;
+            }
+
             try
             {
+                var currentSessionUser = SessionManager.CurrentUser;
+                if (currentSessionUser != null)
+                {
+                    CurrentUser = currentSessionUser;
+                }
+
                 Reviews = new ObservableCollection<Comment>(_commentRepository.GetPublicReviews());
 
-                if (SessionManager.IsAuthenticated)
+                if (SessionManager.IsAuthenticated && currentSessionUser != null)
                 {
-                    Orders = new ObservableCollection<Order>(_orderRepository.GetByUserId(SessionManager.CurrentUser.Id));
+                    ReloadOrdersForCurrentUser();
                 }
                 else
                 {
@@ -444,7 +628,18 @@ namespace Printinvest_WPF_app.ViewModels
 
         private void ToggleEdit()
         {
-            IsEditing = !IsEditing;
+            if (IsEditing)
+            {
+                CancelEdit();
+                return;
+            }
+
+            EditName = CurrentUser?.Name ?? string.Empty;
+            EditLogin = CurrentUser?.Login ?? string.Empty;
+            EditEmail = CurrentUser?.Email ?? string.Empty;
+            ClearProfileValidation();
+            _hasAttemptedProfileSave = false;
+            IsEditing = true;
         }
 
         private void ToggleCreateOrderForm()
@@ -465,44 +660,34 @@ namespace Printinvest_WPF_app.ViewModels
 
         private void SaveProfile()
         {
-            CurrentUser.Name = CurrentUser.Name?.Trim();
-            CurrentUser.Login = CurrentUser.Login?.Trim();
-            CurrentUser.Email = NormalizeEmail(CurrentUser.Email);
-
-            if (string.IsNullOrWhiteSpace(CurrentUser.Name) ||
-                string.IsNullOrWhiteSpace(CurrentUser.Login) ||
-                string.IsNullOrWhiteSpace(CurrentUser.Email))
+            _hasAttemptedProfileSave = true;
+            if (!ValidateProfileEditor(true))
             {
-                MessageBox.Show("Имя, логин и электронная почта обязательны для заполнения.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Исправьте ошибки в полях профиля перед сохранением.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            if (!IsValidEmail(CurrentUser.Email))
-            {
-                MessageBox.Show("Укажите корректный адрес электронной почты.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            CurrentUser.Name = EditName.Trim();
+            CurrentUser.Login = EditLogin.Trim();
+            CurrentUser.Email = NormalizeEmail(EditEmail);
 
-            var existingUser = RepositoryManager.Users.GetByLogin(CurrentUser.Login);
-            if (existingUser != null && existingUser.Id != CurrentUser.Id)
-            {
-                MessageBox.Show("Пользователь с таким логином уже существует.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            var existingEmailUser = RepositoryManager.Users
-                .GetAll()
-                .FirstOrDefault(user => string.Equals(user.Email, CurrentUser.Email, System.StringComparison.OrdinalIgnoreCase));
-            if (existingEmailUser != null && existingEmailUser.Id != CurrentUser.Id)
-            {
-                MessageBox.Show("Пользователь с такой электронной почтой уже существует.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            RepositoryManager.Users.Update(CurrentUser);
+            _userRepository.Update(CurrentUser);
             SessionManager.Login(CurrentUser);
+            OnPropertyChanged(nameof(CurrentUser));
+            ClearProfileValidation();
+            _hasAttemptedProfileSave = false;
             IsEditing = false;
             MessageBox.Show("Профиль успешно обновлен.", "Готово", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void CancelEdit()
+        {
+            EditName = CurrentUser?.Name ?? string.Empty;
+            EditLogin = CurrentUser?.Login ?? string.Empty;
+            EditEmail = CurrentUser?.Email ?? string.Empty;
+            ClearProfileValidation();
+            _hasAttemptedProfileSave = false;
+            IsEditing = false;
         }
 
         private void ChangePhoto()
@@ -567,24 +752,20 @@ namespace Printinvest_WPF_app.ViewModels
                 return;
             }
 
+            var resolvedDeviceType = ResolveOptionValue(NewOrderDeviceType, CustomDeviceType);
             var resolvedBrand = ResolveOptionValue(SelectedBrandOption, CustomBrand);
             var resolvedModel = ResolveOptionValue(SelectedModelOption, CustomModel);
             var resolvedProblem = ResolveOptionValue(SelectedProblemOption, CustomProblemDescription);
+            ShowOrderValidationErrors = true;
+            NotifyOrderValidationStateChanged();
 
-            if (string.IsNullOrWhiteSpace(NewOrderDeviceType) ||
-                string.IsNullOrWhiteSpace(resolvedBrand) ||
-                string.IsNullOrWhiteSpace(resolvedModel) ||
-                string.IsNullOrWhiteSpace(resolvedProblem) ||
-                string.IsNullOrWhiteSpace(NewOrderDeliveryMethod) ||
-                string.IsNullOrWhiteSpace(NewOrderContactPhone))
+            if (HasOrderValidationErrors)
             {
-                MessageBox.Show("Заполните тип устройства, бренд, модель, способ передачи техники, телефон и неисправность.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (IsCourierDeliverySelected && string.IsNullOrWhiteSpace(NewOrderDeliveryAddress))
-            {
-                MessageBox.Show("Укажите адрес для курьера.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(
+                    "Заполните обязательные поля заявки. Для телефона укажите корректный номер.",
+                    "Ошибка проверки",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
                 return;
             }
 
@@ -592,22 +773,24 @@ namespace Printinvest_WPF_app.ViewModels
             {
                 UserId = SessionManager.CurrentUser.Id,
                 User = SessionManager.CurrentUser,
-                DeviceType = NewOrderDeviceType,
+                DeviceType = resolvedDeviceType,
                 DeviceBrand = resolvedBrand,
                 DeviceModel = resolvedModel,
                 ProblemDescription = resolvedProblem,
-                DeliveryMethod = NewOrderDeliveryMethod,
-                DeliveryAddress = IsCourierDeliverySelected ? NewOrderDeliveryAddress.Trim() : null,
+                DeliveryMethod = "Самовывоз",
+                DeliveryAddress = null,
                 ProblemPhoto = NewOrderProblemPhoto,
                 ContactPhone = NewOrderContactPhone.Trim(),
                 ClientComment = string.IsNullOrWhiteSpace(NewOrderClientComment) ? null : NewOrderClientComment.Trim(),
+                PaymentMethod = NewOrderPaymentMethod,
                 Status = OrderStatus.Created,
                 CreatedAt = System.DateTime.Now
             };
 
             AssignBestMaster(order);
             _orderRepository.Add(order);
-            Orders = new ObservableCollection<Order>(_orderRepository.GetByUserId(SessionManager.CurrentUser.Id));
+            ReloadOrdersForCurrentUser();
+            ShowOrderValidationErrors = false;
             CancelCreateOrderForm();
             MessageBox.Show("Заявка успешно создана.", "Готово", MessageBoxButton.OK, MessageBoxImage.Information);
         }
@@ -660,13 +843,16 @@ namespace Printinvest_WPF_app.ViewModels
 
         private void ResetOrderForm()
         {
-            NewOrderDeliveryMethod = DeliveryMethods[0];
+            ShowOrderValidationErrors = false;
+            NewOrderDeliveryMethod = string.Empty;
             NewOrderDeliveryAddress = string.Empty;
             NewOrderContactPhone = string.Empty;
             NewOrderClientComment = string.Empty;
+            NewOrderPaymentMethod = PaymentMethods[0];
             RemoveProblemPhoto();
 
             NewOrderDeviceType = DeviceTypes[0];
+            CustomDeviceType = string.Empty;
             SelectedBrandOption = null;
             CustomBrand = string.Empty;
             SelectedModelOption = null;
@@ -679,12 +865,71 @@ namespace Printinvest_WPF_app.ViewModels
             SyncProblemValue();
         }
 
+        private void NotifyOrderValidationStateChanged()
+        {
+            OnPropertyChanged(nameof(IsCustomDeviceTypeVisible));
+            OnPropertyChanged(nameof(IsNewOrderDeviceTypeInvalid));
+            OnPropertyChanged(nameof(IsNewOrderDeviceBrandInvalid));
+            OnPropertyChanged(nameof(IsNewOrderDeviceModelInvalid));
+            OnPropertyChanged(nameof(IsNewOrderProblemDescriptionInvalid));
+            OnPropertyChanged(nameof(IsNewOrderContactPhoneInvalid));
+            OnPropertyChanged(nameof(HasOrderValidationErrors));
+        }
+
         private void ToggleOrderDetails(object parameter)
         {
             if (parameter is Order order)
             {
                 order.IsDetailsExpanded = !order.IsDetailsExpanded;
             }
+        }
+
+        private void PayOrderOnline(object parameter)
+        {
+            var order = parameter as Order;
+            if (order == null)
+            {
+                return;
+            }
+
+            if (!order.IsOnlinePayment || order.IsOnlinePaymentCompleted)
+            {
+                return;
+            }
+
+            if (order.EstimatedRepairCost <= 0)
+            {
+                MessageBox.Show(
+                    "Онлайн-оплата станет доступна после того, как по заявке будет рассчитана предварительная сумма.",
+                    "Сумма еще не рассчитана",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            var paymentWindow = new OnlinePaymentWindow(order);
+            if (Application.Current.MainWindow != null)
+            {
+                paymentWindow.Owner = Application.Current.MainWindow;
+            }
+
+            if (paymentWindow.ShowDialog() != true)
+            {
+                return;
+            }
+
+            order.IsOnlinePaymentCompleted = true;
+            order.OnlinePaymentPaidAt = System.DateTime.Now;
+            order.Status = OrderStatus.Completed;
+            order.CompletedAt = System.DateTime.Now;
+            _orderRepository.Update(order);
+            ReloadOrdersForCurrentUser();
+
+            MessageBox.Show(
+                "Онлайн-оплата успешно проведена. Заявка закрыта и убрана из вашего списка.",
+                "Оплата выполнена",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
         }
 
         private void RefreshBrandOptions()
@@ -720,6 +965,20 @@ namespace Printinvest_WPF_app.ViewModels
             }
 
             collection.Add(OtherOption);
+        }
+
+        private void ReloadOrdersForCurrentUser()
+        {
+            if (!SessionManager.IsAuthenticated || SessionManager.CurrentUser == null)
+            {
+                Orders = new ObservableCollection<Order>();
+                return;
+            }
+
+            Orders = new ObservableCollection<Order>(
+                _orderRepository
+                    .GetByUserId(SessionManager.CurrentUser.Id)
+                    .Where(order => order.Status != OrderStatus.Completed));
         }
 
         private IEnumerable<string> GetOptionsForDevice(Dictionary<string, string[]> catalog, string deviceType)
@@ -771,6 +1030,89 @@ namespace Printinvest_WPF_app.ViewModels
             return string.IsNullOrWhiteSpace(selectedValue) ? string.Empty : selectedValue.Trim();
         }
 
+        private bool ValidateProfileEditor(bool showRequired)
+        {
+            ValidateEditName(showRequired);
+            ValidateEditLogin(showRequired);
+            ValidateEditEmail(showRequired);
+            return !HasEditNameValidationError &&
+                   !HasEditLoginValidationError &&
+                   !HasEditEmailValidationError;
+        }
+
+        private void ValidateEditName(bool showRequired)
+        {
+            var normalizedName = EditName?.Trim();
+            EditNameValidationMessage = string.IsNullOrWhiteSpace(normalizedName)
+                ? (showRequired ? "Введите имя." : string.Empty)
+                : string.Empty;
+        }
+
+        private void ValidateEditLogin(bool showRequired)
+        {
+            var normalizedLogin = EditLogin?.Trim();
+            if (string.IsNullOrWhiteSpace(normalizedLogin))
+            {
+                EditLoginValidationMessage = showRequired ? "Введите логин." : string.Empty;
+                return;
+            }
+
+            if (_userRepository == null || CurrentUser == null)
+            {
+                EditLoginValidationMessage = string.Empty;
+                return;
+            }
+
+            var existingUser = _userRepository
+                .GetAll()
+                .FirstOrDefault(user =>
+                    user.Id != CurrentUser.Id &&
+                    string.Equals(user.Login, normalizedLogin, System.StringComparison.OrdinalIgnoreCase));
+
+            EditLoginValidationMessage = existingUser == null
+                ? string.Empty
+                : "Этот логин уже занят. Поменяйте логин.";
+        }
+
+        private void ValidateEditEmail(bool showRequired)
+        {
+            var normalizedEmail = NormalizeEmail(EditEmail);
+            if (string.IsNullOrWhiteSpace(normalizedEmail))
+            {
+                EditEmailValidationMessage = showRequired ? "Введите электронную почту." : string.Empty;
+                return;
+            }
+
+            if (!IsValidEmail(normalizedEmail))
+            {
+                EditEmailValidationMessage = "Укажите корректный email.";
+                return;
+            }
+
+            if (_userRepository == null || CurrentUser == null)
+            {
+                EditEmailValidationMessage = string.Empty;
+                return;
+            }
+
+            var existingUser = _userRepository
+                .GetAll()
+                .FirstOrDefault(user =>
+                    user.Id != CurrentUser.Id &&
+                    string.Equals(user.Email, normalizedEmail, System.StringComparison.OrdinalIgnoreCase));
+
+            EditEmailValidationMessage = existingUser == null
+                ? string.Empty
+                : "Эта электронная почта уже зарегистрирована.";
+        }
+
+        private void ClearProfileValidation()
+        {
+            EditNameValidationMessage = string.Empty;
+            EditLoginValidationMessage = string.Empty;
+            EditEmailValidationMessage = string.Empty;
+        }
+
         private static string NormalizeEmail(string email)
         {
             return string.IsNullOrWhiteSpace(email)
@@ -788,6 +1130,25 @@ namespace Printinvest_WPF_app.ViewModels
             catch
             {
                 return false;
+            }
+        }
+
+        private static bool IsValidPhoneNumber(string phoneNumber)
+        {
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+            {
+                return false;
+            }
+
+            var normalizedPhone = new string(phoneNumber.Where(char.IsDigit).ToArray());
+            return Regex.IsMatch(normalizedPhone, @"^(?:375|80)(17|25|29|33|44)\d{7}$");
+        }
+
+        private void SetValidationMessage(ref string field, string value, string propertyName, string flagPropertyName)
+        {
+            if (SetProperty(ref field, value, propertyName))
+            {
+                OnPropertyChanged(flagPropertyName);
             }
         }
     }

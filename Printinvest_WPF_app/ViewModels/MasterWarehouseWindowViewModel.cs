@@ -108,9 +108,17 @@ namespace Printinvest_WPF_app.ViewModels
             set => SetProperty(ref _requestMaterialCategory, value);
         }
 
+        public string TargetOrderEstimatedTotalText => _targetOrder == null
+            ? "0,00 BYN"
+            : $"{_targetOrder.EstimatedRepairCost:N2} BYN";
+
         public string TargetOrderText => _targetOrder == null
             ? "Заявка не выбрана. Вы можете только просматривать склад."
             : $"Материалы для заявки №{_targetOrder.Id}: {_targetOrder.DeviceType} {_targetOrder.DeviceBrand} {_targetOrder.DeviceModel}";
+
+        public string TargetOrderEstimateText => _targetOrder == null
+            ? "0,00 ₽"
+            : $"{_targetOrder.EstimatedRepairCost:N2} ₽";
 
         public ICommand RefreshCommand { get; }
         public ICommand ConsumeWarehouseItemCommand { get; }
@@ -346,6 +354,7 @@ namespace Printinvest_WPF_app.ViewModels
 
             actualItem.Quantity -= quantity;
             _warehouseRepository.Update(actualItem);
+            AddMaterialCostToTargetOrder(actualItem, quantity);
             MoveTargetOrderToInProgress();
             MaterialUsageQuantity = "1";
             LoadData();
@@ -361,8 +370,15 @@ namespace Printinvest_WPF_app.ViewModels
                 return;
             }
 
-            _targetOrder.Status = OrderStatus.WaitingForParts;
-            _orderRepository.Update(_targetOrder);
+            var orderToUpdate = _orderRepository.GetById(_targetOrder.Id);
+            if (orderToUpdate == null || IsFinalOrderStatus(orderToUpdate.Status))
+            {
+                return;
+            }
+
+            orderToUpdate.Status = OrderStatus.WaitingForParts;
+            _orderRepository.Update(orderToUpdate);
+            SynchronizeTargetOrder(orderToUpdate);
         }
 
         private void MoveTargetOrderToInProgress()
@@ -374,13 +390,57 @@ namespace Printinvest_WPF_app.ViewModels
                 return;
             }
 
-            _targetOrder.Status = OrderStatus.InProgress;
-            _orderRepository.Update(_targetOrder);
+            var orderToUpdate = _orderRepository.GetById(_targetOrder.Id);
+            if (orderToUpdate == null ||
+                IsFinalOrderStatus(orderToUpdate.Status) ||
+                orderToUpdate.Status == OrderStatus.ReadyForPickup)
+            {
+                return;
+            }
+
+            orderToUpdate.Status = OrderStatus.InProgress;
+            _orderRepository.Update(orderToUpdate);
+            SynchronizeTargetOrder(orderToUpdate);
         }
 
         private bool IsFinalOrderStatus(OrderStatus status)
         {
             return status == OrderStatus.Completed || status == OrderStatus.Cancelled;
+        }
+
+        private void AddMaterialCostToTargetOrder(WarehouseItem actualItem, int quantity)
+        {
+            if (_targetOrder == null || actualItem == null || quantity <= 0)
+            {
+                return;
+            }
+
+            var orderToUpdate = _orderRepository.GetById(_targetOrder.Id);
+            if (orderToUpdate == null)
+            {
+                return;
+            }
+
+            orderToUpdate.EstimatedPartsCost += actualItem.UnitPrice * quantity;
+            orderToUpdate.EstimatedRepairCost = orderToUpdate.EstimatedPartsCost + orderToUpdate.MasterWorkCost;
+            _orderRepository.Update(orderToUpdate);
+            SynchronizeTargetOrder(orderToUpdate);
+        }
+
+        private void SynchronizeTargetOrder(Order sourceOrder)
+        {
+            if (_targetOrder == null || sourceOrder == null)
+            {
+                return;
+            }
+
+            _targetOrder.Status = sourceOrder.Status;
+            _targetOrder.EstimatedPartsCost = sourceOrder.EstimatedPartsCost;
+            _targetOrder.MasterWorkCost = sourceOrder.MasterWorkCost;
+            _targetOrder.EstimatedRepairCost = sourceOrder.EstimatedRepairCost;
+            _targetOrder.CompletedAt = sourceOrder.CompletedAt;
+            OnPropertyChanged(nameof(TargetOrderEstimateText));
+            OnPropertyChanged(nameof(TargetOrderEstimatedTotalText));
         }
     }
 }

@@ -23,6 +23,24 @@ namespace Printinvest_WPF_app.Views
         public MainWindow()
         {
             InitializeComponent();
+            Loaded += OnWindowLoaded;
+            SizeChanged += OnWindowSizeChanged;
+        }
+
+        private void OnWindowLoaded(object sender, RoutedEventArgs e)
+        {
+            SyncNavigationStateWithWindowWidth();
+        }
+
+        private void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            SyncNavigationStateWithWindowWidth();
+        }
+
+        private void SyncNavigationStateWithWindowWidth()
+        {
+            if (DataContext is ViewModels.MainViewModel viewModel)
+                viewModel.UpdateWindowWidth(ActualWidth);
         }
     }
 }

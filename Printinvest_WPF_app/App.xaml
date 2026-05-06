@@ -9,12 +9,30 @@
             <conv:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter" />
             <conv:PasswordBoxConverter x:Key="PasswordBoxConverter" />
             <conv:OrderStatusConverter x:Key="OrderStatusConverter" />
+            <conv:OrderStatusBackgroundBrushConverter x:Key="OrderStatusBackgroundBrushConverter" />
+            <conv:OrderStatusForegroundBrushConverter x:Key="OrderStatusForegroundBrushConverter" />
             <conv:ItemTypeConverter x:Key="ItemTypeConverter" />
             <conv:CartItemTotalPriceConverter x:Key="CartItemTotalPriceConverter"/>
             <conv:CartItemPriceConverter x:Key="CartItemPriceConverter"/>
             <conv:FilterNameConverter x:Key="FilterNameConverter" />
             <DataTemplate x:Key="OrderStatusTemplate">
                 <TextBlock Text="{Binding Converter={StaticResource OrderStatusConverter}}" />
+            </DataTemplate>
+            <DataTemplate x:Key="OrderStatusBadgeTemplate">
+                <Border Width="140"
+                        Height="28"
+                        CornerRadius="14"
+                        Background="{Binding Converter={StaticResource OrderStatusBackgroundBrushConverter}}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Converter={StaticResource OrderStatusConverter}}"
+                               Foreground="{Binding Converter={StaticResource OrderStatusForegroundBrushConverter}}"
+                               FontWeight="SemiBold"
+                               FontSize="12"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               TextAlignment="Center"/>
+                </Border>
             </DataTemplate>
             <BitmapImage x:Key="DefaultProfileImage" UriSource="/Images/DefaultProfile.png" />
             <BitmapImage x:Key="DefaultProductImage" UriSource="/Images/DefaultProduct.png" />

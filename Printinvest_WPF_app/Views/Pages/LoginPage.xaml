@@ -13,61 +13,29 @@
     </Page.DataContext>
 
     <Grid>
-        <Border Width="460"
-                Padding="32"
-                CornerRadius="20"
-                Background="#F8FAFC"
-                BorderBrush="#D9E2EC"
-                BorderThickness="1"
-                KeyDown="LoginKeyDown"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center">
+        <Border Style="{StaticResource AuthCardStyle}"
+                KeyDown="LoginKeyDown">
             <StackPanel>
                 <TextBlock Text="Вход"
-                           FontSize="34"
-                           FontWeight="Bold"
-                           Foreground="{DynamicResource TextBrush}"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,10"/>
-
-                <TextBlock Text="Войдите в учетную запись, чтобы открыть свой кабинет по роли."
-                           TextWrapping="Wrap"
-                           Foreground="#5B6B7F"
-                           TextAlignment="Center"
-                           Margin="0,0,0,24"/>
+                           Style="{StaticResource PageTitleStyle}"
+                           HorizontalAlignment="Center"/>
 
                 <TextBlock Text="Логин"
-                           FontSize="14"
-                           Foreground="#64748B"
-                           Margin="0,0,0,6"/>
+                           Style="{StaticResource AuthLabelStyle}"/>
                 <TextBox Text="{Binding Login, UpdateSourceTrigger=PropertyChanged}"
-                         Width="360"
-                         Height="44"
-                         FontSize="16"
-                         VerticalContentAlignment="Center"
-                         HorizontalAlignment="Center"
-                         Margin="0,0,0,14"/>
+                         Style="{StaticResource AuthInputStyle}"/>
 
                 <TextBlock Text="Пароль"
-                           FontSize="14"
-                           Foreground="#64748B"
-                           Margin="0,0,0,6"/>
+                           Style="{StaticResource AuthLabelStyle}"/>
                 <PasswordBox Grid.Row="2"
                              x:Name="PasswordBox"
                              PasswordChar="*"
-                             Width="360"
-                             Height="44"
-                             FontSize="16"
-                             Padding="10,0"
-                             VerticalContentAlignment="Center"
-                             HorizontalAlignment="Center"
+                             Style="{StaticResource AuthPasswordStyle}"
                              Margin="0,0,0,18"/>
 
                 <Button Content="Войти"
                         Command="{Binding LoginCommand}"
-                        Width="180"
-                        Height="42"
-                        HorizontalAlignment="Center"
+                        Style="{StaticResource AuthPrimaryButtonStyle}"
                         Margin="0,0,0,18"/>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

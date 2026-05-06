@@ -190,6 +190,35 @@ namespace Printinvest_WPF_app.Contex
                 .HasMaxLength(250)
                 .IsRequired(false);
             modelBuilder.Entity<Order>()
+                .Property(o => o.PublicNumber)
+                .HasMaxLength(20)
+                .IsRequired(false);
+            modelBuilder.Entity<Order>()
+                .Property(o => o.PaymentMethod)
+                .HasMaxLength(40)
+                .IsRequired(false);
+            modelBuilder.Entity<Order>()
+                .Property(o => o.IsOnlinePaymentCompleted)
+                .IsRequired();
+            modelBuilder.Entity<Order>()
+                .Property(o => o.OnlinePaymentPaidAt)
+                .IsRequired(false);
+            modelBuilder.Entity<Order>()
+                .Property(o => o.EstimatedPartsCost)
+                .HasColumnType("DECIMAL(18,2)")
+                .IsRequired();
+            modelBuilder.Entity<Order>()
+                .Property(o => o.MasterWorkCost)
+                .HasColumnType("DECIMAL(18,2)")
+                .IsRequired();
+            modelBuilder.Entity<Order>()
+                .Property(o => o.EstimatedRepairCost)
+                .HasColumnType("DECIMAL(18,2)")
+                .IsRequired();
+            modelBuilder.Entity<Order>()
+                .Property(o => o.CompletedAt)
+                .IsRequired(false);
+            modelBuilder.Entity<Order>()
                 .Property(o => o.ProblemPhoto)
                 .HasColumnType("VARBINARY(MAX)")
                 .IsRequired(false);

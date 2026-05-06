@@ -19,6 +19,7 @@ namespace Printinvest_WPF_app.ViewModels
         private ObservableCollection<WarehouseRequest> _currentOrderWarehouseRequests;
         private Order _selectedOrder;
         private OrderStatus _selectedOrderStatus;
+        private decimal _selectedOrderMasterWorkCost;
         private string _materialRequestSearchText;
         private int _completedOrdersCount;
         private int _activeOrdersCount;
@@ -65,6 +66,7 @@ namespace Printinvest_WPF_app.ViewModels
             {
                 SetProperty(ref _selectedOrder, value);
                 SelectedOrderStatus = value?.Status ?? OrderStatus.Assigned;
+                SelectedOrderMasterWorkCost = value?.MasterWorkCost ?? 0;
                 LoadCurrentOrderWarehouseRequests();
             }
         }
@@ -73,6 +75,27 @@ namespace Printinvest_WPF_app.ViewModels
         {
             get => _selectedOrderStatus;
             set => SetProperty(ref _selectedOrderStatus, value);
+        }
+
+        public decimal SelectedOrderMasterWorkCost
+        {
+            get => _selectedOrderMasterWorkCost;
+            set
+            {
+                var normalizedValue = value < 0 ? 0 : value;
+                if (!SetProperty(ref _selectedOrderMasterWorkCost, normalizedValue))
+                {
+                    return;
+                }
+
+                if (SelectedOrder == null)
+                {
+                    return;
+                }
+
+                SelectedOrder.MasterWorkCost = normalizedValue;
+                SelectedOrder.EstimatedRepairCost = SelectedOrder.EstimatedPartsCost + normalizedValue;
+            }
         }
 
         public int CompletedOrdersCount
@@ -138,9 +161,16 @@ namespace Printinvest_WPF_app.ViewModels
                 return;
             }
 
+            SelectedOrder.MasterWorkCost = SelectedOrderMasterWorkCost;
+            SelectedOrder.EstimatedRepairCost = SelectedOrder.EstimatedPartsCost + SelectedOrder.MasterWorkCost;
             SelectedOrder.Status = SelectedOrderStatus;
             _orderRepository.Update(SelectedOrder);
             LoadData();
+            MessageBox.Show(
+                "Изменения по заявке сохранены. Уведомление клиенту отправляется в фоне.",
+                "Готово",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
         }
 
         private void OpenWarehouseWindow()
@@ -185,7 +215,8 @@ namespace Printinvest_WPF_app.ViewModels
             if (!string.IsNullOrWhiteSpace(MaterialRequestSearchText))
             {
                 var search = MaterialRequestSearchText.ToLowerInvariant();
-                requests = requests.Where(request => request.OrderId.ToString().Contains(search));
+                requests = requests.Where(request =>
+                    (request.OrderDisplayNumber?.ToLowerInvariant().Contains(search) ?? false));
             }
 
             CurrentOrderWarehouseRequests = new ObservableCollection<WarehouseRequest>(requests);

@@ -19,7 +19,7 @@ namespace Printinvest_WPF_app.Models
         public string Name { get; set; }
         public string Description { get; set; }
         public string Characteristics { get; set; }
-        public decimal Price { get; set; } // Стоимость в BYN
+        public decimal Price { get; set; } 
         public byte[] Photo { get; set; }
     }
 

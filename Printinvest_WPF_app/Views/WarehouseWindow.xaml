@@ -94,6 +94,10 @@
                     <TextBlock Text="Цена за единицу" Margin="0,0,0,4"/>
                     <TextBlock Text="{Binding SelectedWarehouseItem.UnitPrice, StringFormat={}{0:N2}, TargetNullValue=0}"
                                Margin="0,0,0,10"/>
+                    <TextBlock Text="Текущая сумма по заявке" Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding TargetOrderEstimatedTotalText}"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,10"/>
                     <TextBlock Text="Количество для списания" Margin="0,0,0,4"/>
                     <TextBox Text="{Binding MaterialUsageQuantity, UpdateSourceTrigger=PropertyChanged}"
                              Margin="0,0,0,10"/>

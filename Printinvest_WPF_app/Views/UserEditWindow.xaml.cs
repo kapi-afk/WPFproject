@@ -1,3 +1,4 @@
+using Printinvest_WPF_app.Models;
 using Printinvest_WPF_app.ViewModels;
 using System.Windows;
 
@@ -20,8 +21,19 @@ namespace Printinvest_WPF_app.Views
             }
 
             var canSave = viewModel.SelectedUser != null &&
-                          !string.IsNullOrWhiteSpace(viewModel.SelectedUser.Name) &&
                           !string.IsNullOrWhiteSpace(viewModel.SelectedUser.Login);
+
+            if (canSave && viewModel.SelectedUserRole == UserRole.Client)
+            {
+                canSave =
+                    !string.IsNullOrWhiteSpace(viewModel.SelectedUserLastName) &&
+                    !string.IsNullOrWhiteSpace(viewModel.SelectedUserFirstName) &&
+                    !string.IsNullOrWhiteSpace(viewModel.SelectedUserEmail);
+            }
+            else if (canSave)
+            {
+                canSave = !string.IsNullOrWhiteSpace(viewModel.SelectedUser.Name);
+            }
 
             viewModel.SaveUserRoleCommand.Execute(null);
 

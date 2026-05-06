@@ -41,6 +41,7 @@ namespace Printinvest_WPF_app.Repositories
             Orders = new OrderRepository(_context);
             Warehouse = new WarehouseRepository(_context);
             WarehouseRequests = new WarehouseRequestRepository(_context);
+            Orders.EnsurePublicNumbers();
 
             var admin = Users.GetByLogin("admin");
             if (admin == null)
@@ -101,6 +102,69 @@ BEGIN
     BEGIN
         ALTER TABLE [Orders] ADD [DeliveryAddress] NVARCHAR(250) NULL;
     END
+
+    IF COL_LENGTH('Orders', 'PublicNumber') IS NULL
+    BEGIN
+        ALTER TABLE [Orders] ADD [PublicNumber] NVARCHAR(20) NULL;
+    END
+
+    IF COL_LENGTH('Orders', 'PaymentMethod') IS NULL
+    BEGIN
+        ALTER TABLE [Orders] ADD [PaymentMethod] NVARCHAR(40) NULL;
+    END
+
+    IF COL_LENGTH('Orders', 'IsOnlinePaymentCompleted') IS NULL
+    BEGIN
+        ALTER TABLE [Orders] ADD [IsOnlinePaymentCompleted] BIT NOT NULL CONSTRAINT [DF_Orders_IsOnlinePaymentCompleted] DEFAULT(0);
+    END
+
+    IF COL_LENGTH('Orders', 'OnlinePaymentPaidAt') IS NULL
+    BEGIN
+        ALTER TABLE [Orders] ADD [OnlinePaymentPaidAt] DATETIME2 NULL;
+    END
+
+    IF COL_LENGTH('Orders', 'EstimatedRepairCost') IS NULL
+    BEGIN
+        ALTER TABLE [Orders] ADD [EstimatedRepairCost] DECIMAL(18,2) NOT NULL CONSTRAINT [DF_Orders_EstimatedRepairCost] DEFAULT(0);
+    END
+
+    IF COL_LENGTH('Orders', 'EstimatedPartsCost') IS NULL
+    BEGIN
+        ALTER TABLE [Orders] ADD [EstimatedPartsCost] DECIMAL(18,2) NOT NULL CONSTRAINT [DF_Orders_EstimatedPartsCost] DEFAULT(0);
+    END
+
+    IF COL_LENGTH('Orders', 'MasterWorkCost') IS NULL
+    BEGIN
+        ALTER TABLE [Orders] ADD [MasterWorkCost] DECIMAL(18,2) NOT NULL CONSTRAINT [DF_Orders_MasterWorkCost] DEFAULT(0);
+    END
+
+    IF COL_LENGTH('Orders', 'CompletedAt') IS NULL
+    BEGIN
+        ALTER TABLE [Orders] ADD [CompletedAt] DATETIME2 NULL;
+    END
+END");
+
+            _context.Database.ExecuteSqlRaw(@"
+IF OBJECT_ID(N'[Orders]', N'U') IS NOT NULL
+   AND COL_LENGTH('Orders', 'PaymentMethod') IS NOT NULL
+BEGIN
+    UPDATE [Orders]
+    SET [PaymentMethod] = N'Оплата на месте'
+    WHERE [PaymentMethod] IS NULL
+       OR LTRIM(RTRIM([PaymentMethod])) = N'';
+END");
+
+            _context.Database.ExecuteSqlRaw(@"
+IF OBJECT_ID(N'[Orders]', N'U') IS NOT NULL
+   AND COL_LENGTH('Orders', 'EstimatedPartsCost') IS NOT NULL
+   AND COL_LENGTH('Orders', 'MasterWorkCost') IS NOT NULL
+   AND COL_LENGTH('Orders', 'EstimatedRepairCost') IS NOT NULL
+BEGIN
+    UPDATE [Orders]
+    SET [EstimatedPartsCost] = [EstimatedRepairCost]
+    WHERE ISNULL([EstimatedPartsCost], 0) = 0
+      AND ISNULL([MasterWorkCost], 0) = 0
+      AND ISNULL([EstimatedRepairCost], 0) > 0;
 END");
         }
 

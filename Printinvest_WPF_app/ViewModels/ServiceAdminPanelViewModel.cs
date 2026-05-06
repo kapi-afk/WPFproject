@@ -1,11 +1,16 @@
-﻿using Printinvest_WPF_app.Models;
+﻿using Microsoft.Win32;
+using Printinvest_WPF_app.Models;
 using Printinvest_WPF_app.Repositories;
 using Printinvest_WPF_app.Utilities;
 using Printinvest_WPF_app.Views;
 using Printinvest_WPF_app.Views.Pages;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Net.Mail;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 
@@ -17,6 +22,7 @@ namespace Printinvest_WPF_app.ViewModels
         private readonly OrderRepository _orderRepository;
         private readonly WarehouseRepository _warehouseRepository;
         private readonly WarehouseRequestRepository _warehouseRequestRepository;
+        private List<WarehouseItem> _allWarehouseItems;
         private ObservableCollection<User> _users;
         private ObservableCollection<User> _masters;
         private ObservableCollection<Order> _orders;
@@ -24,11 +30,17 @@ namespace Printinvest_WPF_app.ViewModels
         private ObservableCollection<WarehouseRequest> _warehouseRequests;
         private User _selectedUser;
         private UserRole _selectedUserRole;
+        private bool _isLoadingSelectedUserData;
+        private string _selectedUserLastName;
+        private string _selectedUserFirstName;
+        private string _selectedUserMiddleName;
+        private string _selectedUserEmail;
         private Order _selectedOrder;
         private User _selectedMaster;
         private WarehouseItem _selectedWarehouseItem;
         private WarehouseRequest _selectedWarehouseRequest;
         private OrderStatus _selectedOrderStatus;
+        private decimal _selectedOrderMasterWorkCost;
         private string _newUserLogin;
         private string _newUserPassword;
         private string _newUserName;
@@ -49,10 +61,16 @@ namespace Printinvest_WPF_app.ViewModels
         private string _newOrderDeliveryMethod;
         private string _newOrderDeliveryAddress;
         private string _newOrderClientComment;
+        private string _newOrderPaymentMethod;
+        private byte[] _newOrderProblemPhoto;
+        private string _newOrderProblemPhotoName;
         private string _warehouseName;
         private string _warehouseCategory;
         private int _warehouseQuantity;
         private decimal _warehouseUnitPrice;
+        private string _warehouseSearchText;
+        private string _selectedWarehouseSortOption;
+        private string _selectedWarehouseCategoryFilter;
         private bool _isUserEditPanelVisible;
         private bool _isWarehouseFormVisible;
         private int _totalOrdersCount;
@@ -60,6 +78,14 @@ namespace Printinvest_WPF_app.ViewModels
         private int _completedOrdersCount;
         private int _mastersCount;
         private int _clientsCount;
+        private bool _showAdminOrderValidationErrors;
+        private bool _wasLastAdminOrderCreationSuccessful;
+
+        private bool AreRepositoriesReady =>
+            _userRepository != null &&
+            _orderRepository != null &&
+            _warehouseRepository != null &&
+            _warehouseRequestRepository != null;
 
         public ObservableCollection<User> Users
         {
@@ -90,6 +116,17 @@ namespace Printinvest_WPF_app.ViewModels
             get => _warehouseRequests;
             set => SetProperty(ref _warehouseRequests, value);
         }
+
+        public ObservableCollection<string> WarehouseSortOptions { get; } = new ObservableCollection<string>
+        {
+            "По названию",
+            "Сначала меньше остаток",
+            "Сначала больше остаток",
+            "Сначала дешевле",
+            "Сначала дороже"
+        };
+
+        public ObservableCollection<string> WarehouseCategoryFilters { get; } = new ObservableCollection<string>();
 
         public ObservableCollection<UserRole> AvailableRoles { get; } = new ObservableCollection<UserRole>
         {
@@ -126,14 +163,23 @@ namespace Printinvest_WPF_app.ViewModels
             "Курьер"
         };
 
+        public ObservableCollection<string> PaymentMethods { get; } = new ObservableCollection<string>
+        {
+            Order.OnSitePaymentMethod,
+            Order.OnlinePaymentMethod
+        };
+
         public User SelectedUser
         {
             get => _selectedUser;
             set
             {
                 SetProperty(ref _selectedUser, value);
+                _isLoadingSelectedUserData = true;
+                LoadSelectedClientFields(value);
                 SelectedUserRole = value?.Role ?? UserRole.Client;
                 LoadSelectedUserSpecializations(value);
+                _isLoadingSelectedUserData = false;
             }
         }
 
@@ -145,6 +191,57 @@ namespace Printinvest_WPF_app.ViewModels
                 if (SetProperty(ref _selectedUserRole, value))
                 {
                     OnPropertyChanged(nameof(IsSelectedUserMaster));
+                    OnPropertyChanged(nameof(IsSelectedUserClient));
+                    OnPropertyChanged(nameof(IsSelectedUserNonClient));
+                    SyncSelectedUserPersonalFields();
+                }
+            }
+        }
+
+        public string SelectedUserLastName
+        {
+            get => _selectedUserLastName;
+            set
+            {
+                if (SetProperty(ref _selectedUserLastName, value))
+                {
+                    SyncSelectedUserPersonalFields();
+                }
+            }
+        }
+
+        public string SelectedUserFirstName
+        {
+            get => _selectedUserFirstName;
+            set
+            {
+                if (SetProperty(ref _selectedUserFirstName, value))
+                {
+                    SyncSelectedUserPersonalFields();
+                }
+            }
+        }
+
+        public string SelectedUserMiddleName
+        {
+            get => _selectedUserMiddleName;
+            set
+            {
+                if (SetProperty(ref _selectedUserMiddleName, value))
+                {
+                    SyncSelectedUserPersonalFields();
+                }
+            }
+        }
+
+        public string SelectedUserEmail
+        {
+            get => _selectedUserEmail;
+            set
+            {
+                if (SetProperty(ref _selectedUserEmail, value))
+                {
+                    SyncSelectedUserPersonalFields();
                 }
             }
         }
@@ -156,6 +253,7 @@ namespace Printinvest_WPF_app.ViewModels
             {
                 SetProperty(ref _selectedOrder, value);
                 SelectedOrderStatus = value?.Status ?? OrderStatus.Created;
+                SelectedOrderMasterWorkCost = value?.MasterWorkCost ?? 0;
                 SelectedMaster = value == null ? null : Masters.FirstOrDefault(master => master.Id == value.AssignedMasterId);
             }
         }
@@ -196,6 +294,27 @@ namespace Printinvest_WPF_app.ViewModels
         {
             get => _selectedOrderStatus;
             set => SetProperty(ref _selectedOrderStatus, value);
+        }
+
+        public decimal SelectedOrderMasterWorkCost
+        {
+            get => _selectedOrderMasterWorkCost;
+            set
+            {
+                var normalizedValue = value < 0 ? 0 : value;
+                if (!SetProperty(ref _selectedOrderMasterWorkCost, normalizedValue))
+                {
+                    return;
+                }
+
+                if (SelectedOrder == null)
+                {
+                    return;
+                }
+
+                SelectedOrder.MasterWorkCost = normalizedValue;
+                SelectedOrder.EstimatedRepairCost = SelectedOrder.EstimatedPartsCost + normalizedValue;
+            }
         }
 
         public string NewUserLogin
@@ -266,47 +385,91 @@ namespace Printinvest_WPF_app.ViewModels
 
         public bool IsNewUserMaster => NewUserRole == UserRole.Master;
         public bool IsSelectedUserMaster => SelectedUserRole == UserRole.Master;
+        public bool IsSelectedUserClient => SelectedUserRole == UserRole.Client;
+        public bool IsSelectedUserNonClient => !IsSelectedUserClient;
 
         public string NewOrderClientName
         {
             get => _newOrderClientName;
-            set => SetProperty(ref _newOrderClientName, value);
+            set
+            {
+                if (SetProperty(ref _newOrderClientName, value))
+                {
+                    NotifyAdminOrderValidationStateChanged();
+                }
+            }
         }
 
         public string NewOrderClientEmail
         {
             get => _newOrderClientEmail;
-            set => SetProperty(ref _newOrderClientEmail, value);
+            set
+            {
+                if (SetProperty(ref _newOrderClientEmail, value))
+                {
+                    NotifyAdminOrderValidationStateChanged();
+                }
+            }
         }
 
         public string NewOrderContactPhone
         {
             get => _newOrderContactPhone;
-            set => SetProperty(ref _newOrderContactPhone, value);
+            set
+            {
+                if (SetProperty(ref _newOrderContactPhone, value))
+                {
+                    NotifyAdminOrderValidationStateChanged();
+                }
+            }
         }
 
         public string NewOrderDeviceType
         {
             get => _newOrderDeviceType;
-            set => SetProperty(ref _newOrderDeviceType, value);
+            set
+            {
+                if (SetProperty(ref _newOrderDeviceType, value))
+                {
+                    NotifyAdminOrderValidationStateChanged();
+                }
+            }
         }
 
         public string NewOrderDeviceBrand
         {
             get => _newOrderDeviceBrand;
-            set => SetProperty(ref _newOrderDeviceBrand, value);
+            set
+            {
+                if (SetProperty(ref _newOrderDeviceBrand, value))
+                {
+                    NotifyAdminOrderValidationStateChanged();
+                }
+            }
         }
 
         public string NewOrderDeviceModel
         {
             get => _newOrderDeviceModel;
-            set => SetProperty(ref _newOrderDeviceModel, value);
+            set
+            {
+                if (SetProperty(ref _newOrderDeviceModel, value))
+                {
+                    NotifyAdminOrderValidationStateChanged();
+                }
+            }
         }
 
         public string NewOrderProblemDescription
         {
             get => _newOrderProblemDescription;
-            set => SetProperty(ref _newOrderProblemDescription, value);
+            set
+            {
+                if (SetProperty(ref _newOrderProblemDescription, value))
+                {
+                    NotifyAdminOrderValidationStateChanged();
+                }
+            }
         }
 
         public string NewOrderDeliveryMethod
@@ -321,6 +484,8 @@ namespace Printinvest_WPF_app.ViewModels
                     {
                         NewOrderDeliveryAddress = string.Empty;
                     }
+
+                    NotifyAdminOrderValidationStateChanged();
                 }
             }
         }
@@ -328,13 +493,50 @@ namespace Printinvest_WPF_app.ViewModels
         public string NewOrderDeliveryAddress
         {
             get => _newOrderDeliveryAddress;
-            set => SetProperty(ref _newOrderDeliveryAddress, value);
+            set
+            {
+                if (SetProperty(ref _newOrderDeliveryAddress, value))
+                {
+                    NotifyAdminOrderValidationStateChanged();
+                }
+            }
         }
 
         public string NewOrderClientComment
         {
             get => _newOrderClientComment;
             set => SetProperty(ref _newOrderClientComment, value);
+        }
+
+        public string NewOrderPaymentMethod
+        {
+            get => _newOrderPaymentMethod;
+            set
+            {
+                if (SetProperty(ref _newOrderPaymentMethod, value))
+                {
+                    OnPropertyChanged(nameof(NewOrderIsOnlinePayment));
+                    NotifyAdminOrderValidationStateChanged();
+                }
+            }
+        }
+
+        public bool NewOrderIsOnlinePayment
+        {
+            get => string.Equals(NewOrderPaymentMethod, Order.OnlinePaymentMethod, StringComparison.Ordinal);
+            set => NewOrderPaymentMethod = value ? Order.OnlinePaymentMethod : Order.OnSitePaymentMethod;
+        }
+
+        public byte[] NewOrderProblemPhoto
+        {
+            get => _newOrderProblemPhoto;
+            set => SetProperty(ref _newOrderProblemPhoto, value);
+        }
+
+        public string NewOrderProblemPhotoName
+        {
+            get => _newOrderProblemPhotoName;
+            set => SetProperty(ref _newOrderProblemPhotoName, value);
         }
 
         public string WarehouseName
@@ -359,6 +561,42 @@ namespace Printinvest_WPF_app.ViewModels
         {
             get => _warehouseUnitPrice;
             set => SetProperty(ref _warehouseUnitPrice, value);
+        }
+
+        public string WarehouseSearchText
+        {
+            get => _warehouseSearchText;
+            set
+            {
+                if (SetProperty(ref _warehouseSearchText, value))
+                {
+                    ApplyWarehouseFilters();
+                }
+            }
+        }
+
+        public string SelectedWarehouseSortOption
+        {
+            get => _selectedWarehouseSortOption;
+            set
+            {
+                if (SetProperty(ref _selectedWarehouseSortOption, value))
+                {
+                    ApplyWarehouseFilters();
+                }
+            }
+        }
+
+        public string SelectedWarehouseCategoryFilter
+        {
+            get => _selectedWarehouseCategoryFilter;
+            set
+            {
+                if (SetProperty(ref _selectedWarehouseCategoryFilter, value))
+                {
+                    ApplyWarehouseFilters();
+                }
+            }
         }
 
         public bool IsCourierDeliverySelected => NewOrderDeliveryMethod == "Курьер";
@@ -409,6 +647,40 @@ namespace Printinvest_WPF_app.ViewModels
             set => SetProperty(ref _clientsCount, value);
         }
 
+        public bool ShowAdminOrderValidationErrors
+        {
+            get => _showAdminOrderValidationErrors;
+            private set
+            {
+                if (SetProperty(ref _showAdminOrderValidationErrors, value))
+                {
+                    NotifyAdminOrderValidationStateChanged();
+                }
+            }
+        }
+
+        public bool WasLastAdminOrderCreationSuccessful
+        {
+            get => _wasLastAdminOrderCreationSuccessful;
+            private set => SetProperty(ref _wasLastAdminOrderCreationSuccessful, value);
+        }
+
+        public bool IsNewOrderClientNameInvalid => ShowAdminOrderValidationErrors && string.IsNullOrWhiteSpace(NewOrderClientName);
+        public bool IsNewOrderClientEmailInvalid => ShowAdminOrderValidationErrors && !IsValidEmail(NewOrderClientEmail?.Trim());
+        public bool IsNewOrderContactPhoneInvalid => ShowAdminOrderValidationErrors && !IsValidPhoneNumber(NewOrderContactPhone);
+        public bool IsNewOrderDeviceBrandInvalid => ShowAdminOrderValidationErrors && string.IsNullOrWhiteSpace(NewOrderDeviceBrand);
+        public bool IsNewOrderDeviceModelInvalid => ShowAdminOrderValidationErrors && string.IsNullOrWhiteSpace(NewOrderDeviceModel);
+        public bool IsNewOrderProblemDescriptionInvalid => ShowAdminOrderValidationErrors && string.IsNullOrWhiteSpace(NewOrderProblemDescription);
+        public bool IsNewOrderDeliveryAddressInvalid => ShowAdminOrderValidationErrors && IsCourierDeliverySelected && string.IsNullOrWhiteSpace(NewOrderDeliveryAddress);
+        public bool HasAdminOrderValidationErrors =>
+            IsNewOrderClientNameInvalid ||
+            IsNewOrderClientEmailInvalid ||
+            IsNewOrderContactPhoneInvalid ||
+            IsNewOrderDeviceBrandInvalid ||
+            IsNewOrderDeviceModelInvalid ||
+            IsNewOrderProblemDescriptionInvalid ||
+            IsNewOrderDeliveryAddressInvalid;
+
         public ICommand RefreshCommand { get; }
         public ICommand DeleteUserCommand { get; }
         public ICommand SaveUserRoleCommand { get; }
@@ -429,6 +701,8 @@ namespace Printinvest_WPF_app.ViewModels
         public ICommand CancelWarehouseFormCommand { get; }
         public ICommand ResolveWarehouseRequestCommand { get; }
         public ICommand ShowWarehouseRequestsCommand { get; }
+        public ICommand SelectProblemPhotoCommand { get; }
+        public ICommand RemoveProblemPhotoCommand { get; }
 
         public ServiceAdminPanelViewModel()
         {
@@ -442,6 +716,7 @@ namespace Printinvest_WPF_app.ViewModels
             Orders = new ObservableCollection<Order>();
             WarehouseItems = new ObservableCollection<WarehouseItem>();
             WarehouseRequests = new ObservableCollection<WarehouseRequest>();
+            _allWarehouseItems = new List<WarehouseItem>();
             NewUserRole = UserRole.Master;
 
             RefreshCommand = new RelayCommand(LoadData);
@@ -458,24 +733,39 @@ namespace Printinvest_WPF_app.ViewModels
             ShowCreateAdminOrderFormCommand = new RelayCommand(ShowCreateAdminOrderForm);
             ShowEditOrderFormCommand = new RelayCommand(ShowEditOrderForm);
             SaveWarehouseItemCommand = new RelayCommand(SaveWarehouseItem);
-            DeleteWarehouseItemCommand = new RelayCommand(DeleteWarehouseItem);
+            DeleteWarehouseItemCommand = new RelayCommandSec(DeleteWarehouseItem);
             ShowCreateWarehouseFormCommand = new RelayCommand(ShowCreateWarehouseForm);
-            ToggleEditWarehouseItemCommand = new RelayCommand(ToggleEditWarehouseItem);
+            ToggleEditWarehouseItemCommand = new RelayCommandSec(ToggleEditWarehouseItem);
             CancelWarehouseFormCommand = new RelayCommand(CancelWarehouseForm);
             ResolveWarehouseRequestCommand = new RelayCommandSec(ResolveWarehouseRequest);
             ShowWarehouseRequestsCommand = new RelayCommand(ShowWarehouseRequests);
+            SelectProblemPhotoCommand = new RelayCommand(SelectProblemPhoto);
+            RemoveProblemPhotoCommand = new RelayCommand(RemoveProblemPhoto);
 
             ResetNewOrderForm();
             CancelWarehouseForm();
-            LoadData();
+            if (AreRepositoriesReady)
+            {
+                LoadData();
+            }
+            else
+            {
+                ResetDataWhenRepositoriesUnavailable();
+            }
         }
 
         private void LoadData()
         {
+            if (!AreRepositoriesReady)
+            {
+                ResetDataWhenRepositoriesUnavailable();
+                return;
+            }
+
             Users = new ObservableCollection<User>(_userRepository.GetAll());
             Masters = new ObservableCollection<User>(_userRepository.GetByRole(UserRole.Master));
             Orders = new ObservableCollection<Order>(_orderRepository.GetAll());
-            WarehouseItems = new ObservableCollection<WarehouseItem>(_warehouseRepository.GetAll());
+            LoadWarehouseItems();
             WarehouseRequests = new ObservableCollection<WarehouseRequest>(
                 _warehouseRequestRepository.GetAll()
                     .Where(request => request.Status != "Обработано"));
@@ -485,6 +775,119 @@ namespace Printinvest_WPF_app.ViewModels
             CompletedOrdersCount = Orders.Count(order => order.Status == OrderStatus.Completed);
             MastersCount = Users.Count(user => user.Role == UserRole.Master);
             ClientsCount = Users.Count(user => user.Role == UserRole.Client);
+        }
+
+        private void ResetDataWhenRepositoriesUnavailable()
+        {
+            Users = new ObservableCollection<User>();
+            Masters = new ObservableCollection<User>();
+            Orders = new ObservableCollection<Order>();
+            WarehouseItems = new ObservableCollection<WarehouseItem>();
+            WarehouseRequests = new ObservableCollection<WarehouseRequest>();
+            _allWarehouseItems = new List<WarehouseItem>();
+
+            if (WarehouseCategoryFilters.Count == 0)
+            {
+                WarehouseCategoryFilters.Add("Все категории");
+            }
+
+            _selectedWarehouseCategoryFilter = WarehouseCategoryFilters[0];
+            OnPropertyChanged(nameof(SelectedWarehouseCategoryFilter));
+
+            if (string.IsNullOrWhiteSpace(_selectedWarehouseSortOption) && WarehouseSortOptions.Count > 0)
+            {
+                _selectedWarehouseSortOption = WarehouseSortOptions[0];
+                OnPropertyChanged(nameof(SelectedWarehouseSortOption));
+            }
+
+            TotalOrdersCount = 0;
+            ActiveOrdersCount = 0;
+            CompletedOrdersCount = 0;
+            MastersCount = 0;
+            ClientsCount = 0;
+        }
+
+        private void LoadWarehouseItems()
+        {
+            _allWarehouseItems = _warehouseRepository.GetAll();
+
+            var selectedCategory = SelectedWarehouseCategoryFilter;
+            WarehouseCategoryFilters.Clear();
+            WarehouseCategoryFilters.Add("Все категории");
+
+            foreach (var category in _allWarehouseItems
+                .Select(item => item.Category)
+                .Where(category => !string.IsNullOrWhiteSpace(category))
+                .Distinct()
+                .OrderBy(category => category))
+            {
+                WarehouseCategoryFilters.Add(category);
+            }
+
+            if (string.IsNullOrWhiteSpace(selectedCategory) || !WarehouseCategoryFilters.Contains(selectedCategory))
+            {
+                SelectedWarehouseCategoryFilter = WarehouseCategoryFilters[0];
+            }
+            else
+            {
+                _selectedWarehouseCategoryFilter = selectedCategory;
+                OnPropertyChanged(nameof(SelectedWarehouseCategoryFilter));
+            }
+
+            if (string.IsNullOrWhiteSpace(SelectedWarehouseSortOption))
+            {
+                SelectedWarehouseSortOption = WarehouseSortOptions[0];
+            }
+            else
+            {
+                ApplyWarehouseFilters();
+            }
+        }
+
+        private void ApplyWarehouseFilters()
+        {
+            IEnumerable<WarehouseItem> items = _allWarehouseItems ?? new List<WarehouseItem>();
+
+            if (!string.IsNullOrWhiteSpace(WarehouseSearchText))
+            {
+                var search = WarehouseSearchText.ToLowerInvariant();
+                items = items.Where(item =>
+                    (item.Name?.ToLowerInvariant().Contains(search) ?? false) ||
+                    (item.Category?.ToLowerInvariant().Contains(search) ?? false));
+            }
+
+            if (!string.IsNullOrWhiteSpace(SelectedWarehouseCategoryFilter) &&
+                SelectedWarehouseCategoryFilter != "Все категории")
+            {
+                items = items.Where(item => item.Category == SelectedWarehouseCategoryFilter);
+            }
+
+            switch (SelectedWarehouseSortOption)
+            {
+                case "Сначала меньше остаток":
+                    items = items.OrderBy(item => item.Quantity).ThenBy(item => item.Name);
+                    break;
+                case "Сначала больше остаток":
+                    items = items.OrderByDescending(item => item.Quantity).ThenBy(item => item.Name);
+                    break;
+                case "Сначала дешевле":
+                    items = items.OrderBy(item => item.UnitPrice).ThenBy(item => item.Name);
+                    break;
+                case "Сначала дороже":
+                    items = items.OrderByDescending(item => item.UnitPrice).ThenBy(item => item.Name);
+                    break;
+                default:
+                    items = items.OrderBy(item => item.Name);
+                    break;
+            }
+
+            var selectedId = SelectedWarehouseItem?.Id;
+            WarehouseItems = new ObservableCollection<WarehouseItem>(items.ToList());
+
+            if (selectedId.HasValue)
+            {
+                SelectedWarehouseItem = WarehouseItems.FirstOrDefault(item => item.Id == selectedId.Value);
+            }
         }
 
         private void CreateUser()
@@ -585,7 +988,39 @@ namespace Printinvest_WPF_app.ViewModels
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(SelectedUser.Name) || string.IsNullOrWhiteSpace(SelectedUser.Login))
+            SelectedUser.Login = SelectedUser.Login?.Trim();
+            SelectedUser.Name = SelectedUser.Name?.Trim();
+
+            if (SelectedUserRole == UserRole.Client)
+            {
+                var fullName = BuildSelectedClientFullName();
+                SelectedUser.Name = fullName;
+                SelectedUser.Email = NormalizeEmail(SelectedUserEmail);
+
+                if (string.IsNullOrWhiteSpace(SelectedUserLastName) ||
+                    string.IsNullOrWhiteSpace(SelectedUserFirstName) ||
+                    string.IsNullOrWhiteSpace(SelectedUser.Login) ||
+                    string.IsNullOrWhiteSpace(SelectedUser.Email))
+                {
+                    MessageBox.Show("Для клиента заполните фамилию, имя, логин и электронную почту.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (!IsValidEmail(SelectedUser.Email))
+                {
+                    MessageBox.Show("Укажите корректный адрес электронной почты клиента.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var existingEmailUser = _userRepository.GetAll()
+                    .FirstOrDefault(user => string.Equals(user.Email, SelectedUser.Email, StringComparison.OrdinalIgnoreCase));
+                if (existingEmailUser != null && existingEmailUser.Id != SelectedUser.Id)
+                {
+                    MessageBox.Show("Пользователь с такой электронной почтой уже существует.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+            else if (string.IsNullOrWhiteSpace(SelectedUser.Name) || string.IsNullOrWhiteSpace(SelectedUser.Login))
             {
                 MessageBox.Show("Name and login are required.", "Validation error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -652,6 +1087,8 @@ namespace Printinvest_WPF_app.ViewModels
 
             SelectedOrder.AssignedMasterId = SelectedMaster?.Id;
             SelectedOrder.AssignedMaster = SelectedMaster;
+            SelectedOrder.MasterWorkCost = SelectedOrderMasterWorkCost;
+            SelectedOrder.EstimatedRepairCost = SelectedOrder.EstimatedPartsCost + SelectedOrder.MasterWorkCost;
             SelectedOrder.Status = GetAutoOrderStatusForAdminSave();
 
             _orderRepository.Update(SelectedOrder);
@@ -697,24 +1134,43 @@ namespace Printinvest_WPF_app.ViewModels
             LoadData();
         }
 
-        private void CreateAdminOrder()
+        private void SelectProblemPhoto()
         {
-            if (string.IsNullOrWhiteSpace(NewOrderClientName) ||
-                string.IsNullOrWhiteSpace(NewOrderClientEmail) ||
-                string.IsNullOrWhiteSpace(NewOrderContactPhone) ||
-                string.IsNullOrWhiteSpace(NewOrderDeviceType) ||
-                string.IsNullOrWhiteSpace(NewOrderDeviceBrand) ||
-                string.IsNullOrWhiteSpace(NewOrderDeviceModel) ||
-                string.IsNullOrWhiteSpace(NewOrderProblemDescription) ||
-                string.IsNullOrWhiteSpace(NewOrderDeliveryMethod))
+            var openFileDialog = new OpenFileDialog
             {
-                MessageBox.Show("Заполните имя клиента, email, телефон, устройство и неисправность.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Filter = "Image files (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg|All files (*.*)|*.*"
+            };
+
+            if (openFileDialog.ShowDialog() != true)
+            {
                 return;
             }
 
-            if (IsCourierDeliverySelected && string.IsNullOrWhiteSpace(NewOrderDeliveryAddress))
+            NewOrderProblemPhoto = File.ReadAllBytes(openFileDialog.FileName);
+            NewOrderProblemPhotoName = Path.GetFileName(openFileDialog.FileName);
+        }
+
+        private void RemoveProblemPhoto()
+        {
+            NewOrderProblemPhoto = null;
+            NewOrderProblemPhotoName = string.Empty;
+        }
+
+        private void CreateAdminOrder()
+        {
+            WasLastAdminOrderCreationSuccessful = false;
+            ShowAdminOrderValidationErrors = true;
+            NotifyAdminOrderValidationStateChanged();
+
+            if (string.IsNullOrWhiteSpace(NewOrderDeviceType) ||
+                string.IsNullOrWhiteSpace(NewOrderDeliveryMethod) ||
+                HasAdminOrderValidationErrors)
             {
-                MessageBox.Show("Укажите адрес для курьера.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(
+                    "Заполните обязательные поля заявки. Для email и телефона укажите корректные значения, а для курьерской доставки заполните адрес.",
+                    "Ошибка проверки",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
                 return;
             }
 
@@ -750,6 +1206,8 @@ namespace Printinvest_WPF_app.ViewModels
                 DeliveryAddress = IsCourierDeliverySelected ? NewOrderDeliveryAddress.Trim() : null,
                 ContactPhone = NewOrderContactPhone.Trim(),
                 ClientComment = string.IsNullOrWhiteSpace(NewOrderClientComment) ? null : NewOrderClientComment.Trim(),
+                ProblemPhoto = NewOrderProblemPhoto,
+                PaymentMethod = NewOrderPaymentMethod,
                 Status = OrderStatus.Created,
                 CreatedAt = DateTime.Now
             };
@@ -759,11 +1217,14 @@ namespace Printinvest_WPF_app.ViewModels
             ResetNewOrderForm();
             LoadData();
             SelectedOrder = Orders.FirstOrDefault(item => item.Id == order.Id);
+            WasLastAdminOrderCreationSuccessful = true;
             MessageBox.Show("Заявка успешно оформлена администратором.", "Готово", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void ResetNewOrderForm()
         {
+            WasLastAdminOrderCreationSuccessful = false;
+            ShowAdminOrderValidationErrors = false;
             NewOrderClientName = string.Empty;
             NewOrderClientEmail = string.Empty;
             NewOrderContactPhone = string.Empty;
@@ -774,6 +1235,9 @@ namespace Printinvest_WPF_app.ViewModels
             NewOrderDeliveryMethod = DeliveryMethods[0];
             NewOrderDeliveryAddress = string.Empty;
             NewOrderClientComment = string.Empty;
+            NewOrderPaymentMethod = PaymentMethods[0];
+            NewOrderProblemPhoto = null;
+            NewOrderProblemPhotoName = string.Empty;
         }
 
         private void PopulateWarehouseForm(WarehouseItem item)
@@ -798,15 +1262,17 @@ namespace Printinvest_WPF_app.ViewModels
             OpenWarehouseItemWindow(null);
         }
 
-        private void ToggleEditWarehouseItem()
+        private void ToggleEditWarehouseItem(object parameter)
         {
-            if (SelectedWarehouseItem == null)
+            var item = parameter as WarehouseItem ?? SelectedWarehouseItem;
+            if (item == null)
             {
                 MessageBox.Show("Выберите позицию склада.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            OpenWarehouseItemWindow(SelectedWarehouseItem);
+            SelectedWarehouseItem = item;
+            OpenWarehouseItemWindow(item);
         }
 
         private void SaveWarehouseItem()
@@ -850,15 +1316,17 @@ namespace Printinvest_WPF_app.ViewModels
             CancelWarehouseForm();
         }
 
-        private void DeleteWarehouseItem()
+        private void DeleteWarehouseItem(object parameter)
         {
-            if (SelectedWarehouseItem == null)
+            var item = parameter as WarehouseItem ?? SelectedWarehouseItem;
+            if (item == null)
             {
                 MessageBox.Show("Выберите позицию склада.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            _warehouseRepository.Delete(SelectedWarehouseItem.Id);
+            SelectedWarehouseItem = item;
+            _warehouseRepository.Delete(item.Id);
             LoadData();
             CancelWarehouseForm();
         }
@@ -945,6 +1413,56 @@ namespace Printinvest_WPF_app.ViewModels
             SelectedUserSpecializesOfficeEquipment = MasterAssignmentService.HasSpecialization(user, MasterAssignmentService.OfficeEquipmentSpecialization);
         }
 
+        private void LoadSelectedClientFields(User user)
+        {
+            var nameParts = SplitFullName(user?.Name);
+            SelectedUserLastName = nameParts[0];
+            SelectedUserFirstName = nameParts[1];
+            SelectedUserMiddleName = nameParts[2];
+            SelectedUserEmail = user?.Email ?? string.Empty;
+        }
+
+        private void SyncSelectedUserPersonalFields()
+        {
+            if (_isLoadingSelectedUserData || SelectedUser == null)
+            {
+                return;
+            }
+
+            if (SelectedUserRole == UserRole.Client)
+            {
+                SelectedUser.Name = BuildSelectedClientFullName();
+                SelectedUser.Email = SelectedUserEmail;
+            }
+        }
+
+        private string BuildSelectedClientFullName()
+        {
+            return string.Join(" ", new[] { SelectedUserLastName, SelectedUserFirstName, SelectedUserMiddleName }
+                .Where(part => !string.IsNullOrWhiteSpace(part))
+                .Select(part => part.Trim()));
+        }
+
+        private static string[] SplitFullName(string fullName)
+        {
+            var parts = (fullName ?? string.Empty)
+                .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            return new[]
+            {
+                parts.Length > 0 ? parts[0] : string.Empty,
+                parts.Length > 1 ? parts[1] : string.Empty,
+                parts.Length > 2 ? string.Join(" ", parts.Skip(2)) : string.Empty
+            };
+        }
+
+        private static string NormalizeEmail(string email)
+        {
+            return string.IsNullOrWhiteSpace(email)
+                ? string.Empty
+                : email.Trim().ToLowerInvariant();
+        }
+
         private void AssignBestMaster(Order order)
         {
             var master = MasterAssignmentService.FindBestMaster(
@@ -1014,6 +1532,47 @@ namespace Printinvest_WPF_app.ViewModels
                 ? OrderStatus.InProgress
                 : OrderStatus.Created;
             _orderRepository.Update(order);
+        }
+
+        private void NotifyAdminOrderValidationStateChanged()
+        {
+            OnPropertyChanged(nameof(IsNewOrderClientNameInvalid));
+            OnPropertyChanged(nameof(IsNewOrderClientEmailInvalid));
+            OnPropertyChanged(nameof(IsNewOrderContactPhoneInvalid));
+            OnPropertyChanged(nameof(IsNewOrderDeviceBrandInvalid));
+            OnPropertyChanged(nameof(IsNewOrderDeviceModelInvalid));
+            OnPropertyChanged(nameof(IsNewOrderProblemDescriptionInvalid));
+            OnPropertyChanged(nameof(IsNewOrderDeliveryAddressInvalid));
+            OnPropertyChanged(nameof(HasAdminOrderValidationErrors));
+        }
+
+        private static bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return false;
+            }
+
+            try
+            {
+                var parsedEmail = new MailAddress(email);
+                return string.Equals(parsedEmail.Address, email, StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static bool IsValidPhoneNumber(string phoneNumber)
+        {
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+            {
+                return false;
+            }
+
+            var normalizedPhone = new string(phoneNumber.Where(char.IsDigit).ToArray());
+            return Regex.IsMatch(normalizedPhone, @"^(?:375|80)(17|25|29|33|44)\d{7}$");
         }
 
         private string GenerateUniqueClientLogin(string name, string email)

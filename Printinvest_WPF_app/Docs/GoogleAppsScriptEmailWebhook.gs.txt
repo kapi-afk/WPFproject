@@ -1,0 +1,23 @@
+function doPost(e) {
+  var data = JSON.parse(e.postData.contents || "{}");
+
+  if (!data.to || !data.subject || !data.text) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: false, error: "Missing required fields." }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  GmailApp.sendEmail(
+    data.to,
+    data.subject,
+    data.text,
+    {
+      name: data.fromName || "Repair Service",
+      replyTo: data.fromEmail || ""
+    }
+  );
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}

@@ -17,7 +17,7 @@
                        FontWeight="Bold"
                        Margin="0,0,0,18"/>
 
-            <TextBlock Text="Описание неисправности" Margin="0,0,0,4"/>
+            <TextBlock Text="Описание проблемы" Margin="0,0,0,4"/>
             <TextBlock Text="{Binding SelectedOrder.ProblemDescription}"
                        TextWrapping="Wrap"
                        Margin="0,0,0,12"/>
@@ -32,19 +32,41 @@
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="Телефон клиента" Margin="0,0,0,4"/>
                     <TextBlock Text="{Binding SelectedOrder.ContactPhone}" Margin="0,0,0,12"/>
+
                     <TextBlock Text="Способ передачи" Margin="0,0,0,4"/>
                     <TextBlock Text="{Binding SelectedOrder.DeliveryMethod, TargetNullValue=Самовывоз}" Margin="0,0,0,12"/>
+
+                    <TextBlock Text="Способ оплаты" Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding SelectedOrder.PaymentMethodDisplay}" Margin="0,0,0,12"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2">
                     <TextBlock Text="Email клиента" Margin="0,0,0,4"/>
                     <TextBlock Text="{Binding SelectedOrder.User.Email, TargetNullValue=Не указан}" Margin="0,0,0,12"/>
+
                     <TextBlock Text="Адрес курьера" Margin="0,0,0,4"/>
                     <TextBlock Text="{Binding SelectedOrder.DeliveryAddress, TargetNullValue=Не требуется}"
                                TextWrapping="Wrap"
                                Margin="0,0,0,12"/>
+
+                    <TextBlock Text="Статус оплаты" Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding SelectedOrder.PaymentStatusText}" Margin="0,0,0,12"/>
                 </StackPanel>
             </Grid>
+
+            <TextBlock Text="Суммы по заявке" Margin="0,0,0,4"/>
+            <TextBlock Text="Стоимость деталей" Margin="0,0,0,4"/>
+            <TextBlock Text="{Binding SelectedOrder.EstimatedPartsCost, StringFormat={}{0:N2} BYN}"
+                       Margin="0,0,0,12"/>
+
+            <TextBlock Text="Стоимость работы мастера" Margin="0,0,0,4"/>
+            <TextBlock Text="{Binding SelectedOrder.MasterWorkCost, StringFormat={}{0:N2} BYN}"
+                       Margin="0,0,0,12"/>
+
+            <TextBlock Text="Предварительная сумма" Margin="0,0,0,4"/>
+            <TextBlock Text="{Binding SelectedOrder.EstimatedRepairCost, StringFormat={}{0:N2} BYN}"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,12"/>
 
             <TextBlock Text="Назначить мастера" Margin="0,0,0,4"/>
             <ComboBox ItemsSource="{Binding Masters}"

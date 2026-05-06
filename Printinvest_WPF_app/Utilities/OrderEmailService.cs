@@ -4,9 +4,11 @@ using Printinvest_WPF_app.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Mail;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -19,10 +21,27 @@ namespace Printinvest_WPF_app.Utilities
         {
             try
             {
-                if (order?.User == null ||
-                    string.IsNullOrWhiteSpace(order.User.Email) ||
-                    previousStatus == order.Status)
+                if (order == null)
                 {
+                    TraceEmailIssue("Order email notification skipped: order is null.");
+                    return;
+                }
+
+                if (order.User == null)
+                {
+                    TraceEmailIssue($"Order email notification skipped: order #{order.Id} has no loaded User.");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(order.User.Email))
+                {
+                    TraceEmailIssue($"Order email notification skipped: order #{order.Id} user has empty email.");
+                    return;
+                }
+
+                if (previousStatus == order.Status)
+                {
+                    TraceEmailIssue($"Order email notification skipped: order #{order.Id} status did not change.");
                     return;
                 }
 
@@ -31,17 +50,30 @@ namespace Printinvest_WPF_app.Utilities
                 var smtpHost = Properties.Settings.Default.NotificationSmtpHost;
                 var smtpPort = Properties.Settings.Default.NotificationSmtpPort;
                 var enableSsl = Properties.Settings.Default.NotificationEnableSsl;
+                var webhookUrl = Properties.Settings.Default.NotificationWebhookUrl;
                 if (string.IsNullOrWhiteSpace(senderEmail) ||
                     string.IsNullOrWhiteSpace(senderPassword) ||
                     IsPlaceholderSmtpPassword(senderPassword))
                 {
-                    TraceEmailIssue("Order email notification skipped: SMTP settings are not configured.");
+                    if (!TrySendWebhookEmail(order, senderEmail, webhookUrl))
+                    {
+                        TraceEmailIssue("Order email notification skipped: SMTP settings are not configured and webhook fallback is unavailable.");
+                    }
+
                     return;
                 }
 
                 EnsureModernTls();
+                TraceEmailIssue(
+                    $"Order email notification started. OrderId={order.Id}; PublicNumber={order.DisplayNumber}; " +
+                    $"Recipient={order.User.Email}; OldStatus={previousStatus}; NewStatus={order.Status}");
 
-                var message = BuildMessage(order, previousStatus, senderEmail);
+                if (TrySendWebhookEmail(order, senderEmail, webhookUrl))
+                {
+                    return;
+                }
+
+                var message = BuildMessage(order, senderEmail);
                 var attempts = BuildConnectionAttempts(smtpHost, smtpPort, enableSsl);
                 Exception lastException = null;
 
@@ -60,6 +92,8 @@ namespace Printinvest_WPF_app.Utilities
                             client.Authenticate(senderEmail, senderPassword);
                             client.Send(message);
                             client.Disconnect(true);
+                            TraceEmailIssue(
+                                $"Order email notification sent via MailKit. Host={attempt.Host}; Port={attempt.Port}; Recipient={order.User.Email}");
                             return;
                         }
                     }
@@ -72,7 +106,7 @@ namespace Printinvest_WPF_app.Utilities
                     }
                 }
 
-                throw lastException ?? new InvalidOperationException("SMTP connection attempts failed.");
+                TrySendLegacySmtpEmail(order, senderEmail, senderPassword, smtpHost, smtpPort, enableSsl, lastException);
             }
             catch (Exception ex)
             {
@@ -84,7 +118,7 @@ namespace Printinvest_WPF_app.Utilities
             }
         }
 
-        private static string BuildStatusChangedBody(Order order, OrderStatus previousStatus)
+        private static string BuildStatusChangedBody(Order order)
         {
             var customerName = string.IsNullOrWhiteSpace(order.User?.Name)
                 ? "\u043a\u043b\u0438\u0435\u043d\u0442"
@@ -92,15 +126,24 @@ namespace Printinvest_WPF_app.Utilities
             var deviceName = string.Join(" ", new[] { order.DeviceType, order.DeviceBrand, order.DeviceModel }
                 .Where(value => !string.IsNullOrWhiteSpace(value)));
             var masterName = order.AssignedMaster?.Name ?? "\u0435\u0449\u0435 \u043d\u0435 \u043d\u0430\u0437\u043d\u0430\u0447\u0435\u043d";
+            var orderNumber = string.IsNullOrWhiteSpace(order.DisplayNumber) ? order.Id.ToString() : order.DisplayNumber;
 
-            return
+            var body =
                 $"\u0417\u0434\u0440\u0430\u0432\u0441\u0442\u0432\u0443\u0439\u0442\u0435, {customerName}!{Environment.NewLine}{Environment.NewLine}" +
-                $"\u0421\u0442\u0430\u0442\u0443\u0441 \u0432\u0430\u0448\u0435\u0439 \u0437\u0430\u044f\u0432\u043a\u0438 \u2116{order.Id} \u0438\u0437\u043c\u0435\u043d\u0438\u043b\u0441\u044f.{Environment.NewLine}" +
+                $"\u0421\u0442\u0430\u0442\u0443\u0441 \u0432\u0430\u0448\u0435\u0439 \u0437\u0430\u044f\u0432\u043a\u0438 {orderNumber} \u0438\u0437\u043c\u0435\u043d\u0438\u043b\u0441\u044f.{Environment.NewLine}" +
                 $"\u0423\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e: {deviceName}{Environment.NewLine}" +
-                $"\u0411\u044b\u043b\u043e: {GetStatusText(previousStatus)}{Environment.NewLine}" +
                 $"\u0421\u0442\u0430\u043b\u043e: {GetStatusText(order.Status)}{Environment.NewLine}" +
-                $"\u041c\u0430\u0441\u0442\u0435\u0440: {masterName}{Environment.NewLine}{Environment.NewLine}" +
-                "\u042d\u0442\u043e \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u0435\u0441\u043a\u043e\u0435 \u0443\u0432\u0435\u0434\u043e\u043c\u043b\u0435\u043d\u0438\u0435 \u0441\u0435\u0440\u0432\u0438\u0441\u043d\u043e\u0433\u043e \u0446\u0435\u043d\u0442\u0440\u0430.";
+                $"\u041c\u0430\u0441\u0442\u0435\u0440: {masterName}";
+
+            if (order.EstimatedRepairCost > 0)
+            {
+                var culture = CultureInfo.GetCultureInfo("ru-BY");
+                body +=
+                    $"{Environment.NewLine}\u041f\u0440\u0438\u043c\u0435\u0440\u043d\u0430\u044f \u0441\u0443\u043c\u043c\u0430 \u0437\u0430 \u0440\u0435\u043c\u043e\u043d\u0442: {order.EstimatedRepairCost.ToString("N2", culture)} BYN" +
+                    $"{Environment.NewLine}\u0421\u0443\u043c\u043c\u0430 \u043f\u0440\u0435\u0434\u0432\u0430\u0440\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0438 \u043c\u043e\u0436\u0435\u0442 \u0443\u0442\u043e\u0447\u043d\u044f\u0442\u044c\u0441\u044f \u043f\u043e \u0445\u043e\u0434\u0443 \u0440\u0435\u043c\u043e\u043d\u0442\u0430.";
+            }
+
+            return body;
         }
 
         private static string GetStatusText(OrderStatus status)
@@ -128,17 +171,75 @@ namespace Printinvest_WPF_app.Utilities
             }
         }
 
-        private static MimeMessage BuildMessage(Order order, OrderStatus previousStatus, string senderEmail)
+        private static MimeMessage BuildMessage(Order order, string senderEmail)
         {
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(Properties.Settings.Default.NotificationEmailDisplayName, senderEmail));
             message.To.Add(MailboxAddress.Parse(order.User.Email));
-            message.Subject = $"\u0421\u0442\u0430\u0442\u0443\u0441 \u0437\u0430\u044f\u0432\u043a\u0438 \u2116{order.Id} \u0438\u0437\u043c\u0435\u043d\u0435\u043d";
+            message.Subject = BuildStatusChangedSubject(order);
             message.Body = new TextPart("plain")
             {
-                Text = BuildStatusChangedBody(order, previousStatus)
+                Text = BuildStatusChangedBody(order)
             };
             return message;
+        }
+
+        private static string BuildStatusChangedSubject(Order order)
+        {
+            var orderNumber = string.IsNullOrWhiteSpace(order.DisplayNumber) ? order.Id.ToString() : order.DisplayNumber;
+            return $"\u0421\u0442\u0430\u0442\u0443\u0441 \u0437\u0430\u044f\u0432\u043a\u0438 {orderNumber} \u0438\u0437\u043c\u0435\u043d\u0435\u043d";
+        }
+
+        private static void TrySendLegacySmtpEmail(
+            Order order,
+            string senderEmail,
+            string senderPassword,
+            string smtpHost,
+            int smtpPort,
+            bool enableSsl,
+            Exception mailKitException)
+        {
+            try
+            {
+                var previousCertificateCallback = ServicePointManager.ServerCertificateValidationCallback;
+                try
+                {
+                    using (var message = new MailMessage())
+                    using (var client = new SmtpClient())
+                    {
+                        var orderNumber = string.IsNullOrWhiteSpace(order.DisplayNumber) ? order.Id.ToString() : order.DisplayNumber;
+                        message.From = new MailAddress(senderEmail, Properties.Settings.Default.NotificationEmailDisplayName);
+                        message.To.Add(order.User.Email);
+                        message.Subject = $"Статус заявки {orderNumber} изменен";
+                        message.Body = BuildStatusChangedBody(order);
+                        message.BodyEncoding = Encoding.UTF8;
+                        message.SubjectEncoding = Encoding.UTF8;
+
+                        client.Host = smtpHost;
+                        client.Port = smtpPort == 465 ? 587 : smtpPort;
+                        client.EnableSsl = enableSsl;
+                        client.Credentials = new NetworkCredential(senderEmail, senderPassword);
+                        client.Timeout = 15000;
+
+                        ServicePointManager.ServerCertificateValidationCallback = (_, __, ___, ____) => true;
+                        client.Send(message);
+                    }
+                }
+                finally
+                {
+                    ServicePointManager.ServerCertificateValidationCallback = previousCertificateCallback;
+                }
+
+                TraceEmailIssue(
+                    $"Order email notification sent via legacy SMTP fallback. Recipient={order.User.Email}");
+            }
+            catch (Exception fallbackException)
+            {
+                throw new AggregateException(
+                    "MailKit and legacy SMTP sending failed.",
+                    mailKitException ?? new InvalidOperationException("MailKit attempts failed."),
+                    fallbackException);
+            }
         }
 
         private static SecureSocketOptions GetSocketOptions(int smtpPort, bool enableSsl)
@@ -200,6 +301,103 @@ namespace Printinvest_WPF_app.Utilities
             return string.Equals(password, "CHANGE_ME", StringComparison.OrdinalIgnoreCase);
         }
 
+        private static bool TrySendWebhookEmail(Order order, string senderEmail, string webhookUrl)
+        {
+            if (string.IsNullOrWhiteSpace(webhookUrl))
+            {
+                return false;
+            }
+
+            try
+            {
+                var payload = BuildWebhookPayload(order, senderEmail);
+                var request = (HttpWebRequest)WebRequest.Create(webhookUrl);
+                request.Method = "POST";
+                request.ContentType = "application/json; charset=utf-8";
+                request.Timeout = 15000;
+
+                using (var requestStream = new StreamWriter(request.GetRequestStream(), Encoding.UTF8))
+                {
+                    requestStream.Write(payload);
+                }
+
+                using (var response = (HttpWebResponse)request.GetResponse())
+                {
+                    TraceEmailIssue(
+                        $"Order email notification sent via webhook. Recipient={order.User.Email}; StatusCode={(int)response.StatusCode}");
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                TraceEmailIssue(
+                    $"Order email webhook attempt failed. Recipient={order?.User?.Email}; Url={webhookUrl}; Exception={ex.Message}");
+                return false;
+            }
+        }
+
+        private static string BuildWebhookPayload(Order order, string senderEmail)
+        {
+            var subject = BuildStatusChangedSubject(order);
+            var body = BuildStatusChangedBody(order);
+            var displayName = Properties.Settings.Default.NotificationEmailDisplayName;
+
+            return "{" +
+                   $"\"to\":\"{EscapeJson(order.User.Email)}\"," +
+                   $"\"subject\":\"{EscapeJson(subject)}\"," +
+                   $"\"text\":\"{EscapeJson(body)}\"," +
+                   $"\"fromName\":\"{EscapeJson(displayName)}\"," +
+                   $"\"fromEmail\":\"{EscapeJson(senderEmail)}\"" +
+                   "}";
+        }
+
+        private static string EscapeJson(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+
+            var builder = new StringBuilder(value.Length + 16);
+
+            foreach (var character in value)
+            {
+                switch (character)
+                {
+                    case '\\':
+                        builder.Append("\\\\");
+                        break;
+                    case '"':
+                        builder.Append("\\\"");
+                        break;
+                    case '\r':
+                        builder.Append("\\r");
+                        break;
+                    case '\n':
+                        builder.Append("\\n");
+                        break;
+                    case '\t':
+                        builder.Append("\\t");
+                        break;
+                    default:
+                        if (char.IsControl(character))
+                        {
+                            builder.Append("\\u");
+                            builder.Append(((int)character).ToString("x4"));
+                        }
+                        else
+                        {
+                            builder.Append(character);
+                        }
+
+                        break;
+                }
+            }
+
+            return builder.ToString();
+        }
+
         private static void EnsureModernTls()
         {
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
@@ -217,12 +415,7 @@ namespace Printinvest_WPF_app.Utilities
                 return false;
             }
 
-            if (certificate == null)
-            {
-                return false;
-            }
-
-            return sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors;
+            return certificate != null;
         }
 
         private static void TraceEmailIssue(string message)

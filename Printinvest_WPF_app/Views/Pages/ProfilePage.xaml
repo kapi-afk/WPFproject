@@ -9,581 +9,706 @@
       Title="ProfilePage"
       Background="{DynamicResource ContentBackgroundBrush}">
 
-    <Page.DataContext>
-        <vm:ServiceClientProfileViewModel />
-    </Page.DataContext>
-
     <Page.Resources>
         <conv:OrderStatusConverter x:Key="OrderStatusConverter" />
+        <Style x:Key="OrderSingleLineTextBoxStyle"
+               TargetType="{x:Type TextBox}"
+               BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        </Style>
+        <Style x:Key="OrderComboBoxStyle"
+               TargetType="{x:Type ComboBox}"
+               BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        </Style>
+        <Style x:Key="RequiredOrderTextBoxStyle"
+               TargetType="{x:Type TextBox}"
+               BasedOn="{StaticResource OrderSingleLineTextBoxStyle}">
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="True">
+                    <Setter Property="BorderBrush" Value="#D13438"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="RequiredOrderMultiLineTextBoxStyle"
+               TargetType="{x:Type TextBox}"
+               BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="True">
+                    <Setter Property="BorderBrush" Value="#D13438"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="RequiredOrderComboBoxStyle"
+               TargetType="{x:Type ComboBox}"
+               BasedOn="{StaticResource OrderComboBoxStyle}">
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="True">
+                    <Setter Property="BorderBrush" Value="#D13438"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="ValidationMessageStyle"
+               TargetType="{x:Type TextBlock}">
+            <Setter Property="Foreground" Value="#C62828"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,4,0,10"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
     </Page.Resources>
 
     <Grid>
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="4,12,6,24"
-              MaxWidth="1500"
-              HorizontalAlignment="Center">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="320"/>
-                <ColumnDefinition Width="16"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <Grid Width="{Binding ViewportWidth, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                  MaxWidth="1180"
+                  Margin="16,16,18,28"
+                  HorizontalAlignment="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.38*"
+                                          MinWidth="340"/>
+                    <ColumnDefinition Width="24"/>
+                    <ColumnDefinition Width="0.62*"
+                                          MinWidth="520"/>
+                </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Row="0"
-                       Grid.Column="0"
-                       Text="Профиль клиента"
-                       FontSize="26"
-                       FontWeight="Bold"
-                       Foreground="{DynamicResource TextBrush}"
-                       Margin="0,0,0,18"/>
+                <TextBlock Grid.Row="0"
+                               Grid.Column="0"
+                               Grid.ColumnSpan="3"
+                               Text="Профиль клиента"
+                               Style="{StaticResource PageTitleStyle}"/>
 
-            <Border Grid.Row="1"
-                    Grid.Column="0"
-                    Background="#F8FAFC"
-                    BorderBrush="#D9E2EC"
-                    BorderThickness="1"
-                    CornerRadius="18"
-                    Padding="24"
-                    VerticalAlignment="Top">
-                <StackPanel>
-                    <StackPanel HorizontalAlignment="Center" Margin="0,0,0,22">
-                        <Border Width="118"
-                                Height="118"
-                                CornerRadius="59"
-                                BorderBrush="#CBD5E1"
-                                BorderThickness="1.5"
-                                Background="White">
-                                
+                <Border
+                            Grid.Column="0"
+                            Style="{StaticResource CardStyle}"
+                            Padding="28"
+                            MaxWidth="395"
+                            VerticalAlignment="Top"
+                            Margin="0,55,0,0"
+                            Grid.RowSpan="2">
+                    <StackPanel Margin="0,19,0,0">
+                        <StackPanel HorizontalAlignment="Center" Margin="0,0,0,22">
+                            <Border Width="118"
+                                        Height="118"
+                                        CornerRadius="59"
+                                        BorderBrush="{DynamicResource CardBorderBrush}"
+                                        BorderThickness="1.5"
+                                        Background="{DynamicResource InputBackgroundBrush}">
                             </Border>
 
-                        <Button Content="{Binding PhotoActionText}"
-                                Command="{Binding ChangePhotoCommand}"
-                                Width="132"
-                                Margin="0,14,0,0"
-                                HorizontalAlignment="Center"/>
-                    </StackPanel>
-
-                    <TextBlock Text="Основные данные"
-                               FontSize="18"
-                               FontWeight="Bold"
-                               Foreground="{DynamicResource TextBrush}"
-                               Margin="0,0,0,14"/>
-
-                    <Border Background="White"
-                            BorderBrush="#E2E8F0"
-                            BorderThickness="1"
-                            CornerRadius="12"
-                            Padding="16">
-                        <StackPanel>
-                            <TextBlock Text="Имя"
-                                       FontSize="12"
-                                       Foreground="#64748B"
-                                       Margin="0,0,0,4"/>
-                            <TextBlock Text="{Binding CurrentUser.Name}"
-                                       FontSize="18"
-                                       FontWeight="SemiBold"
-                                       Margin="0,0,0,12"
-                                       Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}"/>
-                            <TextBox Text="{Binding CurrentUser.Name, UpdateSourceTrigger=PropertyChanged}"
-                                     FontSize="16"
-                                     Margin="0,0,0,12"
-                                     Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}"/>
-
-                            <TextBlock Text="Логин"
-                                       FontSize="12"
-                                       Foreground="#64748B"
-                                       Margin="0,0,0,4"/>
-                            <TextBlock Text="{Binding CurrentUser.Login}"
-                                       FontSize="16"
-                                       Margin="0,0,0,12"
-                                       Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}"/>
-                            <TextBox Text="{Binding CurrentUser.Login, UpdateSourceTrigger=PropertyChanged}"
-                                     FontSize="16"
-                                     Margin="0,0,0,12"
-                                     Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}"/>
-
-                            <TextBlock Text="Электронная почта"
-                                       FontSize="12"
-                                       Foreground="#64748B"
-                                       Margin="0,0,0,4"/>
-                            <TextBlock Text="{Binding CurrentUser.Email}"
-                                       FontSize="16"
-                                       Margin="0,0,0,4"
-                                       Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}"/>
-                            <TextBox Text="{Binding CurrentUser.Email, UpdateSourceTrigger=PropertyChanged}"
-                                     FontSize="16"
-                                     Margin="0,0,0,4"
-                                     Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}"/>
-                            <TextBlock Text="На этот адрес приходят уведомления о статусе ремонта."
-                                       FontSize="12"
-                                       Foreground="#64748B"
-                                       TextWrapping="Wrap"
-                                       Margin="0,0,0,16"/>
-
-                            <StackPanel Orientation="Horizontal">
-                                <Button Content="Редактировать"
-                                        Command="{Binding ToggleEditCommand}"
-                                        Width="128"
-                                        Margin="0,0,10,0"
-                                        Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}"/>
-                                <Button Content="Сохранить"
-                                        Command="{Binding SaveCommand}"
-                                        Width="110"
-                                        Margin="0"
-                                        Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}"/>
-                            </StackPanel>
+                            <Button Content="{Binding PhotoActionText}"
+                                        Command="{Binding ChangePhotoCommand}"
+                                        Width="132"
+                                        Style="{StaticResource SmallSecondaryButtonStyle}"
+                                        Margin="0,14,0,0"
+                                        HorizontalAlignment="Center"/>
                         </StackPanel>
-                    </Border>
 
-                    <Button Content="Выйти"
-                            Command="{Binding LogoutCommand}"
-                            Width="96"
-                            Margin="0,14,0,0"
-                            HorizontalAlignment="Left"/>
-                </StackPanel>
-            </Border>
+                        <TextBlock Text="Основные данные"
+                                       Style="{StaticResource SectionTitleStyle}"
+                                       FontSize="18"
+                                       Margin="0,0,0,14"/>
 
-            <StackPanel Grid.Row="1"
-                        Grid.Column="2">
-                <Border Background="#F8FAFC"
-                        BorderBrush="#D9E2EC"
-                        BorderThickness="1"
-                        CornerRadius="18"
-                        Padding="22"
-                        Margin="0,0,0,18">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,6">
-                            <TextBlock Text="Мои заявки"
-                                       FontSize="24"
-                                       FontWeight="Bold"
-                                       Foreground="{DynamicResource TextBrush}"
-                                       VerticalAlignment="Center"/>
-                        </Grid>
+                        <Border Style="{StaticResource InnerCardStyle}"
+                                    Padding="20"
+                                    MaxWidth="366"
+                                    HorizontalAlignment="Stretch">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
 
-                        <TextBlock Text="Здесь отображаются созданные вами заявки, назначенный мастер и текущий статус ремонта."
-                                   TextWrapping="Wrap"
-                                   Foreground="#5B6B7F"
-                                   Margin="0,0,0,18"/>
+                                <StackPanel Grid.Row="0">
+                                    <TextBlock Text="Имя"
+                                               Style="{StaticResource FieldLabelStyle}"/>
+                                    <TextBlock Text="{Binding CurrentUser.Name}"
+                                               FontSize="18"
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,0,12"
+                                               Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}"/>
+                                    <TextBox Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
+                                             FontSize="16"
+                                             Margin="0,0,0,12"
+                                             Tag="{Binding HasEditNameValidationError}"
+                                             Style="{StaticResource RequiredOrderTextBoxStyle}"
+                                             Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBlock Text="{Binding EditNameValidationMessage}"
+                                               Style="{StaticResource ValidationMessageStyle}"
+                                               Visibility="{Binding HasEditNameValidationError, Converter={StaticResource BoolToVis}}"/>
 
-                        <Border Background="White"
-                                BorderBrush="#E2E8F0"
-                                BorderThickness="1"
-                                CornerRadius="14"
-                                Padding="18"
-                                Visibility="{Binding HasOrders, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}">
-                            <TextBlock Text="У вас пока нет заявок. Создайте первую через кнопку выше."
-                                       TextWrapping="Wrap"
-                                       Foreground="#5B6B7F"/>
+                                    <TextBlock Text="Логин"
+                                               Style="{StaticResource FieldLabelStyle}"/>
+                                    <TextBlock Text="{Binding CurrentUser.Login}"
+                                               FontSize="16"
+                                               Margin="0,0,0,12"
+                                               Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}"/>
+                                    <TextBox Text="{Binding EditLogin, UpdateSourceTrigger=PropertyChanged}"
+                                             FontSize="16"
+                                             Margin="0,0,0,12"
+                                             Tag="{Binding HasEditLoginValidationError}"
+                                             Style="{StaticResource RequiredOrderTextBoxStyle}"
+                                             Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBlock Text="{Binding EditLoginValidationMessage}"
+                                               Style="{StaticResource ValidationMessageStyle}"
+                                               Visibility="{Binding HasEditLoginValidationError, Converter={StaticResource BoolToVis}}"/>
+
+                                    <TextBlock Text="Электронная почта"
+                                               Style="{StaticResource FieldLabelStyle}"/>
+                                    <TextBlock Text="{Binding CurrentUser.Email}"
+                                               FontSize="16"
+                                               Margin="0,0,0,12"
+                                               Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}"/>
+                                    <TextBox Text="{Binding EditEmail, UpdateSourceTrigger=PropertyChanged}"
+                                             FontSize="16"
+                                             Margin="0,0,0,12"
+                                             Tag="{Binding HasEditEmailValidationError}"
+                                             Style="{StaticResource RequiredOrderTextBoxStyle}"
+                                             Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBlock Text="{Binding EditEmailValidationMessage}"
+                                               Style="{StaticResource ValidationMessageStyle}"
+                                               Visibility="{Binding HasEditEmailValidationError, Converter={StaticResource BoolToVis}}"/>
+                                </StackPanel>
+
+                                <Grid Grid.Row="1"
+                                      Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button Grid.Column="0"
+                                                Content="Редактировать"
+                                                Command="{Binding ToggleEditCommand}"
+                                                Width="117"
+                                                Height="32"
+                                                FontSize="12"
+                                                Style="{StaticResource SmallSecondaryButtonStyle}"
+                                                Visibility="{Binding IsEditing, ConverterParameter=Inverse, Converter={StaticResource BoolToVis}}"/>
+
+                                    <StackPanel Grid.Column="1"
+                                                Orientation="Horizontal"
+                                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}">
+                                        <Button Content="Отмена"
+                                                Command="{Binding CancelEditCommand}"
+                                                Width="116"
+                                                Height="34"
+                                                FontSize="12"
+                                                Margin="0,0,10,0"
+                                                Style="{StaticResource SmallSecondaryButtonStyle}"/>
+                                        <Button Content="Сохранить"
+                                                Command="{Binding SaveCommand}"
+                                                Width="116"
+                                                Height="34"
+                                                FontSize="12"
+                                                Style="{StaticResource SmallPrimaryButtonStyle}"
+                                                Margin="0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Grid>
                         </Border>
+                        <Button Content="Выйти"
+                                    Command="{Binding LogoutCommand}"
+                                    Width="96"
+                                    Style="{StaticResource TertiaryButtonStyle}"
+                                    BorderBrush="{DynamicResource CardBorderBrush}"
+                                    BorderThickness="1"
+                                    Padding="10,5"
+                                    Click="Button_Click_1"
+                                    Height="31"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,16,0,0"/>
+                    </StackPanel>
+                </Border>
 
-                        <ItemsControl ItemsSource="{Binding Orders}"
-                                      Visibility="{Binding HasOrders, Converter={StaticResource BoolToVis}}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="White"
-                                            BorderBrush="#E2E8F0"
-                                            BorderThickness="1"
-                                            CornerRadius="14"
-                                            Padding="18"
-                                            Margin="0,0,0,12">
-                                        <Grid>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="Auto"/>
-                                            </Grid.RowDefinitions>
+                <StackPanel Grid.Row="1"
+                                Grid.Column="2"
+                                HorizontalAlignment="Stretch">
+                    <Border Style="{StaticResource CardStyle}"
+                                Padding="28"
+                                Margin="0,0,0,28">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,6">
+                                <TextBlock Text="Мои заявки"
+                                               Style="{StaticResource SectionTitleStyle}"
+                                               VerticalAlignment="Center"/>
+                            </Grid>
 
-                                            <Grid Grid.Row="0" Margin="0,0,0,12">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource InnerCardStyle}"
+                                        Visibility="{Binding HasOrders, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}">
+                                <TextBlock Text="У вас пока нет заявок."
+                                               Style="{StaticResource SectionHintStyle}"
+                                               Margin="0"/>
+                            </Border>
 
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="Заявка #"
-                                                               Foreground="#64748B"
-                                                               FontSize="12"/>
-                                                    <TextBlock Text="{Binding Id}"
-                                                               FontWeight="Bold"
-                                                               Margin="4,0,0,0"/>
-                                                </StackPanel>
+                            <ItemsControl ItemsSource="{Binding Orders}"
+                                              Visibility="{Binding HasOrders, Converter={StaticResource BoolToVis}}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource InnerCardStyle}"
+                                                    Padding="18"
+                                                    Margin="0,0,0,16">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
 
-                                                <Border Grid.Column="1"
-                                                        Background="#E8F1FB"
-                                                        CornerRadius="999"
-                                                        Padding="10,4">
-                                                    <TextBlock Text="{Binding Status, Converter={StaticResource OrderStatusConverter}}"
-                                                               Foreground="#0F4C81"
-                                                               FontWeight="SemiBold"
-                                                               FontSize="12"/>
-                                                </Border>
-                                            </Grid>
-
-                                            <Grid Grid.Row="1" Margin="0,0,0,10">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-
-                                                <StackPanel>
-                                                    <TextBlock Text="Устройство" FontSize="12" Foreground="#64748B"/>
-                                                    <TextBlock Text="{Binding DeviceType}" FontWeight="SemiBold"/>
-                                                </StackPanel>
-
-                                                <StackPanel Grid.Column="1">
-                                                    <TextBlock Text="Бренд и модель" FontSize="12" Foreground="#64748B"/>
-                                                    <TextBlock>
-                                                        <Run Text="{Binding DeviceBrand}"/>
-                                                        <Run Text=" "/>
-                                                        <Run Text="{Binding DeviceModel}"/>
-                                                    </TextBlock>
-                                                </StackPanel>
-
-                                                <Button Grid.Column="2"
-                                                        Content="{Binding DetailsButtonText}"
-                                                        Command="{Binding DataContext.ToggleOrderDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        CommandParameter="{Binding}"
-                                                        Width="104"
-                                                        Height="34"
-                                                        Margin="16,0,0,0"
-                                                        VerticalAlignment="Center"/>
-                                            </Grid>
-
-                                            <StackPanel Grid.Row="2"
-                                                        Visibility="{Binding IsDetailsExpanded, Converter={StaticResource BoolToVis}}">
-                                                <Grid Margin="0,0,0,10">
+                                                <Grid Grid.Row="0" Margin="0,0,0,12">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
 
-                                                    <StackPanel>
-                                                        <TextBlock Text="Мастер" FontSize="12" Foreground="#64748B"/>
-                                                        <TextBlock Text="{Binding AssignedMaster.Name, TargetNullValue=Не назначен}"/>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="Заявка"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                       FontSize="12"/>
+                                                        <TextBlock Text="{Binding DisplayNumber}"
+                                                                       FontWeight="Bold"
+                                                                       Margin="4,0,0,0"/>
                                                     </StackPanel>
 
-                                                    <StackPanel Grid.Column="1">
-                                                        <TextBlock Text="Передача техники" FontSize="12" Foreground="#64748B"/>
-                                                        <TextBlock Text="{Binding DeliveryMethod, TargetNullValue=Самовывоз}"/>
+                                                    <ContentControl Grid.Column="1"
+                                                                        Content="{Binding Status}"
+                                                                        ContentTemplate="{StaticResource OrderStatusBadgeTemplate}"
+                                                                        HorizontalAlignment="Right"
+                                                                        VerticalAlignment="Center"/>
+                                                </Grid>
+
+                                                <Grid Grid.Row="1"
+                                                          Margin="0,0,0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="22"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="240"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="Устройство"
+                                                                       FontSize="12"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                        <TextBlock Text="{Binding DeviceType}"
+                                                                       FontWeight="SemiBold"/>
                                                     </StackPanel>
 
                                                     <StackPanel Grid.Column="2">
-                                                        <TextBlock Text="Телефон" FontSize="12" Foreground="#64748B"/>
-                                                        <TextBlock Text="{Binding ContactPhone}"/>
+                                                        <TextBlock Text="Бренд и модель"
+                                                                       FontSize="12"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                        <TextBlock TextWrapping="Wrap">
+                                                                <Run Text="{Binding DeviceBrand}"/>
+                                                                <Run Text=" "/>
+                                                                <Run Text="{Binding DeviceModel}"/>
+                                                        </TextBlock>
+                                                    </StackPanel>
+
+                                                    <StackPanel Grid.Column="4"
+                                                                Orientation="Horizontal"
+                                                                HorizontalAlignment="Right"
+                                                                VerticalAlignment="Bottom">
+                                                        <Button Content="Оплатить"
+                                                                Command="{Binding DataContext.PayOrderOnlineCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}"
+                                                                Width="108"
+                                                                Style="{StaticResource SmallPrimaryButtonStyle}"
+                                                                Margin="0,0,8,0"
+                                                                Visibility="{Binding CanShowOnlinePaymentButton, Converter={StaticResource BoolToVis}}"/>
+                                                        <Button Content="{Binding DetailsButtonText}"
+                                                                Command="{Binding DataContext.ToggleOrderDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}"
+                                                                Width="116"
+                                                                Style="{StaticResource SmallSecondaryButtonStyle}"
+                                                                Margin="0"/>
                                                     </StackPanel>
                                                 </Grid>
 
-                                                <StackPanel Margin="0,0,0,10">
-                                                    <StackPanel.Style>
-                                                        <Style TargetType="StackPanel">
-                                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding DeliveryMethod}" Value="Курьер">
-                                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </StackPanel.Style>
-                                                    <TextBlock Text="Адрес для курьера" FontSize="12" Foreground="#64748B" Margin="0,0,0,4"/>
-                                                    <TextBlock Text="{Binding DeliveryAddress}" TextWrapping="Wrap"/>
+                                                <StackPanel Grid.Row="2"
+                                                                Visibility="{Binding IsDetailsExpanded, Converter={StaticResource BoolToVis}}">
+                                                    <WrapPanel Margin="0,0,0,10">
+                                                        <StackPanel Width="180"
+                                                                        Margin="0,0,18,10">
+                                                            <TextBlock Text="Мастер"
+                                                                           FontSize="12"
+                                                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                            <TextBlock Text="{Binding AssignedMaster.Name, TargetNullValue=Не назначен}"
+                                                                           TextWrapping="Wrap"/>
+                                                        </StackPanel>
+
+                                                        <StackPanel Width="180"
+                                                                        Margin="0,0,18,10">
+                                                            <TextBlock Text="Передача техники"
+                                                                           FontSize="12"
+                                                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                            <TextBlock Text="{Binding DeliveryMethod, TargetNullValue=Самовывоз}"
+                                                                           TextWrapping="Wrap"/>
+                                                        </StackPanel>
+
+                                                        <StackPanel Width="180"
+                                                                        Margin="0,0,18,10">
+                                                            <TextBlock Text="Телефон"
+                                                                           FontSize="12"
+                                                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                            <TextBlock Text="{Binding ContactPhone}"
+                                                                           TextWrapping="Wrap"/>
+                                                        </StackPanel>
+                                                        <StackPanel Width="180"
+                                                                        Margin="0,0,18,10">
+                                                            <TextBlock Text="Способ оплаты"
+                                                                           FontSize="12"
+                                                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                            <TextBlock Text="{Binding PaymentMethodDisplay}"
+                                                                           TextWrapping="Wrap"/>
+                                                        </StackPanel>
+                                                        <StackPanel Width="180"
+                                                                        Margin="0,0,18,10">
+                                                            <TextBlock Text="Статус оплаты"
+                                                                           FontSize="12"
+                                                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                            <TextBlock Text="{Binding PaymentStatusText}"
+                                                                           TextWrapping="Wrap"/>
+                                                        </StackPanel>
+                                                    </WrapPanel>
+
+                                                    <StackPanel Margin="0,0,0,10">
+                                                        <StackPanel.Style>
+                                                            <Style TargetType="StackPanel">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding DeliveryMethod}" Value="Курьер">
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </StackPanel.Style>
+                                                        <TextBlock Text="Адрес для курьера"
+                                                                       FontSize="12"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                       Margin="0,0,0,4"/>
+                                                        <TextBlock Text="{Binding DeliveryAddress}"
+                                                                       TextWrapping="Wrap"/>
+                                                    </StackPanel>
+
+                                                    <TextBlock Text="Описание проблемы"
+                                                                   FontSize="12"
+                                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                   Margin="0,0,0,4"/>
+                                                    <TextBlock Text="{Binding ProblemDescription}"
+                                                                   TextWrapping="Wrap"/>
+
+                                                    <StackPanel Margin="0,10,0,0">
+                                                        <TextBlock Text="Комментарий клиента"
+                                                                       FontSize="12"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                       Margin="0,0,0,4"/>
+                                                        <TextBlock Text="{Binding ClientComment, TargetNullValue=Нет комментария}"
+                                                                       TextWrapping="Wrap"/>
+                                                    </StackPanel>
+                                                    <StackPanel Margin="0,10,0,0"
+                                                                Visibility="{Binding IsOnlinePaymentCompleted, Converter={StaticResource BoolToVis}}">
+                                                        <TextBlock Text="Дата онлайн-оплаты"
+                                                                   FontSize="12"
+                                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                   Margin="0,0,0,4"/>
+                                                        <TextBlock Text="{Binding PaymentPaidAtText}"
+                                                                   TextWrapping="Wrap"/>
+                                                    </StackPanel>
+
+                                                    <Border Background="{DynamicResource PanelBackgroundBrush}"
+                                                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                                                BorderThickness="1"
+                                                                CornerRadius="10"
+                                                                Padding="8"
+                                                                Margin="0,10,0,0"
+                                                                Visibility="{Binding HasProblemPhoto, Converter={StaticResource BoolToVis}}">
+                                                        <Image Source="{Binding ProblemPhoto, Converter={StaticResource ByteArrayToImageConverter}}"
+                                                                   Height="120"
+                                                                   Stretch="Uniform"/>
+                                                    </Border>
                                                 </StackPanel>
-
-                                                <TextBlock Text="Описание неисправности" FontSize="12" Foreground="#64748B" Margin="0,0,0,4"/>
-                                                <TextBlock Text="{Binding ProblemDescription}" TextWrapping="Wrap"/>
-
-                                                <StackPanel Margin="0,10,0,0">
-                                                    <TextBlock Text="Комментарий клиента" FontSize="12" Foreground="#64748B" Margin="0,0,0,4"/>
-                                                    <TextBlock Text="{Binding ClientComment, TargetNullValue=Нет комментария}" TextWrapping="Wrap"/>
-                                                </StackPanel>
-
-                                                <Border Background="#F8FAFC"
-                                                        BorderBrush="#E2E8F0"
-                                                        BorderThickness="1"
-                                                        CornerRadius="10"
-                                                        Padding="8"
-                                                        Margin="0,10,0,0"
-                                                        Visibility="{Binding HasProblemPhoto, Converter={StaticResource BoolToVis}}">
-                                                    <Image Source="{Binding ProblemPhoto, Converter={StaticResource ByteArrayToImageConverter}}"
-                                                           Height="120"
-                                                           Stretch="Uniform"/>
-                                                </Border>
-                                            </StackPanel>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <Button Content="Создать заявку"
-                                Command="{Binding ToggleCreateOrderFormCommand}"
-                                Width="148"
-                                Height="36"
-                                Margin="0,14,0,0"
-                                HorizontalAlignment="Right"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Background="#F8FAFC"
-                        BorderBrush="#D9E2EC"
-                        BorderThickness="1"
-                        CornerRadius="18"
-                        Padding="22">
-                    <StackPanel>
-                        <TextBlock Text="Отзывы о сервисе"
-                                   FontSize="24"
-                                   FontWeight="Bold"
-                                   Foreground="{DynamicResource TextBrush}"
-                                   Margin="0,0,0,6"/>
-                        <TextBlock Text="Здесь можно оставить свой отзыв и посмотреть, что пишут другие клиенты."
-                                   TextWrapping="Wrap"
-                                   Foreground="#5B6B7F"
-                                   Margin="0,0,0,18"/>
-
-                        <Border Background="White"
-                                BorderBrush="#E2E8F0"
-                                BorderThickness="1"
-                                CornerRadius="14"
-                                Padding="18"
-                                Margin="0,0,0,16">
-                            <StackPanel>
-                                <TextBlock Text="Новый отзыв"
-                                           FontSize="16"
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,0,10"/>
-                                <TextBox Text="{Binding NewReviewText, UpdateSourceTrigger=PropertyChanged}"
-                                         AcceptsReturn="True"
-                                         TextWrapping="Wrap"
-                                         Height="90"
-                                         Margin="0,0,0,12"/>
-                                <Button Content="Оставить отзыв"
-                                        Command="{Binding AddReviewCommand}"
-                                        Width="146"
-                                        HorizontalAlignment="Left"
-                                        Margin="0"/>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Background="White"
-                                BorderBrush="#E2E8F0"
-                                BorderThickness="1"
-                                CornerRadius="14"
-                                Padding="18"
-                                Visibility="{Binding HasReviews, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}">
-                            <TextBlock Text="Пока отзывов нет. Вы можете оставить первый."
-                                       TextWrapping="Wrap"
-                                       Foreground="#5B6B7F"/>
-                        </Border>
-
-                        <ItemsControl ItemsSource="{Binding Reviews}"
-                                      Visibility="{Binding HasReviews, Converter={StaticResource BoolToVis}}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="White"
-                                            BorderBrush="#E2E8F0"
-                                            BorderThickness="1"
-                                            CornerRadius="14"
-                                            Padding="18"
-                                            Margin="0,0,0,12">
-                                        <StackPanel>
-                                            <Grid Margin="0,0,0,8">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-
-                                                <TextBlock Text="{Binding User.Name}"
-                                                           FontWeight="Bold"
-                                                           FontSize="16"/>
-                                                <TextBlock Grid.Column="1"
-                                                           Text="{Binding Timestamp, StringFormat={}{0:dd.MM.yyyy HH:mm}}"
-                                                           Foreground="#64748B"
-                                                           FontSize="12"/>
                                             </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
 
-                                            <TextBlock Text="{Binding Text}"
-                                                       TextWrapping="Wrap"
-                                                       Foreground="{DynamicResource TextBrush}"/>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-        </Grid>
+                            <Button Content="Создать заявку"
+                                        Command="{Binding ToggleCreateOrderFormCommand}"
+                                        Width="148"
+                                        Style="{StaticResource MediumPrimaryButtonStyle}"
+                                        Margin="0,14,0,0"
+                                        HorizontalAlignment="Right"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="Отзывы о сервисе"
+                                           Style="{StaticResource SectionTitleStyle}"
+                                           Margin="0,0,0,8"/>
+                            <Border Style="{StaticResource InnerCardStyle}"
+                                        Padding="20"
+                                        Margin="0,0,0,16">
+                                <StackPanel>
+                                    <TextBlock Text="Новый отзыв"
+                                                   FontSize="16"
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,0,0,10"/>
+                                    <TextBox Text="{Binding NewReviewText, UpdateSourceTrigger=PropertyChanged}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 Height="90"
+                                                 Margin="0,0,0,12"/>
+                                    <Button Content="Оставить отзыв"
+                                                Command="{Binding AddReviewCommand}"
+                                                Style="{StaticResource MediumPrimaryButtonStyle}"
+                                                Width="165"
+                                                HorizontalAlignment="Left"
+                                                Margin="0,15,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource InnerCardStyle}"
+                                        Padding="20"
+                                        Visibility="{Binding HasReviews, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}">
+                                <TextBlock Text="Пока отзывов нет. Вы можете оставить первый."
+                                               Style="{StaticResource SectionHintStyle}"
+                                               Margin="0"/>
+                            </Border>
+
+                            <ItemsControl ItemsSource="{Binding Reviews}"
+                                              Visibility="{Binding HasReviews, Converter={StaticResource BoolToVis}}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource InnerCardStyle}"
+                                                    Padding="20"
+                                                    Margin="0,0,0,16">
+                                            <StackPanel>
+                                                <Grid Margin="0,0,0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <TextBlock Text="{Binding User.Name}"
+                                                                   FontWeight="Bold"
+                                                                   FontSize="16"/>
+                                                    <TextBlock Grid.Column="1"
+                                                                   Text="{Binding Timestamp, StringFormat={}{0:dd.MM.yyyy HH:mm}}"
+                                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                   FontSize="12"/>
+                                                </Grid>
+
+                                                <TextBlock Text="{Binding Text}"
+                                                               TextWrapping="Wrap"
+                                                               Foreground="{DynamicResource TextBrush}"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
         </ScrollViewer>
 
         <Grid Background="#66000000"
               Visibility="{Binding IsCreateOrderFormVisible, Converter={StaticResource BoolToVis}}">
-            <Border Background="White"
-                    BorderBrush="#D7E3F1"
-                    BorderThickness="1"
-                    CornerRadius="18"
-                    Padding="22"
-                    Width="760"
-                    MaxWidth="760"
+            <Border Style="{StaticResource DialogCardStyle}"
+                    Width="680"
+                    MaxWidth="680"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center">
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
-                              MaxHeight="760">
-                <StackPanel>
-                    <TextBlock Text="Новая заявка"
-                               FontSize="26"
-                               FontWeight="Bold"
-                               Foreground="{DynamicResource TextBrush}"
-                               Margin="0,0,0,18"/>
+                              MaxHeight="680">
+                    <StackPanel>
+                        <TextBlock Text="Новая заявка"
+                               Style="{StaticResource PageTitleStyle}"
+                               FontSize="26"/>
 
-                    <Grid Margin="0,0,0,12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="20"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
 
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="Тип устройства"
-                                       FontSize="12"
-                                       Foreground="#64748B"
-                                       Margin="0,0,0,6"/>
-                            <ComboBox ItemsSource="{Binding DeviceTypes}"
-                                      SelectedItem="{Binding NewOrderDeviceType}"
-                                      Margin="0,0,0,12"/>
-
-                            <TextBlock Text="Бренд"
-                                       FontSize="12"
-                                       Foreground="#64748B"
-                                       Margin="0,0,0,6"/>
-                            <ComboBox ItemsSource="{Binding BrandOptions}"
-                                      SelectedItem="{Binding SelectedBrandOption}"
-                                      Margin="0,0,0,8"/>
-                            <TextBox Text="{Binding CustomBrand, UpdateSourceTrigger=PropertyChanged}"
-                                     Margin="0,0,0,12"
-                                     Visibility="{Binding IsCustomBrandVisible, Converter={StaticResource BoolToVis}}"/>
-
-                            <TextBlock Text="Телефон"
-                                       FontSize="12"
-                                       Foreground="#64748B"
-                                       Margin="0,0,0,6"/>
-                            <TextBox Text="{Binding NewOrderContactPhone, UpdateSourceTrigger=PropertyChanged}"
-                                     Margin="0,0,0,12"/>
-
-                            <TextBlock Text="Передача техники"
-                                       FontSize="12"
-                                       Foreground="#64748B"
-                                       Margin="0,0,0,6"/>
-                            <ComboBox ItemsSource="{Binding DeliveryMethods}"
-                                      SelectedItem="{Binding NewOrderDeliveryMethod}"
-                                      Margin="0,0,0,12"/>
-
-                            <TextBlock Text="Адрес для курьера"
-                                       FontSize="12"
-                                       Foreground="#64748B"
-                                       Margin="0,0,0,6"
-                                       Visibility="{Binding IsCourierDeliverySelected, Converter={StaticResource BoolToVis}}"/>
-                            <TextBox Text="{Binding NewOrderDeliveryAddress, UpdateSourceTrigger=PropertyChanged}"
-                                     TextWrapping="Wrap"
-                                     AcceptsReturn="True"
-                                     Height="72"
-                                     Visibility="{Binding IsCourierDeliverySelected, Converter={StaticResource BoolToVis}}"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="Модель"
-                                       FontSize="12"
-                                       Foreground="#64748B"
-                                       Margin="0,0,0,6"/>
-                            <ComboBox ItemsSource="{Binding ModelOptions}"
-                                      SelectedItem="{Binding SelectedModelOption}"
-                                      Margin="0,0,0,8"/>
-                            <TextBox Text="{Binding CustomModel, UpdateSourceTrigger=PropertyChanged}"
-                                     Margin="0,0,0,12"
-                                     Visibility="{Binding IsCustomModelVisible, Converter={StaticResource BoolToVis}}"/>
-
-                            <TextBlock Text="Неисправность"
-                                       FontSize="12"
-                                       Foreground="#64748B"
-                                       Margin="0,0,0,6"/>
-                            <ComboBox ItemsSource="{Binding ProblemOptions}"
-                                      SelectedItem="{Binding SelectedProblemOption}"
-                                      Margin="0,0,0,8"/>
-                            <TextBox Text="{Binding CustomProblemDescription, UpdateSourceTrigger=PropertyChanged}"
-                                     AcceptsReturn="True"
-                                     TextWrapping="Wrap"
-                                     Height="92"
-                                     Visibility="{Binding IsCustomProblemVisible, Converter={StaticResource BoolToVis}}"/>
-                        </StackPanel>
-                    </Grid>
-
-                    <Border Background="#F8FAFC"
-                            BorderBrush="#E2E8F0"
-                            BorderThickness="1"
-                            CornerRadius="14"
-                            Padding="14"
-                            Margin="0,0,0,12">
-                        <StackPanel>
-                            <TextBlock Text="Фото неисправности"
-                                       FontSize="12"
-                                       Foreground="#64748B"/>
-                            <TextBlock Text="Необязательно, но поможет мастеру быстрее понять проблему."
-                                       Foreground="#5B6B7F"
-                                       Margin="0,4,0,12"/>
-
-                            <StackPanel Orientation="Horizontal"
-                                        Margin="0,0,0,10">
-                                <Button Content="Добавить фото"
-                                        Command="{Binding SelectProblemPhotoCommand}"
-                                        Width="126"
-                                        Margin="0,0,10,0"/>
-                                <Button Content="Удалить фото"
-                                        Command="{Binding RemoveProblemPhotoCommand}"
-                                        Width="118"
-                                        Visibility="{Binding HasSelectedProblemPhoto, Converter={StaticResource BoolToVis}}"/>
+                            <StackPanel Grid.Row="0"
+                                        Grid.Column="0">
+                                <TextBlock Text="Тип устройства *"
+                                           Style="{StaticResource FieldLabelStyle}"/>
+                                <ComboBox ItemsSource="{Binding DeviceTypes}"
+                                          SelectedItem="{Binding NewOrderDeviceType}"
+                                          Margin="0,0,0,12"
+                                          Style="{StaticResource OrderComboBoxStyle}"/>
+                                <TextBox Text="{Binding CustomDeviceType, UpdateSourceTrigger=PropertyChanged}"
+                                         Margin="0,0,0,12"
+                                         Visibility="{Binding IsCustomDeviceTypeVisible, Converter={StaticResource BoolToVis}}"
+                                         Style="{StaticResource RequiredOrderTextBoxStyle}"
+                                         Tag="{Binding IsNewOrderDeviceTypeInvalid}"/>
                             </StackPanel>
 
-                            <TextBlock Text="{Binding NewOrderProblemPhotoStatus}"
-                                       Foreground="#5B6B7F"
+                            <StackPanel Grid.Row="0"
+                                        Grid.Column="2">
+                                <TextBlock Text="Модель *"
+                                           Style="{StaticResource FieldLabelStyle}"/>
+                                <ComboBox ItemsSource="{Binding ModelOptions}"
+                                          SelectedItem="{Binding SelectedModelOption}"
+                                          Margin="0,0,0,8"
+                                          Style="{StaticResource RequiredOrderComboBoxStyle}"
+                                          Tag="{Binding IsNewOrderDeviceModelInvalid}"/>
+                                <TextBox Text="{Binding CustomModel, UpdateSourceTrigger=PropertyChanged}"
+                                         Margin="0,0,0,12"
+                                         Visibility="{Binding IsCustomModelVisible, Converter={StaticResource BoolToVis}}"
+                                         Style="{StaticResource RequiredOrderTextBoxStyle}"
+                                         Tag="{Binding IsNewOrderDeviceModelInvalid}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1"
+                                        Grid.Column="0">
+                                <TextBlock Text="Бренд *"
+                                           Style="{StaticResource FieldLabelStyle}"/>
+                                <ComboBox ItemsSource="{Binding BrandOptions}"
+                                          SelectedItem="{Binding SelectedBrandOption}"
+                                          Margin="0,0,0,8"
+                                          Style="{StaticResource RequiredOrderComboBoxStyle}"
+                                          Tag="{Binding IsNewOrderDeviceBrandInvalid}"/>
+                                <TextBox Text="{Binding CustomBrand, UpdateSourceTrigger=PropertyChanged}"
+                                         Margin="0,0,0,12"
+                                         Visibility="{Binding IsCustomBrandVisible, Converter={StaticResource BoolToVis}}"
+                                         Style="{StaticResource RequiredOrderTextBoxStyle}"
+                                         Tag="{Binding IsNewOrderDeviceBrandInvalid}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1"
+                                        Grid.Column="2">
+                                <TextBlock Text="Неисправность *"
+                                           Style="{StaticResource FieldLabelStyle}"/>
+                                <ComboBox ItemsSource="{Binding ProblemOptions}"
+                                          SelectedItem="{Binding SelectedProblemOption}"
+                                          Margin="0,0,0,8"
+                                          Style="{StaticResource RequiredOrderComboBoxStyle}"
+                                          Tag="{Binding IsNewOrderProblemDescriptionInvalid}"/>
+                                <TextBox Text="{Binding CustomProblemDescription, UpdateSourceTrigger=PropertyChanged}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         Height="92"
+                                         Visibility="{Binding IsCustomProblemVisible, Converter={StaticResource BoolToVis}}"
+                                         Style="{StaticResource RequiredOrderMultiLineTextBoxStyle}"
+                                         Tag="{Binding IsNewOrderProblemDescriptionInvalid}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2"
+                                        Grid.Column="0">
+                                <TextBlock Text="Телефон *"
+                                           Style="{StaticResource FieldLabelStyle}"/>
+                                <TextBox Text="{Binding NewOrderContactPhone, UpdateSourceTrigger=PropertyChanged}"
+                                         Margin="0,0,0,4"
+                                         ToolTip="Например: +375 (29) 123-45-67"
+                                         Style="{StaticResource RequiredOrderTextBoxStyle}"
+                                         Tag="{Binding IsNewOrderContactPhoneInvalid}"/>
+                                <TextBlock Text="Например: +375 (29) 123-45-67"
+                                           Style="{StaticResource InfoTextStyle}"
+                                           Margin="0,0,0,12"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2"
+                                        Grid.Column="2">
+                                <TextBlock Text="Способ оплаты"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Margin="0,0,0,4"/>
+                                <CheckBox Content="Онлайн-оплата"
+                                          IsChecked="{Binding NewOrderIsOnlinePayment}"
+                                          FontSize="15"
+                                          Margin="0,6,0,6"/>
+                                <TextBlock Text="Если флажок не установлен, оплата будет на месте."
+                                           Style="{StaticResource InfoTextStyle}"
+                                           Margin="0,0,0,12"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Border Style="{StaticResource InnerCardStyle}"
+                            Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="Фото неисправности"
+                                       Style="{StaticResource FieldLabelStyle}"/>
+                                <TextBlock Text="Необязательно, но поможет мастеру быстрее понять проблему."
+                                       Style="{StaticResource InfoTextStyle}"
+                                       Margin="0,4,0,12"/>
+
+                                <StackPanel Orientation="Horizontal"
+                                        Margin="0,0,0,10">
+                                    <Button Content="Добавить фото"
+                                        Command="{Binding SelectProblemPhotoCommand}"
+                                        Style="{StaticResource MediumPrimaryButtonStyle}"
+                                        Width="156"
+                                        Margin="0,0,10,0"/>
+                                    <Button Content="Удалить фото"
+                                        Command="{Binding RemoveProblemPhotoCommand}"
+                                        Style="{StaticResource SmallSecondaryButtonStyle}"
+                                        Width="118"
+                                        Visibility="{Binding HasSelectedProblemPhoto, Converter={StaticResource BoolToVis}}"/>
+                                </StackPanel>
+
+                                <TextBlock Text="{Binding NewOrderProblemPhotoStatus}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
                                        Margin="0,0,0,10"/>
 
-                            <Border Background="White"
-                                    BorderBrush="#E2E8F0"
+                                <Border Background="{DynamicResource InputBackgroundBrush}"
+                                    BorderBrush="{DynamicResource CardBorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="10"
                                     Padding="8"
                                     Visibility="{Binding HasSelectedProblemPhoto, Converter={StaticResource BoolToVis}}">
-                                <Image Source="{Binding NewOrderProblemPhoto, Converter={StaticResource ByteArrayToImageConverter}}"
+                                    <Image Source="{Binding NewOrderProblemPhoto, Converter={StaticResource ByteArrayToImageConverter}}"
                                        Height="150"
                                        Stretch="Uniform"/>
-                            </Border>
-                        </StackPanel>
-                    </Border>
+                                </Border>
+                            </StackPanel>
+                        </Border>
 
-                    <TextBlock Text="Комментарий"
-                               FontSize="12"
-                               Foreground="#64748B"
-                               Margin="0,0,0,6"/>
-                    <TextBox Text="{Binding NewOrderClientComment, UpdateSourceTrigger=PropertyChanged}"
+                        <TextBlock Text="Комментарий"
+                               Style="{StaticResource FieldLabelStyle}"/>
+                        <TextBox Text="{Binding NewOrderClientComment, UpdateSourceTrigger=PropertyChanged}"
                              AcceptsReturn="True"
                              TextWrapping="Wrap"
                              Height="84"
                              Margin="0,0,0,16"/>
 
-                    <StackPanel Orientation="Horizontal"
+                        <StackPanel Orientation="Horizontal"
                                 HorizontalAlignment="Left">
-                        <Button Content="Отправить заявку"
+                            <Button Content="Отправить заявку"
                                 Command="{Binding CreateOrderCommand}"
-                                Width="150"
+                                Style="{StaticResource MediumPrimaryButtonStyle}"
+                                MinWidth="190"
                                 Margin="0,0,10,0"/>
-                        <Button Content="Отмена"
+                            <Button Content="Отмена"
                                 Command="{Binding CancelCreateOrderFormCommand}"
+                                Style="{StaticResource MediumSecondaryButtonStyle}"
                                 Width="96"/>
+                        </StackPanel>
                     </StackPanel>
-                </StackPanel>
                 </ScrollViewer>
             </Border>
         </Grid>

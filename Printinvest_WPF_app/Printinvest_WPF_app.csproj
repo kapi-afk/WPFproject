@@ -190,7 +190,9 @@
     <Compile Include="Converters\FilterNameConverter.cs" />
     <Compile Include="Converters\HashHelper.cs" />
     <Compile Include="Converters\ItemTypeConverter.cs" />
+    <Compile Include="Converters\OrderStatusBackgroundBrushConverter.cs" />
     <Compile Include="Converters\OrderStatusConverter.cs" />
+    <Compile Include="Converters\OrderStatusForegroundBrushConverter.cs" />
     <Compile Include="Converters\PasswordBoxConverter.cs" />
     <Compile Include="Converters\SessionManager.cs" />
     <Compile Include="Models\Analytic.cs" />
@@ -214,6 +216,7 @@
     <Compile Include="Repositories\WarehouseRequestRepository.cs" />
     <Compile Include="Utilities\MasterAssignmentService.cs" />
     <Compile Include="Utilities\OrderEmailService.cs" />
+    <Compile Include="Utilities\OrderPublicNumberService.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\CatalogViewModel.cs" />
     <Compile Include="ViewModels\ItemDetailsViewModel.cs" />
@@ -225,6 +228,7 @@
     <Compile Include="ViewModels\RegisterViewModel.cs" />
     <Compile Include="ViewModels\RelayCommand.cs" />
     <Compile Include="ViewModels\MasterWarehouseWindowViewModel.cs" />
+    <Compile Include="ViewModels\OnlinePaymentViewModel.cs" />
     <Compile Include="ViewModels\ServiceAdminPanelViewModel.cs" />
     <Compile Include="ViewModels\ServiceClientProfileViewModel.cs" />
     <Compile Include="ViewModels\ServiceMasterPanelViewModel.cs" />
@@ -236,6 +240,9 @@
     </Compile>
     <Compile Include="Views\AdminOrderEditWindow.xaml.cs">
       <DependentUpon>AdminOrderEditWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\OnlinePaymentWindow.xaml.cs">
+      <DependentUpon>OnlinePaymentWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\UserCreateWindow.xaml.cs">
       <DependentUpon>UserCreateWindow.xaml</DependentUpon>
@@ -255,9 +262,6 @@
     <Compile Include="Views\WarehouseRequestsWindow.xaml.cs">
       <DependentUpon>WarehouseRequestsWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Pages\AdminPanel.xaml.cs">
-      <DependentUpon>AdminPanel.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Views\Pages\AdminPanelPage.xaml.cs">
       <DependentUpon>AdminPanelPage.xaml</DependentUpon>
     </Compile>
@@ -273,16 +277,9 @@
     <Compile Include="Views\Pages\LoginPage.xaml.cs">
       <DependentUpon>LoginPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Pages\ManagerPanel.xaml.cs">
-      <DependentUpon>ManagerPanel.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Views\Pages\ManagerPanelPage.xaml.cs">
       <DependentUpon>ManagerPanelPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Pages\PasswordRecoveryPage.xaml.cs">
-      <DependentUpon>PasswordRecoveryPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\Pages\ProductPage.xaml.cs" />
     <Compile Include="Views\Pages\ProfilePage.xaml.cs">
       <DependentUpon>ProfilePage.xaml</DependentUpon>
     </Compile>
@@ -324,6 +321,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Views\OnlinePaymentWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Views\UserCreateWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -360,10 +361,6 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Views\Pages\AdminPanel.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Views\Pages\AdminPanelPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -384,21 +381,9 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Pages\ManagerPanel.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Views\Pages\ManagerPanelPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\Pages\PasswordRecoveryPage.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\Pages\ProductPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\Pages\ProfilePage.xaml">
       <SubType>Designer</SubType>

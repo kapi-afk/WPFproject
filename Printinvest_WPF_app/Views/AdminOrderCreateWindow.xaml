@@ -3,84 +3,263 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Оформить заявку"
-        Height="680"
-        Width="620"
-        MinHeight="560"
-        MinWidth="560"
+        Width="700"
+        Height="700"
+        MinWidth="700"
+        MinHeight="700"
+        ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource ContentBackgroundBrush}">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="20">
-            <TextBlock Text="Оформить заявку"
-                       FontSize="22"
-                       FontWeight="Bold"
-                       Margin="0,0,0,18"/>
+    <Window.Resources>
+        <Style x:Key="OrderSingleLineTextBoxStyle"
+               TargetType="{x:Type TextBox}"
+               BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        </Style>
+        <Style x:Key="OrderComboBoxStyle"
+               TargetType="{x:Type ComboBox}"
+               BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="IsEditable" Value="False"/>
+        </Style>
+        <Style x:Key="RequiredOrderTextBoxStyle"
+               TargetType="{x:Type TextBox}"
+               BasedOn="{StaticResource OrderSingleLineTextBoxStyle}">
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="True">
+                    <Setter Property="BorderBrush" Value="#D13438"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="RequiredOrderMultiLineTextBoxStyle"
+               TargetType="{x:Type TextBox}"
+               BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="True">
+                    <Setter Property="BorderBrush" Value="#D13438"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="RequiredOrderComboBoxStyle"
+               TargetType="{x:Type ComboBox}"
+               BasedOn="{StaticResource OrderComboBoxStyle}">
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="True">
+                    <Setter Property="BorderBrush" Value="#D13438"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
 
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="18" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+    <Border Style="{StaticResource DialogCardStyle}"
+            Margin="14">
+        <StackPanel>
+                <TextBlock Text="Новая заявка"
+                           Style="{StaticResource PageTitleStyle}"
+                           FontSize="26"/>
 
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="Имя клиента" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding NewOrderClientName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                    <TextBlock Text="Email клиента" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding NewOrderClientEmail, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                    <TextBlock Text="Телефон" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding NewOrderContactPhone, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                    <TextBlock Text="Тип устройства" Margin="0,0,0,4"/>
-                    <ComboBox ItemsSource="{Binding DeviceTypes}"
-                              SelectedItem="{Binding NewOrderDeviceType}"
-                              Margin="0,0,0,12"/>
-                    <TextBlock Text="Бренд" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding NewOrderDeviceBrand, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                <Border Style="{StaticResource InnerCardStyle}"
+                        Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Имя клиента *"
+                                       Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox Text="{Binding NewOrderClientName, UpdateSourceTrigger=PropertyChanged}"
+                                     Margin="0,0,0,12"
+                                     Style="{StaticResource RequiredOrderTextBoxStyle}"
+                                     Tag="{Binding IsNewOrderClientNameInvalid}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Email клиента *"
+                                       Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox Text="{Binding NewOrderClientEmail, UpdateSourceTrigger=PropertyChanged}"
+                                     Margin="0,0,0,12"
+                                     Style="{StaticResource RequiredOrderTextBoxStyle}"
+                                     Tag="{Binding IsNewOrderClientEmailInvalid}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0"
+                                Grid.Column="0">
+                        <TextBlock Text="Тип устройства *"
+                                   Style="{StaticResource FieldLabelStyle}"/>
+                        <ComboBox x:Name="DeviceTypeComboBox"
+                                  ItemsSource="{Binding DeviceTypes}"
+                                  SelectedItem="{Binding NewOrderDeviceType}"
+                                  Margin="0,0,0,12"
+                                  Style="{StaticResource OrderComboBoxStyle}"
+                                  SelectionChanged="DeviceTypeComboBox_SelectionChanged"/>
+                        <TextBox x:Name="CustomDeviceTypeTextBox"
+                                 Margin="0,0,0,12"
+                                 Visibility="Collapsed"
+                                 Style="{StaticResource RequiredOrderTextBoxStyle}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="0"
+                                Grid.Column="2">
+                        <TextBlock Text="Модель *"
+                                   Style="{StaticResource FieldLabelStyle}"/>
+                        <ComboBox x:Name="ModelComboBox"
+                                  Margin="0,0,0,8"
+                                  Style="{StaticResource RequiredOrderComboBoxStyle}"
+                                  SelectionChanged="ModelComboBox_SelectionChanged"/>
+                        <TextBox x:Name="CustomModelTextBox"
+                                 Margin="0,0,0,12"
+                                 Visibility="Collapsed"
+                                 Style="{StaticResource RequiredOrderTextBoxStyle}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1"
+                                Grid.Column="0">
+                        <TextBlock Text="Бренд *"
+                                   Style="{StaticResource FieldLabelStyle}"/>
+                        <ComboBox x:Name="BrandComboBox"
+                                  Margin="0,0,0,8"
+                                  Style="{StaticResource RequiredOrderComboBoxStyle}"
+                                  SelectionChanged="BrandComboBox_SelectionChanged"/>
+                        <TextBox x:Name="CustomBrandTextBox"
+                                 Margin="0,0,0,12"
+                                 Visibility="Collapsed"
+                                 Style="{StaticResource RequiredOrderTextBoxStyle}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1"
+                                Grid.Column="2">
+                        <TextBlock Text="Неисправность *"
+                                   Style="{StaticResource FieldLabelStyle}"/>
+                        <ComboBox x:Name="ProblemComboBox"
+                                  Margin="0,0,0,8"
+                                  Style="{StaticResource RequiredOrderComboBoxStyle}"
+                                  SelectionChanged="ProblemComboBox_SelectionChanged"/>
+                        <TextBox x:Name="CustomProblemTextBox"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 Height="92"
+                                 Visibility="Collapsed"
+                                 Style="{StaticResource RequiredOrderMultiLineTextBoxStyle}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="2"
+                                Grid.Column="0">
+                        <TextBlock Text="Телефон *"
+                                   Style="{StaticResource FieldLabelStyle}"/>
+                        <TextBox Text="{Binding NewOrderContactPhone, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,0,0,4"
+                                 ToolTip="Например: +375 (29) 123-45-67"
+                                 Style="{StaticResource RequiredOrderTextBoxStyle}"
+                                 Tag="{Binding IsNewOrderContactPhoneInvalid}"/>
+                        <TextBlock Text="Например: +375 (29) 123-45-67"
+                                   Style="{StaticResource InfoTextStyle}"
+                                   Margin="0,0,0,12"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="2"
+                                Grid.Column="2">
+                        <TextBlock Text="Способ оплаты"
+                                   Style="{StaticResource FieldLabelStyle}"
+                                   Margin="0,0,0,4"/>
+                        <CheckBox Content="Онлайн-оплата"
+                                  IsChecked="{Binding NewOrderIsOnlinePayment}"
+                                  FontSize="15"
+                                  Margin="0,6,0,6"/>
+                        <TextBlock Text="Если флажок не установлен, оплата будет на месте."
+                                   Style="{StaticResource InfoTextStyle}"
+                                   Margin="0,0,0,12"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Grid>
+
+                <Border Style="{StaticResource InnerCardStyle}"
+                        Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Фото неисправности"
+                                   Style="{StaticResource FieldLabelStyle}"/>
+                        <TextBlock Text="Необязательно, но поможет мастеру быстрее понять проблему."
+                                   Style="{StaticResource InfoTextStyle}"
+                                   Margin="0,4,0,12"/>
+
+                        <StackPanel Orientation="Horizontal"
+                                    Margin="0,0,0,10">
+                            <Button Content="Добавить фото"
+                                    Style="{StaticResource MediumPrimaryButtonStyle}"
+                                    Width="156"
+                                    Margin="0,0,10,0"
+                                    Click="SelectProblemPhoto_Click"/>
+                            <Button x:Name="RemovePhotoButton"
+                                    Content="Удалить фото"
+                                    Style="{StaticResource SmallSecondaryButtonStyle}"
+                                    Width="118"
+                                    Visibility="Collapsed"
+                                    Click="RemoveProblemPhoto_Click"/>
+                        </StackPanel>
+
+                        <TextBlock x:Name="ProblemPhotoStatusTextBlock"
+                                   Text="Фото не добавлено"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   Margin="0,0,0,10"/>
+
+                        <Border x:Name="ProblemPhotoPreviewBorder"
+                                Background="{DynamicResource InputBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="8"
+                                Visibility="Collapsed">
+                            <Image x:Name="ProblemPhotoPreview"
+                                   Height="150"
+                                   Stretch="Uniform"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="Комментарий"
+                           Style="{StaticResource FieldLabelStyle}"/>
+                <TextBox Text="{Binding NewOrderClientComment, UpdateSourceTrigger=PropertyChanged}"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         Height="84"
+                         Margin="0,0,0,16"/>
+
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Left">
+                    <Button Content="Отправить заявку"
+                            Style="{StaticResource MediumPrimaryButtonStyle}"
+                            MinWidth="190"
+                            Margin="0,0,10,0"
+                            Click="Create_Click"/>
+                    <Button Content="Отмена"
+                            Style="{StaticResource MediumSecondaryButtonStyle}"
+                            Width="96"
+                            Click="Cancel_Click"/>
                 </StackPanel>
-
-                <StackPanel Grid.Column="2">
-                    <TextBlock Text="Модель" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding NewOrderDeviceModel, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                    <TextBlock Text="Неисправность" Margin="0,0,0,4"/>
-                    <TextBox Text="{Binding NewOrderProblemDescription, UpdateSourceTrigger=PropertyChanged}"
-                             AcceptsReturn="True"
-                             TextWrapping="Wrap"
-                             Height="92"
-                             Margin="0,0,0,12"/>
-                    <TextBlock Text="Передача техники" Margin="0,0,0,4"/>
-                    <ComboBox ItemsSource="{Binding DeliveryMethods}"
-                              SelectedItem="{Binding NewOrderDeliveryMethod}"
-                              Margin="0,0,0,12"/>
-                    <TextBlock Text="Адрес для курьера"
-                               Margin="0,0,0,4"
-                               Visibility="{Binding IsCourierDeliverySelected, Converter={StaticResource BoolToVis}}"/>
-                    <TextBox Text="{Binding NewOrderDeliveryAddress, UpdateSourceTrigger=PropertyChanged}"
-                             AcceptsReturn="True"
-                             TextWrapping="Wrap"
-                             Height="70"
-                             Margin="0,0,0,12"
-                             Visibility="{Binding IsCourierDeliverySelected, Converter={StaticResource BoolToVis}}"/>
-                </StackPanel>
-            </Grid>
-
-            <TextBlock Text="Комментарий" Margin="0,4,0,4"/>
-            <TextBox Text="{Binding NewOrderClientComment, UpdateSourceTrigger=PropertyChanged}"
-                     AcceptsReturn="True"
-                     TextWrapping="Wrap"
-                     Height="78"
-                     Margin="0,0,0,18"/>
-
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Right">
-                <Button Content="Отмена"
-                        Width="120"
-                        Margin="0,0,10,0"
-                        Click="Cancel_Click"/>
-                <Button Content="Создать заявку"
-                        Width="160"
-                        Click="Create_Click"/>
-            </StackPanel>
         </StackPanel>
-    </ScrollViewer>
+    </Border>
 </Window>

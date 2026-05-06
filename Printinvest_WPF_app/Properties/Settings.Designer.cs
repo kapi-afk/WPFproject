@@ -110,5 +110,14 @@ namespace Printinvest_WPF_app.Properties {
                 return ((bool)(this["NotificationEnableSsl"]));
             }
         }
+
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string NotificationWebhookUrl {
+            get {
+                return ((string)(this["NotificationWebhookUrl"]));
+            }
+        }
     }
 }

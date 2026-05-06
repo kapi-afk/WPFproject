@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Printinvest_WPF_app.ViewModels;
 
 namespace Printinvest_WPF_app.Views.Pages
 {
@@ -23,6 +24,17 @@ namespace Printinvest_WPF_app.Views.Pages
         public ProfilePage()
         {
             InitializeComponent();
+            DataContext = new ServiceClientProfileViewModel();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

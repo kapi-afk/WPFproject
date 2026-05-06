@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Printinvest_WPF_app.Utilities;
 
 namespace Printinvest_WPF_app.Models
 {
@@ -13,6 +14,16 @@ namespace Printinvest_WPF_app.Models
         private OrderStatus _status;
         private byte[] _problemPhoto;
         private bool _isDetailsExpanded;
+        private decimal _estimatedPartsCost;
+        private decimal _masterWorkCost;
+        private decimal _estimatedRepairCost;
+        private System.DateTime? _completedAt;
+        private string _paymentMethod;
+        private bool _isOnlinePaymentCompleted;
+        private System.DateTime? _onlinePaymentPaidAt;
+
+        public const string OnSitePaymentMethod = "Оплата на месте";
+        public const string OnlinePaymentMethod = "Онлайн-оплата";
 
         public int Id { get; set; }
         public int UserId { get; set; }
@@ -25,6 +36,7 @@ namespace Printinvest_WPF_app.Models
         public string ProblemDescription { get; set; }
         public string DeliveryMethod { get; set; }
         public string DeliveryAddress { get; set; }
+        public string PublicNumber { get; set; }
         public byte[] ProblemPhoto
         {
             get => _problemPhoto;
@@ -56,9 +68,123 @@ namespace Printinvest_WPF_app.Models
         }
         [NotMapped]
         public string DetailsButtonText => IsDetailsExpanded ? "Скрыть" : "Подробнее";
+        [NotMapped]
+        public string DisplayNumber => OrderPublicNumberService.GetOrCreate(this);
+        [NotMapped]
+        public bool IsOnlinePayment => string.Equals(PaymentMethod, OnlinePaymentMethod, StringComparison.Ordinal);
+        [NotMapped]
+        public bool CanShowOnlinePaymentButton => IsOnlinePayment && !IsOnlinePaymentCompleted;
+        [NotMapped]
+        public string PaymentMethodDisplay => string.IsNullOrWhiteSpace(PaymentMethod) ? OnSitePaymentMethod : PaymentMethod;
+        [NotMapped]
+        public string PaymentStatusText => !IsOnlinePayment
+            ? "Оплата на месте"
+            : (IsOnlinePaymentCompleted ? "Оплачено онлайн" : "Ожидает онлайн-оплаты");
+        [NotMapped]
+        public string PaymentPaidAtText => OnlinePaymentPaidAt.HasValue
+            ? OnlinePaymentPaidAt.Value.ToString("dd.MM.yyyy HH:mm")
+            : "Не оплачено";
         public string ContactPhone { get; set; }
         public string ClientComment { get; set; }
         public string AdminComment { get; set; }
+        public decimal EstimatedPartsCost
+        {
+            get => _estimatedPartsCost;
+            set
+            {
+                if (_estimatedPartsCost != value)
+                {
+                    _estimatedPartsCost = value;
+                    OnPropertyChanged(nameof(EstimatedPartsCost));
+                }
+            }
+        }
+
+        public decimal MasterWorkCost
+        {
+            get => _masterWorkCost;
+            set
+            {
+                if (_masterWorkCost != value)
+                {
+                    _masterWorkCost = value;
+                    OnPropertyChanged(nameof(MasterWorkCost));
+                }
+            }
+        }
+
+        public decimal EstimatedRepairCost
+        {
+            get => _estimatedRepairCost;
+            set
+            {
+                if (_estimatedRepairCost != value)
+                {
+                    _estimatedRepairCost = value;
+                    OnPropertyChanged(nameof(EstimatedRepairCost));
+                }
+            }
+        }
+
+        public System.DateTime? CompletedAt
+        {
+            get => _completedAt;
+            set
+            {
+                if (_completedAt != value)
+                {
+                    _completedAt = value;
+                    OnPropertyChanged(nameof(CompletedAt));
+                }
+            }
+        }
+
+        public string PaymentMethod
+        {
+            get => _paymentMethod;
+            set
+            {
+                if (_paymentMethod != value)
+                {
+                    _paymentMethod = value;
+                    OnPropertyChanged(nameof(PaymentMethod));
+                    OnPropertyChanged(nameof(IsOnlinePayment));
+                    OnPropertyChanged(nameof(CanShowOnlinePaymentButton));
+                    OnPropertyChanged(nameof(PaymentMethodDisplay));
+                    OnPropertyChanged(nameof(PaymentStatusText));
+                }
+            }
+        }
+
+        public bool IsOnlinePaymentCompleted
+        {
+            get => _isOnlinePaymentCompleted;
+            set
+            {
+                if (_isOnlinePaymentCompleted != value)
+                {
+                    _isOnlinePaymentCompleted = value;
+                    OnPropertyChanged(nameof(IsOnlinePaymentCompleted));
+                    OnPropertyChanged(nameof(CanShowOnlinePaymentButton));
+                    OnPropertyChanged(nameof(PaymentStatusText));
+                    OnPropertyChanged(nameof(PaymentPaidAtText));
+                }
+            }
+        }
+
+        public System.DateTime? OnlinePaymentPaidAt
+        {
+            get => _onlinePaymentPaidAt;
+            set
+            {
+                if (_onlinePaymentPaidAt != value)
+                {
+                    _onlinePaymentPaidAt = value;
+                    OnPropertyChanged(nameof(OnlinePaymentPaidAt));
+                    OnPropertyChanged(nameof(PaymentPaidAtText));
+                }
+            }
+        }
         public List<OrderItem> Items { get; set; } = new List<OrderItem>();
 
         public OrderStatus Status
@@ -74,8 +200,8 @@ namespace Printinvest_WPF_app.Models
             }
         }
 
-        public DateTime CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
+        public System.DateTime CreatedAt { get; set; }
+        public System.DateTime? UpdatedAt { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

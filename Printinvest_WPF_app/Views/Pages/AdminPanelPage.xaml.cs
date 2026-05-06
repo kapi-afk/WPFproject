@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Printinvest_WPF_app.ViewModels;
 
 namespace Printinvest_WPF_app.Views.Pages
 {
@@ -23,6 +24,12 @@ namespace Printinvest_WPF_app.Views.Pages
         public AdminPanelPage()
         {
             InitializeComponent();
+            DataContext = new ServiceAdminPanelViewModel();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Printinvest_WPF_app.Models
 {
@@ -16,5 +17,8 @@ namespace Printinvest_WPF_app.Models
         public int RequestedQuantity { get; set; }
         public string Status { get; set; }
         public DateTime CreatedAt { get; set; }
+
+        [NotMapped]
+        public string OrderDisplayNumber => Order?.DisplayNumber ?? $"№ {OrderId}";
     }
 }

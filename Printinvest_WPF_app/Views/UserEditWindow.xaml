@@ -4,74 +4,96 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:conv="clr-namespace:Printinvest_WPF_app.Converters"
         Title="Редактирование пользователя"
-        Height="410"
-        Width="520"
-        MinHeight="410"
-        MinWidth="520"
+        Height="500"
+        Width="620"
+        MinHeight="480"
+        MinWidth="620"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize"
         Background="{DynamicResource ContentBackgroundBrush}">
 
     <Window.Resources>
         <conv:BoolToVisConverter x:Key="BoolToVis"/>
     </Window.Resources>
 
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
-                   Text="Редактирование пользователя"
-                   FontSize="22"
-                   FontWeight="Bold"
-                   Margin="0,0,0,18"/>
+            <TextBlock Grid.Row="0"
+                       Text="Редактирование пользователя"
+                       FontSize="22"
+                       FontWeight="Bold"
+                       Margin="0,0,0,18"/>
 
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="18" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="18" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0">
-                <TextBlock Text="Имя" Margin="0,0,0,4"/>
-                <TextBox Text="{Binding SelectedUser.Name, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                <TextBlock Text="Логин" Margin="0,0,0,4"/>
-                <TextBox Text="{Binding SelectedUser.Login, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-            </StackPanel>
+                <StackPanel Grid.Column="0">
+                    <StackPanel Visibility="{Binding IsSelectedUserClient, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="Фамилия" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding SelectedUserLastName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
 
-            <StackPanel Grid.Column="2">
-                <TextBlock Text="Роль" Margin="0,0,0,4"/>
-                <ComboBox ItemsSource="{Binding AvailableRoles}"
-                          SelectedItem="{Binding SelectedUserRole}"
-                          Margin="0,0,0,12"/>
-                <StackPanel Visibility="{Binding IsSelectedUserMaster, Converter={StaticResource BoolToVis}}">
-                    <TextBlock Text="Специализация мастера" Margin="0,0,0,6"/>
-                    <CheckBox Content="Ноутбуки"
-                              IsChecked="{Binding SelectedUserSpecializesLaptops}"
-                              Margin="0,0,0,6"/>
-                    <CheckBox Content="ПК и моноблоки"
-                              IsChecked="{Binding SelectedUserSpecializesComputers}"
-                              Margin="0,0,0,6"/>
-                    <CheckBox Content="Мониторы и принтеры"
-                              IsChecked="{Binding SelectedUserSpecializesOfficeEquipment}"/>
+                        <TextBlock Text="Имя" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding SelectedUserFirstName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+
+                        <TextBlock Text="Отчество" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding SelectedUserMiddleName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                    </StackPanel>
+
+                    <StackPanel Visibility="{Binding IsSelectedUserNonClient, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="Имя" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding SelectedUser.Name, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                    </StackPanel>
                 </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Роль" Margin="0,0,0,4"/>
+                    <ComboBox ItemsSource="{Binding AvailableRoles}"
+                              SelectedItem="{Binding SelectedUserRole}"
+                              Margin="0,0,0,12"/>
+
+                    <StackPanel Visibility="{Binding IsSelectedUserClient, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="Электронная почта" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding SelectedUserEmail, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Логин" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding SelectedUser.Login, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+
+                    <StackPanel Visibility="{Binding IsSelectedUserMaster, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="Специализация мастера" Margin="0,0,0,6"/>
+                        <CheckBox Content="Ноутбуки"
+                                  IsChecked="{Binding SelectedUserSpecializesLaptops}"
+                                  Margin="0,0,0,6"/>
+                        <CheckBox Content="ПК и моноблоки"
+                                  IsChecked="{Binding SelectedUserSpecializesComputers}"
+                                  Margin="0,0,0,6"/>
+                        <CheckBox Content="Мониторы и принтеры"
+                                  IsChecked="{Binding SelectedUserSpecializesOfficeEquipment}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Grid.Row="2"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Margin="0,18,0,0">
+                <Button Content="Отмена"
+                        Width="120"
+                        Margin="0,0,10,0"
+                        Click="Cancel_Click" Foreground="#FF1D7CC9" Background="White"/>
+                <Button Content="Сохранить"
+                        Width="150"
+                        Click="Save_Click"/>
             </StackPanel>
         </Grid>
-
-        <StackPanel Grid.Row="2"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right">
-            <Button Content="Отмена"
-                    Width="120"
-                    Margin="0,0,10,0"
-                    Click="Cancel_Click"/>
-            <Button Content="Сохранить"
-                    Width="150"
-                    Click="Save_Click"/>
-        </StackPanel>
-    </Grid>
+    </ScrollViewer>
 </Window>

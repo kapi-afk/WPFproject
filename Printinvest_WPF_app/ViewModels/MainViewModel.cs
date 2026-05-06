@@ -12,10 +12,14 @@ namespace Printinvest_WPF_app.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
+        private const double CompactNavigationThreshold = 1420;
+
         private Page _currentPage;
         private bool _isDark;
         private bool _isEnglish;
         private bool _navVisible = true;
+        private bool _isCompactNavigationMode;
+        private double _lastWindowWidth;
 
         private readonly ResourceDictionary _lightTheme = new ResourceDictionary() { Source = new Uri("Themes/LightTheme.xaml", UriKind.Relative) };
         private readonly ResourceDictionary _darkTheme = new ResourceDictionary() { Source = new Uri("Themes/DarkTheme.xaml", UriKind.Relative) };
@@ -59,12 +63,22 @@ namespace Printinvest_WPF_app.ViewModels
                 _currentPage = value;
                 OnPropertyChanged(nameof(CurrentPage));
                 OnPropertyChanged(nameof(IsAdminOrMasterAuthenticated));
+                OnPropertyChanged(nameof(IsShellNavigationVisible));
+                UpdateWindowWidth(_lastWindowWidth);
             }
         }
         public bool NavVisible
         {
             get => _navVisible;
-            set { _navVisible = value; OnPropertyChanged(nameof(NavVisible)); }
+            set
+            {
+                var effectiveValue = _isCompactNavigationMode ? false : value;
+                if (_navVisible == effectiveValue)
+                    return;
+
+                _navVisible = effectiveValue;
+                OnPropertyChanged(nameof(NavVisible));
+            }
         }
 
         public ICommand NavigateProfileCommand { get; }
@@ -74,6 +88,8 @@ namespace Printinvest_WPF_app.ViewModels
         public ICommand ChangeLanguageCommand { get; }
         public ICommand LogoutCommand { get; }
         public bool IsAdminOrMasterAuthenticated => SessionManager.IsAdmin || SessionManager.IsMaster;
+        public bool IsShellNavigationVisible => !IsAuthenticationPage(CurrentPage);
+        public bool IsCompactNavigationMode => _isCompactNavigationMode;
 
         private void ToggleTheme()
         {
@@ -117,10 +133,43 @@ namespace Printinvest_WPF_app.ViewModels
 
         public string WindowTitle => Application.Current.TryFindResource("AppTitle")?.ToString();
 
+        public void UpdateWindowWidth(double windowWidth)
+        {
+            _lastWindowWidth = windowWidth;
+
+            var shouldForceCollapsed = IsShellNavigationVisible && windowWidth > 0 && windowWidth < CompactNavigationThreshold;
+            if (_isCompactNavigationMode == shouldForceCollapsed)
+            {
+                if (shouldForceCollapsed && _navVisible)
+                {
+                    _navVisible = false;
+                    OnPropertyChanged(nameof(NavVisible));
+                }
+
+                return;
+            }
+
+            _isCompactNavigationMode = shouldForceCollapsed;
+            OnPropertyChanged(nameof(IsCompactNavigationMode));
+
+            if (_isCompactNavigationMode && _navVisible)
+            {
+                _navVisible = false;
+                OnPropertyChanged(nameof(NavVisible));
+            }
+        }
+
         private void Logout()
         {
             SessionManager.Logout();
             CurrentPage = new LoginPage();
+        }
+
+        private static bool IsAuthenticationPage(Page page)
+        {
+            return page is LoginPage ||
+                   page is RegisterPage ||
+                   page is RecoverPage;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
