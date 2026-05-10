@@ -12,6 +12,8 @@ namespace Printinvest_WPF_app
 {
     public partial class App : Application
     {
+        public static event EventHandler LanguageChanged;
+
         protected override void OnStartup(StartupEventArgs e)
         {
             // Сначала загружаем настройки
@@ -38,21 +40,28 @@ namespace Printinvest_WPF_app
 
         public static void ApplyTheme(string theme)
         {
+            var normalizedTheme = string.Equals(theme, "Dark", StringComparison.OrdinalIgnoreCase)
+                ? "Dark"
+                : "Light";
+
             var newTheme = new ResourceDictionary
             {
-                Source = new Uri($"Themes/{theme}Theme.xaml", UriKind.Relative)
+                Source = new Uri($"Themes/{normalizedTheme}Theme.xaml", UriKind.Relative)
             };
 
-            var oldTheme = Current.Resources.MergedDictionaries
-                .FirstOrDefault(d => d.Source != null && d.Source.OriginalString.Contains("Themes/"));
+            var oldThemes = Current.Resources.MergedDictionaries
+                .Where(d => d.Source != null && d.Source.OriginalString.Contains("Themes/"))
+                .ToList();
 
-            if (oldTheme != null)
+            foreach (var oldTheme in oldThemes)
+            {
                 Current.Resources.MergedDictionaries.Remove(oldTheme);
+            }
 
             Current.Resources.MergedDictionaries.Add(newTheme);
 
-            // Сохраняем выбор темы
-            Settings.Default.AppTheme = theme;
+            Current.Properties["Theme"] = normalizedTheme;
+            Settings.Default.AppTheme = normalizedTheme;
             Settings.Default.Save();
         }
 
@@ -81,6 +90,17 @@ namespace Printinvest_WPF_app
 
             // Можно сохранить язык в Application.Current.Properties для доступа из других частей приложения
             Current.Properties["Language"] = languageCode;
+            LanguageChanged?.Invoke(Current, EventArgs.Empty);
+        }
+
+        public static string GetString(string key, string fallback = "")
+        {
+            if (Current == null)
+            {
+                return fallback;
+            }
+
+            return Current.TryFindResource(key)?.ToString() ?? fallback;
         }
     }
 }

@@ -14,12 +14,14 @@ namespace Printinvest_WPF_app.ViewModels
     {
         private readonly OrderRepository _orderRepository;
         private readonly WarehouseRequestRepository _warehouseRequestRepository;
+        private List<Order> _allOrders;
         private List<WarehouseRequest> _allMasterWarehouseRequests;
         private ObservableCollection<Order> _orders;
         private ObservableCollection<WarehouseRequest> _currentOrderWarehouseRequests;
         private Order _selectedOrder;
         private OrderStatus _selectedOrderStatus;
         private decimal _selectedOrderMasterWorkCost;
+        private string _orderSearchText;
         private string _materialRequestSearchText;
         private int _completedOrdersCount;
         private int _activeOrdersCount;
@@ -44,6 +46,18 @@ namespace Printinvest_WPF_app.ViewModels
                 if (SetProperty(ref _materialRequestSearchText, value))
                 {
                     ApplyMaterialRequestFilter();
+                }
+            }
+        }
+
+        public string OrderSearchText
+        {
+            get => _orderSearchText;
+            set
+            {
+                if (SetProperty(ref _orderSearchText, value))
+                {
+                    ApplyOrderFilter();
                 }
             }
         }
@@ -119,6 +133,7 @@ namespace Printinvest_WPF_app.ViewModels
         {
             _orderRepository = RepositoryManager.Orders;
             _warehouseRequestRepository = RepositoryManager.WarehouseRequests;
+            _allOrders = new List<Order>();
             _allMasterWarehouseRequests = new List<WarehouseRequest>();
             Orders = new ObservableCollection<Order>();
             CurrentOrderWarehouseRequests = new ObservableCollection<WarehouseRequest>();
@@ -127,6 +142,7 @@ namespace Printinvest_WPF_app.ViewModels
             UpdateOrderStatusCommand = new RelayCommand(UpdateOrderStatus);
             LogoutCommand = new RelayCommand(Logout);
             OpenWarehouseWindowCommand = new RelayCommand(OpenWarehouseWindow);
+            App.LanguageChanged += OnLanguageChanged;
 
             LoadData();
         }
@@ -135,6 +151,7 @@ namespace Printinvest_WPF_app.ViewModels
         {
             if (!SessionManager.IsAuthenticated || !SessionManager.IsMaster)
             {
+                _allOrders.Clear();
                 Orders.Clear();
                 _allMasterWarehouseRequests.Clear();
                 CurrentOrderWarehouseRequests.Clear();
@@ -143,13 +160,11 @@ namespace Printinvest_WPF_app.ViewModels
                 return;
             }
 
-            Orders = new ObservableCollection<Order>(_orderRepository.GetByAssignedMasterId(SessionManager.CurrentUser.Id));
-            CompletedOrdersCount = Orders.Count(order => order.Status == OrderStatus.Completed);
-            ActiveOrdersCount = Orders.Count(order => order.Status != OrderStatus.Completed && order.Status != OrderStatus.Cancelled);
-            if (SelectedOrder != null)
-            {
-                SelectedOrder = Orders.FirstOrDefault(order => order.Id == SelectedOrder.Id);
-            }
+            _allOrders = _orderRepository.GetByAssignedMasterId(SessionManager.CurrentUser.Id);
+            CompletedOrdersCount = _allOrders.Count(order => order.Status == OrderStatus.Completed);
+            ActiveOrdersCount = _allOrders.Count(order => order.Status != OrderStatus.Completed && order.Status != OrderStatus.Cancelled);
+
+            ApplyOrderFilter();
             LoadCurrentOrderWarehouseRequests();
         }
 
@@ -181,26 +196,37 @@ namespace Printinvest_WPF_app.ViewModels
                 return;
             }
 
-            var warehouseWindow = new WarehouseWindow(SelectedOrder);
-            if (Application.Current.MainWindow != null)
+            try
             {
-                warehouseWindow.Owner = Application.Current.MainWindow;
-            }
+                var warehouseWindow = new WarehouseWindow(SelectedOrder);
+                if (Application.Current.MainWindow != null)
+                {
+                    warehouseWindow.Owner = Application.Current.MainWindow;
+                }
 
-            warehouseWindow.ShowDialog();
-            LoadData();
+                warehouseWindow.ShowDialog();
+                LoadData();
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show(
+                    $"Не удалось открыть окно склада.{System.Environment.NewLine}{ex.Message}",
+                    "Ошибка",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
 
         private void LoadCurrentOrderWarehouseRequests()
         {
-            if (Orders == null || !Orders.Any())
+            if (_allOrders == null || !_allOrders.Any())
             {
                 _allMasterWarehouseRequests = new List<WarehouseRequest>();
                 CurrentOrderWarehouseRequests = new ObservableCollection<WarehouseRequest>();
                 return;
             }
 
-            var orderIds = Orders.Select(order => order.Id).ToList();
+            var orderIds = _allOrders.Select(order => order.Id).ToList();
             _allMasterWarehouseRequests = _warehouseRequestRepository.GetAll()
                 .Where(request => orderIds.Contains(request.OrderId))
                 .ToList();
@@ -222,6 +248,73 @@ namespace Printinvest_WPF_app.ViewModels
             CurrentOrderWarehouseRequests = new ObservableCollection<WarehouseRequest>(requests);
         }
 
+        private void ApplyOrderFilter()
+        {
+            var selectedOrderId = SelectedOrder?.Id;
+            IEnumerable<Order> orders = _allOrders ?? Enumerable.Empty<Order>();
+
+            if (!string.IsNullOrWhiteSpace(OrderSearchText))
+            {
+                var search = OrderSearchText.Trim().ToLowerInvariant();
+                orders = orders.Where(order =>
+                    (order.DisplayNumber?.ToLowerInvariant().Contains(search) ?? false) ||
+                    (order.User?.Name?.ToLowerInvariant().Contains(search) ?? false) ||
+                    (order.DeviceType?.ToLowerInvariant().Contains(search) ?? false) ||
+                    (order.DeviceBrand?.ToLowerInvariant().Contains(search) ?? false) ||
+                    (order.DeviceModel?.ToLowerInvariant().Contains(search) ?? false) ||
+                    (order.ProblemDescription?.ToLowerInvariant().Contains(search) ?? false));
+            }
+
+            var filteredOrders = orders
+                .OrderBy(GetOrderStatusPriority)
+                .ThenByDescending(order => order.UpdatedAt ?? order.CreatedAt)
+                .ThenByDescending(order => order.Id)
+                .ToList();
+
+            Orders = new ObservableCollection<Order>(filteredOrders);
+
+            var nextSelectedOrder = selectedOrderId.HasValue
+                ? Orders.FirstOrDefault(order => order.Id == selectedOrderId.Value)
+                : Orders.FirstOrDefault();
+
+            if (!ReferenceEquals(SelectedOrder, nextSelectedOrder))
+            {
+                SelectedOrder = nextSelectedOrder;
+            }
+            else if (nextSelectedOrder == null)
+            {
+                LoadCurrentOrderWarehouseRequests();
+            }
+        }
+
+        private static int GetOrderStatusPriority(Order order)
+        {
+            if (order == null)
+            {
+                return int.MaxValue;
+            }
+
+            switch (order.Status)
+            {
+                case OrderStatus.Assigned:
+                    return 0;
+                case OrderStatus.Diagnosing:
+                    return 1;
+                case OrderStatus.WaitingForParts:
+                    return 2;
+                case OrderStatus.InProgress:
+                    return 3;
+                case OrderStatus.ReadyForPickup:
+                    return 4;
+                case OrderStatus.Completed:
+                    return 5;
+                case OrderStatus.Cancelled:
+                    return 6;
+                default:
+                    return 7;
+            }
+        }
+
         private void Logout()
         {
             SessionManager.Logout();
@@ -230,6 +323,11 @@ namespace Printinvest_WPF_app.ViewModels
             {
                 mainViewModel.CurrentPage = new LoginPage();
             }
+        }
+
+        private void OnLanguageChanged(object sender, System.EventArgs e)
+        {
+            LoadData();
         }
     }
 }

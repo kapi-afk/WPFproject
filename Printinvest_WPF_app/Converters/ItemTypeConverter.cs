@@ -10,10 +10,10 @@ namespace Printinvest_WPF_app.Converters
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is Product)
-                return "Товар";
+                return App.GetString("ItemTypeProduct", "Product");
             if (value is Service)
-                return "Услуга";
-            return "Неизвестно";
+                return App.GetString("ItemTypeService", "Service");
+            return App.GetString("ItemTypeUnknown", "Unknown");
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

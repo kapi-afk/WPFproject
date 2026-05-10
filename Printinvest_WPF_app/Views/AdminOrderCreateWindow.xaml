@@ -2,7 +2,7 @@
 <Window x:Class="Printinvest_WPF_app.Views.AdminOrderCreateWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Оформить заявку"
+        Title="{DynamicResource CreateOrderButton}"
         Width="700"
         Height="700"
         MinWidth="700"
@@ -61,8 +61,11 @@
 
     <Border Style="{StaticResource DialogCardStyle}"
             Margin="14">
-        <StackPanel>
-                <TextBlock Text="Новая заявка"
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      MaxHeight="650">
+            <StackPanel>
+                <TextBlock Text="{DynamicResource NewOrderDialogTitle}"
                            Style="{StaticResource PageTitleStyle}"
                            FontSize="26"/>
 
@@ -76,7 +79,7 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Имя клиента *"
+                            <TextBlock Text="{DynamicResource ClientNameRequiredLabel}"
                                        Style="{StaticResource FieldLabelStyle}"/>
                             <TextBox Text="{Binding NewOrderClientName, UpdateSourceTrigger=PropertyChanged}"
                                      Margin="0,0,0,12"
@@ -85,7 +88,7 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Email клиента *"
+                            <TextBlock Text="{DynamicResource ClientEmailRequiredLabel}"
                                        Style="{StaticResource FieldLabelStyle}"/>
                             <TextBox Text="{Binding NewOrderClientEmail, UpdateSourceTrigger=PropertyChanged}"
                                      Margin="0,0,0,12"
@@ -109,14 +112,20 @@
 
                     <StackPanel Grid.Row="0"
                                 Grid.Column="0">
-                        <TextBlock Text="Тип устройства *"
+                        <TextBlock Text="{DynamicResource DeviceTypeRequiredLabel}"
                                    Style="{StaticResource FieldLabelStyle}"/>
                         <ComboBox x:Name="DeviceTypeComboBox"
                                   ItemsSource="{Binding DeviceTypes}"
                                   SelectedItem="{Binding NewOrderDeviceType}"
                                   Margin="0,0,0,12"
                                   Style="{StaticResource OrderComboBoxStyle}"
-                                  SelectionChanged="DeviceTypeComboBox_SelectionChanged"/>
+                                  SelectionChanged="DeviceTypeComboBox_SelectionChanged">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource CatalogOptionConverter}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                         <TextBox x:Name="CustomDeviceTypeTextBox"
                                  Margin="0,0,0,12"
                                  Visibility="Collapsed"
@@ -125,12 +134,18 @@
 
                     <StackPanel Grid.Row="0"
                                 Grid.Column="2">
-                        <TextBlock Text="Модель *"
+                        <TextBlock Text="{DynamicResource ModelRequiredLabel}"
                                    Style="{StaticResource FieldLabelStyle}"/>
                         <ComboBox x:Name="ModelComboBox"
                                   Margin="0,0,0,8"
                                   Style="{StaticResource RequiredOrderComboBoxStyle}"
-                                  SelectionChanged="ModelComboBox_SelectionChanged"/>
+                                  SelectionChanged="ModelComboBox_SelectionChanged">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource CatalogOptionConverter}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                         <TextBox x:Name="CustomModelTextBox"
                                  Margin="0,0,0,12"
                                  Visibility="Collapsed"
@@ -139,12 +154,18 @@
 
                     <StackPanel Grid.Row="1"
                                 Grid.Column="0">
-                        <TextBlock Text="Бренд *"
+                        <TextBlock Text="{DynamicResource BrandRequiredLabel}"
                                    Style="{StaticResource FieldLabelStyle}"/>
                         <ComboBox x:Name="BrandComboBox"
                                   Margin="0,0,0,8"
                                   Style="{StaticResource RequiredOrderComboBoxStyle}"
-                                  SelectionChanged="BrandComboBox_SelectionChanged"/>
+                                  SelectionChanged="BrandComboBox_SelectionChanged">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource CatalogOptionConverter}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                         <TextBox x:Name="CustomBrandTextBox"
                                  Margin="0,0,0,12"
                                  Visibility="Collapsed"
@@ -153,12 +174,18 @@
 
                     <StackPanel Grid.Row="1"
                                 Grid.Column="2">
-                        <TextBlock Text="Неисправность *"
+                        <TextBlock Text="{DynamicResource ProblemRequiredLabel}"
                                    Style="{StaticResource FieldLabelStyle}"/>
                         <ComboBox x:Name="ProblemComboBox"
                                   Margin="0,0,0,8"
                                   Style="{StaticResource RequiredOrderComboBoxStyle}"
-                                  SelectionChanged="ProblemComboBox_SelectionChanged"/>
+                                  SelectionChanged="ProblemComboBox_SelectionChanged">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource CatalogOptionConverter}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                         <TextBox x:Name="CustomProblemTextBox"
                                  AcceptsReturn="True"
                                  TextWrapping="Wrap"
@@ -169,28 +196,28 @@
 
                     <StackPanel Grid.Row="2"
                                 Grid.Column="0">
-                        <TextBlock Text="Телефон *"
+                        <TextBlock Text="{DynamicResource PhoneRequiredLabel}"
                                    Style="{StaticResource FieldLabelStyle}"/>
                         <TextBox Text="{Binding NewOrderContactPhone, UpdateSourceTrigger=PropertyChanged}"
                                  Margin="0,0,0,4"
-                                 ToolTip="Например: +375 (29) 123-45-67"
+                                 ToolTip="{DynamicResource PhoneHint}"
                                  Style="{StaticResource RequiredOrderTextBoxStyle}"
                                  Tag="{Binding IsNewOrderContactPhoneInvalid}"/>
-                        <TextBlock Text="Например: +375 (29) 123-45-67"
+                        <TextBlock Text="{DynamicResource PhoneHint}"
                                    Style="{StaticResource InfoTextStyle}"
                                    Margin="0,0,0,12"/>
                     </StackPanel>
 
                     <StackPanel Grid.Row="2"
                                 Grid.Column="2">
-                        <TextBlock Text="Способ оплаты"
+                        <TextBlock Text="{DynamicResource PaymentMethodLabel}"
                                    Style="{StaticResource FieldLabelStyle}"
                                    Margin="0,0,0,4"/>
-                        <CheckBox Content="Онлайн-оплата"
+                        <CheckBox Content="{DynamicResource OnlinePaymentCheckbox}"
                                   IsChecked="{Binding NewOrderIsOnlinePayment}"
                                   FontSize="15"
                                   Margin="0,6,0,6"/>
-                        <TextBlock Text="Если флажок не установлен, оплата будет на месте."
+                        <TextBlock Text="{DynamicResource PaymentHint}"
                                    Style="{StaticResource InfoTextStyle}"
                                    Margin="0,0,0,12"
                                    TextWrapping="Wrap"/>
@@ -200,21 +227,21 @@
                 <Border Style="{StaticResource InnerCardStyle}"
                         Margin="0,0,0,12">
                     <StackPanel>
-                        <TextBlock Text="Фото неисправности"
+                        <TextBlock Text="{DynamicResource ProblemPhotoLabel}"
                                    Style="{StaticResource FieldLabelStyle}"/>
-                        <TextBlock Text="Необязательно, но поможет мастеру быстрее понять проблему."
+                        <TextBlock Text="{DynamicResource ProblemPhotoHint}"
                                    Style="{StaticResource InfoTextStyle}"
                                    Margin="0,4,0,12"/>
 
                         <StackPanel Orientation="Horizontal"
                                     Margin="0,0,0,10">
-                            <Button Content="Добавить фото"
+                            <Button Content="{DynamicResource AddPhotoButton}"
                                     Style="{StaticResource MediumPrimaryButtonStyle}"
                                     Width="156"
                                     Margin="0,0,10,0"
                                     Click="SelectProblemPhoto_Click"/>
                             <Button x:Name="RemovePhotoButton"
-                                    Content="Удалить фото"
+                                    Content="{DynamicResource RemovePhotoButton}"
                                     Style="{StaticResource SmallSecondaryButtonStyle}"
                                     Width="118"
                                     Visibility="Collapsed"
@@ -222,7 +249,7 @@
                         </StackPanel>
 
                         <TextBlock x:Name="ProblemPhotoStatusTextBlock"
-                                   Text="Фото не добавлено"
+                                   Text="{DynamicResource ProblemPhotoNotAdded}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    Margin="0,0,0,10"/>
 
@@ -240,7 +267,7 @@
                     </StackPanel>
                 </Border>
 
-                <TextBlock Text="Комментарий"
+                <TextBlock Text="{DynamicResource CommentLabel}"
                            Style="{StaticResource FieldLabelStyle}"/>
                 <TextBox Text="{Binding NewOrderClientComment, UpdateSourceTrigger=PropertyChanged}"
                          AcceptsReturn="True"
@@ -250,16 +277,17 @@
 
                 <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Left">
-                    <Button Content="Отправить заявку"
+                    <Button Content="{DynamicResource SendOrderButton}"
                             Style="{StaticResource MediumPrimaryButtonStyle}"
                             MinWidth="190"
                             Margin="0,0,10,0"
                             Click="Create_Click"/>
-                    <Button Content="Отмена"
+                    <Button Content="{DynamicResource CancelButton}"
                             Style="{StaticResource MediumSecondaryButtonStyle}"
                             Width="96"
                             Click="Cancel_Click"/>
                 </StackPanel>
-        </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
     </Border>
 </Window>

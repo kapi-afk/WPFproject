@@ -13,6 +13,7 @@ using System.Net.Mail;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace Printinvest_WPF_app.ViewModels
 {
@@ -80,6 +81,17 @@ namespace Printinvest_WPF_app.ViewModels
         private int _clientsCount;
         private bool _showAdminOrderValidationErrors;
         private bool _wasLastAdminOrderCreationSuccessful;
+        private static readonly OrderStatusChartDefinition[] OrderStatusChartDefinitions =
+        {
+            new OrderStatusChartDefinition(OrderStatus.Created, "ChartStatusCreated", "Created", "#5B8DEF"),
+            new OrderStatusChartDefinition(OrderStatus.Assigned, "ChartStatusAssigned", "Assigned to master", "#7C6BF1"),
+            new OrderStatusChartDefinition(OrderStatus.Diagnosing, "ChartStatusDiagnosing", "Diagnosing", "#F39C4A"),
+            new OrderStatusChartDefinition(OrderStatus.WaitingForParts, "ChartStatusWaitingForParts", "Waiting for parts", "#E66A6A"),
+            new OrderStatusChartDefinition(OrderStatus.InProgress, "ChartStatusInProgress", "In progress", "#31B099"),
+            new OrderStatusChartDefinition(OrderStatus.ReadyForPickup, "ChartStatusReadyForPickup", "Ready for pickup", "#4DB6E5"),
+            new OrderStatusChartDefinition(OrderStatus.Completed, "ChartStatusCompleted", "Completed", "#8796AC"),
+            new OrderStatusChartDefinition(OrderStatus.Cancelled, "ChartStatusCancelled", "Cancelled", "#C26D7C")
+        };
 
         private bool AreRepositoriesReady =>
             _userRepository != null &&
@@ -117,14 +129,7 @@ namespace Printinvest_WPF_app.ViewModels
             set => SetProperty(ref _warehouseRequests, value);
         }
 
-        public ObservableCollection<string> WarehouseSortOptions { get; } = new ObservableCollection<string>
-        {
-            "По названию",
-            "Сначала меньше остаток",
-            "Сначала больше остаток",
-            "Сначала дешевле",
-            "Сначала дороже"
-        };
+        public ObservableCollection<string> WarehouseSortOptions { get; } = new ObservableCollection<string>();
 
         public ObservableCollection<string> WarehouseCategoryFilters { get; } = new ObservableCollection<string>();
 
@@ -168,6 +173,9 @@ namespace Printinvest_WPF_app.ViewModels
             Order.OnSitePaymentMethod,
             Order.OnlinePaymentMethod
         };
+
+        public ObservableCollection<OrderStatusChartSlice> OrderStatusChartSlices { get; } =
+            new ObservableCollection<OrderStatusChartSlice>();
 
         public User SelectedUser
         {
@@ -647,6 +655,8 @@ namespace Printinvest_WPF_app.ViewModels
             set => SetProperty(ref _clientsCount, value);
         }
 
+        public bool HasOrderStatusChartData => OrderStatusChartSlices.Count > 0;
+
         public bool ShowAdminOrderValidationErrors
         {
             get => _showAdminOrderValidationErrors;
@@ -718,6 +728,7 @@ namespace Printinvest_WPF_app.ViewModels
             WarehouseRequests = new ObservableCollection<WarehouseRequest>();
             _allWarehouseItems = new List<WarehouseItem>();
             NewUserRole = UserRole.Master;
+            RebuildWarehouseSortOptions();
 
             RefreshCommand = new RelayCommand(LoadData);
             DeleteUserCommand = new RelayCommandSec(DeleteUser);
@@ -752,6 +763,8 @@ namespace Printinvest_WPF_app.ViewModels
             {
                 ResetDataWhenRepositoriesUnavailable();
             }
+
+            App.LanguageChanged += OnLanguageChanged;
         }
 
         private void LoadData()
@@ -775,6 +788,7 @@ namespace Printinvest_WPF_app.ViewModels
             CompletedOrdersCount = Orders.Count(order => order.Status == OrderStatus.Completed);
             MastersCount = Users.Count(user => user.Role == UserRole.Master);
             ClientsCount = Users.Count(user => user.Role == UserRole.Client);
+            UpdateOrderStatusChart();
         }
 
         private void ResetDataWhenRepositoriesUnavailable()
@@ -788,7 +802,7 @@ namespace Printinvest_WPF_app.ViewModels
 
             if (WarehouseCategoryFilters.Count == 0)
             {
-                WarehouseCategoryFilters.Add("Все категории");
+                WarehouseCategoryFilters.Add(GetAllCategoriesLabel());
             }
 
             _selectedWarehouseCategoryFilter = WarehouseCategoryFilters[0];
@@ -805,6 +819,113 @@ namespace Printinvest_WPF_app.ViewModels
             CompletedOrdersCount = 0;
             MastersCount = 0;
             ClientsCount = 0;
+            UpdateOrderStatusChart();
+        }
+
+        private void UpdateOrderStatusChart()
+        {
+            OrderStatusChartSlices.Clear();
+
+            var totalOrders = Orders?.Count ?? 0;
+            if (totalOrders == 0)
+            {
+                OnPropertyChanged(nameof(HasOrderStatusChartData));
+                return;
+            }
+
+            const double canvasSize = 240d;
+            const double outerRadius = 92d;
+            const double innerRadius = 58d;
+            var center = new Point(canvasSize / 2, canvasSize / 2);
+            var startAngle = -90d;
+            var statusEntries = OrderStatusChartDefinitions
+                .Select((definition, index) => new
+                {
+                    Definition = definition,
+                    Index = index,
+                    Count = Orders.Count(order => order.Status == definition.Status)
+                })
+                .OrderByDescending(item => item.Count)
+                .ThenBy(item => item.Index)
+                .ToList();
+
+            foreach (var entry in statusEntries)
+            {
+                var count = entry.Count;
+                var sweepAngle = totalOrders == 0 ? 0 : 360d * count / totalOrders;
+                var slice = new OrderStatusChartSlice
+                {
+                    Label = App.GetString(entry.Definition.ResourceKey, entry.Definition.FallbackLabel),
+                    Count = count,
+                    Percentage = totalOrders == 0 ? 0 : (double)count / totalOrders,
+                    Fill = CreateBrush(entry.Definition.ColorHex),
+                    Geometry = count == 0
+                        ? null
+                        : sweepAngle >= 359.999
+                        ? CreateFullRingGeometry(center, outerRadius, innerRadius)
+                        : CreateDonutSliceGeometry(center, outerRadius, innerRadius, startAngle, sweepAngle)
+                };
+
+                OrderStatusChartSlices.Add(slice);
+                startAngle += sweepAngle;
+            }
+
+            OnPropertyChanged(nameof(HasOrderStatusChartData));
+        }
+
+        private static Brush CreateBrush(string colorHex)
+        {
+            var brush = (SolidColorBrush)new BrushConverter().ConvertFromString(colorHex);
+            brush.Freeze();
+            return brush;
+        }
+
+        private static Geometry CreateFullRingGeometry(Point center, double outerRadius, double innerRadius)
+        {
+            var ring = new GeometryGroup
+            {
+                FillRule = FillRule.EvenOdd
+            };
+
+            ring.Children.Add(new EllipseGeometry(center, outerRadius, outerRadius));
+            ring.Children.Add(new EllipseGeometry(center, innerRadius, innerRadius));
+            ring.Freeze();
+            return ring;
+        }
+
+        private static Geometry CreateDonutSliceGeometry(
+            Point center,
+            double outerRadius,
+            double innerRadius,
+            double startAngle,
+            double sweepAngle)
+        {
+            var endAngle = startAngle + sweepAngle;
+            var outerStart = PointOnCircle(center, outerRadius, startAngle);
+            var outerEnd = PointOnCircle(center, outerRadius, endAngle);
+            var innerEnd = PointOnCircle(center, innerRadius, endAngle);
+            var innerStart = PointOnCircle(center, innerRadius, startAngle);
+            var isLargeArc = sweepAngle > 180d;
+
+            var geometry = new StreamGeometry();
+            using (var context = geometry.Open())
+            {
+                context.BeginFigure(outerStart, true, true);
+                context.ArcTo(outerEnd, new Size(outerRadius, outerRadius), 0, isLargeArc, SweepDirection.Clockwise, true, false);
+                context.LineTo(innerEnd, true, false);
+                context.ArcTo(innerStart, new Size(innerRadius, innerRadius), 0, isLargeArc, SweepDirection.Counterclockwise, true, false);
+            }
+
+            geometry.Freeze();
+            return geometry;
+        }
+
+        private static Point PointOnCircle(Point center, double radius, double angleInDegrees)
+        {
+            var angleInRadians = angleInDegrees * Math.PI / 180d;
+            return new Point(
+                center.X + radius * Math.Cos(angleInRadians),
+                center.Y + radius * Math.Sin(angleInRadians));
         }
 
         private void LoadWarehouseItems()
@@ -813,7 +934,7 @@ namespace Printinvest_WPF_app.ViewModels
 
             var selectedCategory = SelectedWarehouseCategoryFilter;
             WarehouseCategoryFilters.Clear();
-            WarehouseCategoryFilters.Add("Все категории");
+            WarehouseCategoryFilters.Add(GetAllCategoriesLabel());
 
             foreach (var category in _allWarehouseItems
                 .Select(item => item.Category)
@@ -857,28 +978,30 @@ namespace Printinvest_WPF_app.ViewModels
             }
 
             if (!string.IsNullOrWhiteSpace(SelectedWarehouseCategoryFilter) &&
-                SelectedWarehouseCategoryFilter != "Все категории")
+                SelectedWarehouseCategoryFilter != GetAllCategoriesLabel())
             {
                 items = items.Where(item => item.Category == SelectedWarehouseCategoryFilter);
             }
 
-            switch (SelectedWarehouseSortOption)
+            if (SelectedWarehouseSortOption == App.GetString("WarehouseSortQuantityAsc", "Lower stock first"))
             {
-                case "Сначала меньше остаток":
-                    items = items.OrderBy(item => item.Quantity).ThenBy(item => item.Name);
-                    break;
-                case "Сначала больше остаток":
-                    items = items.OrderByDescending(item => item.Quantity).ThenBy(item => item.Name);
-                    break;
-                case "Сначала дешевле":
-                    items = items.OrderBy(item => item.UnitPrice).ThenBy(item => item.Name);
-                    break;
-                case "Сначала дороже":
-                    items = items.OrderByDescending(item => item.UnitPrice).ThenBy(item => item.Name);
-                    break;
-                default:
-                    items = items.OrderBy(item => item.Name);
-                    break;
+                items = items.OrderBy(item => item.Quantity).ThenBy(item => item.Name);
+            }
+            else if (SelectedWarehouseSortOption == App.GetString("WarehouseSortQuantityDesc", "Higher stock first"))
+            {
+                items = items.OrderByDescending(item => item.Quantity).ThenBy(item => item.Name);
+            }
+            else if (SelectedWarehouseSortOption == App.GetString("WarehouseSortPriceAsc", "Cheaper first"))
+            {
+                items = items.OrderBy(item => item.UnitPrice).ThenBy(item => item.Name);
+            }
+            else if (SelectedWarehouseSortOption == App.GetString("WarehouseSortPriceDesc", "More expensive first"))
+            {
+                items = items.OrderByDescending(item => item.UnitPrice).ThenBy(item => item.Name);
+            }
+            else
+            {
+                items = items.OrderBy(item => item.Name);
             }
 
             var selectedId = SelectedWarehouseItem?.Id;
@@ -903,6 +1026,13 @@ namespace Printinvest_WPF_app.ViewModels
             if (_userRepository.GetByLogin(NewUserLogin) != null)
             {
                 MessageBox.Show("A user with this login already exists.", "Validation error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var passwordValidationMessage = HashHelper.GetPasswordValidationError(NewUserPassword);
+            if (!string.IsNullOrWhiteSpace(passwordValidationMessage))
+            {
+                MessageBox.Show(passwordValidationMessage, "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -967,15 +1097,17 @@ namespace Printinvest_WPF_app.ViewModels
             NewUserRole = UserRole.Master;
             ResetNewUserSpecializations();
 
-            var window = new UserCreateWindow(this);
-            ShowDialog(window);
+            ShowDialog(
+                () => new UserCreateWindow(this),
+                App.GetString("CreateAccountButton", "Создать аккаунт"));
             LoadData();
         }
 
         private void ShowEditUserForm()
         {
-            var window = new UserEditWindow(this);
-            ShowDialog(window);
+            ShowDialog(
+                () => new UserEditWindow(this),
+                App.GetString("EditButton", "Изменить"));
             IsUserEditPanelVisible = false;
             LoadData();
         }
@@ -1121,16 +1253,18 @@ namespace Printinvest_WPF_app.ViewModels
                 ? null
                 : Masters.FirstOrDefault(master => master.Id == SelectedOrder.AssignedMasterId);
 
-            var window = new AdminOrderEditWindow(this);
-            ShowDialog(window);
+            ShowDialog(
+                () => new AdminOrderEditWindow(this),
+                App.GetString("EditOrderTitle", "Управление заявкой"));
             LoadData();
         }
 
         private void ShowCreateAdminOrderForm()
         {
             ResetNewOrderForm();
-            var window = new AdminOrderCreateWindow(this);
-            ShowDialog(window);
+            ShowDialog(
+                () => new AdminOrderCreateWindow(this),
+                App.GetString("CreateOrderButton", "Создать заявку"));
             LoadData();
         }
 
@@ -1282,13 +1416,18 @@ namespace Printinvest_WPF_app.ViewModels
 
         private void OpenWarehouseItemWindow(WarehouseItem item)
         {
-            var window = new WarehouseItemWindow(item);
-            if (Application.Current.MainWindow != null)
+            WarehouseItemWindow window;
+            try
             {
-                window.Owner = Application.Current.MainWindow;
+                window = new WarehouseItemWindow(item);
+            }
+            catch (Exception ex)
+            {
+                ShowDialogOpenError(App.GetString("WarehouseTab", "Склад"), ex);
+                return;
             }
 
-            if (window.ShowDialog() != true)
+            if (!TryShowDialog(window, App.GetString("WarehouseTab", "Склад")))
             {
                 return;
             }
@@ -1358,19 +1497,56 @@ namespace Printinvest_WPF_app.ViewModels
 
         private void ShowWarehouseRequests()
         {
-            var window = new WarehouseRequestsWindow(this);
-            ShowDialog(window);
+            ShowDialog(
+                () => new WarehouseRequestsWindow(this),
+                App.GetString("MaterialRequestsTitle", "Запросы на материалы"));
             LoadData();
         }
 
-        private void ShowDialog(Window window)
+        private void ShowDialog(Func<Window> windowFactory, string dialogTitle)
         {
-            if (Application.Current.MainWindow != null)
+            try
             {
-                window.Owner = Application.Current.MainWindow;
-            }
+                var window = windowFactory?.Invoke();
+                if (window == null)
+                {
+                    return;
+                }
 
-            window.ShowDialog();
+                TryShowDialog(window, dialogTitle);
+            }
+            catch (Exception ex)
+            {
+                ShowDialogOpenError(dialogTitle, ex);
+            }
+        }
+
+        private bool TryShowDialog(Window window, string dialogTitle)
+        {
+            try
+            {
+                if (Application.Current.MainWindow != null && !ReferenceEquals(window, Application.Current.MainWindow))
+                {
+                    window.Owner = Application.Current.MainWindow;
+                }
+
+                return window.ShowDialog() == true;
+            }
+            catch (Exception ex)
+            {
+                ShowDialogOpenError(dialogTitle, ex);
+                return false;
+            }
+        }
+
+        private static void ShowDialogOpenError(string dialogTitle, Exception ex)
+        {
+            var title = string.IsNullOrWhiteSpace(dialogTitle) ? "окно" : dialogTitle;
+            MessageBox.Show(
+                $"Не удалось открыть \"{title}\".{Environment.NewLine}{ex.Message}",
+                "Ошибка",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
         }
 
         private string GetNewUserSpecializations()
@@ -1546,6 +1722,39 @@ namespace Printinvest_WPF_app.ViewModels
             OnPropertyChanged(nameof(HasAdminOrderValidationErrors));
         }
 
+        private void OnLanguageChanged(object sender, EventArgs e)
+        {
+            RebuildWarehouseSortOptions();
+            LoadData();
+        }
+
+        private void RebuildWarehouseSortOptions()
+        {
+            var previousSelection = _selectedWarehouseSortOption;
+            WarehouseSortOptions.Clear();
+            WarehouseSortOptions.Add(App.GetString("WarehouseSortByName", "By name"));
+            WarehouseSortOptions.Add(App.GetString("WarehouseSortQuantityAsc", "Lower stock first"));
+            WarehouseSortOptions.Add(App.GetString("WarehouseSortQuantityDesc", "Higher stock first"));
+            WarehouseSortOptions.Add(App.GetString("WarehouseSortPriceAsc", "Cheaper first"));
+            WarehouseSortOptions.Add(App.GetString("WarehouseSortPriceDesc", "More expensive first"));
+
+            if (!string.IsNullOrWhiteSpace(previousSelection) && WarehouseSortOptions.Contains(previousSelection))
+            {
+                _selectedWarehouseSortOption = previousSelection;
+                OnPropertyChanged(nameof(SelectedWarehouseSortOption));
+            }
+            else if (WarehouseSortOptions.Count > 0)
+            {
+                _selectedWarehouseSortOption = WarehouseSortOptions[0];
+                OnPropertyChanged(nameof(SelectedWarehouseSortOption));
+            }
+        }
+
+        private static string GetAllCategoriesLabel()
+        {
+            return App.GetString("WarehouseAllCategories", "All categories");
+        }
+
         private static bool IsValidEmail(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -1611,5 +1820,32 @@ namespace Printinvest_WPF_app.ViewModels
                 mainViewModel.CurrentPage = new LoginPage();
             }
         }
+    }
+
+    public class OrderStatusChartSlice
+    {
+        public string Label { get; set; }
+        public int Count { get; set; }
+        public double Percentage { get; set; }
+        public Brush Fill { get; set; }
+        public Geometry Geometry { get; set; }
+        public string PercentageText => $"{Percentage:P0}";
+        public string SummaryText => string.Format(App.GetString("ChartItemsCountFormat", "{0} pcs."), Count);
+    }
+
+    public class OrderStatusChartDefinition
+    {
+        public OrderStatusChartDefinition(OrderStatus status, string resourceKey, string fallbackLabel, string colorHex)
+        {
+            Status = status;
+            ResourceKey = resourceKey;
+            FallbackLabel = fallbackLabel;
+            ColorHex = colorHex;
+        }
+
+        public OrderStatus Status { get; }
+        public string ResourceKey { get; }
+        public string FallbackLabel { get; }
+        public string ColorHex { get; }
     }
 }

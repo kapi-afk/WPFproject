@@ -187,6 +187,7 @@
     <Compile Include="Converters\BoolToVisConverter.cs" />
     <Compile Include="Converters\ByteArrayToImageConverter.cs" />
     <Compile Include="Converters\CartItemTotalPriceConverter.cs" />
+    <Compile Include="Converters\CatalogOptionConverter.cs" />
     <Compile Include="Converters\FilterNameConverter.cs" />
     <Compile Include="Converters\HashHelper.cs" />
     <Compile Include="Converters\ItemTypeConverter.cs" />
@@ -195,6 +196,7 @@
     <Compile Include="Converters\OrderStatusForegroundBrushConverter.cs" />
     <Compile Include="Converters\PasswordBoxConverter.cs" />
     <Compile Include="Converters\SessionManager.cs" />
+    <Compile Include="Converters\UserRoleConverter.cs" />
     <Compile Include="Models\Analytic.cs" />
     <Compile Include="Models\Cart.cs" />
     <Compile Include="Models\Comment.cs" />

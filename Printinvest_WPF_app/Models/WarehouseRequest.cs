@@ -19,6 +19,27 @@ namespace Printinvest_WPF_app.Models
         public DateTime CreatedAt { get; set; }
 
         [NotMapped]
-        public string OrderDisplayNumber => Order?.DisplayNumber ?? $"№ {OrderId}";
+        public string OrderDisplayNumber => Order?.DisplayNumber ?? $"{App.GetString("OrderNumberShort", "No.")} {OrderId}";
+
+        [NotMapped]
+        public string DisplayStatus
+        {
+            get
+            {
+                if (string.Equals(Status, "Нужно", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(Status, "Запрошено", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(Status, "Новая заявка", StringComparison.OrdinalIgnoreCase))
+                {
+                    return App.GetString("WarehouseRequestStatusPending", "Requested");
+                }
+
+                if (string.Equals(Status, "Обработано", StringComparison.OrdinalIgnoreCase))
+                {
+                    return App.GetString("WarehouseRequestStatusProcessed", "Processed");
+                }
+
+                return Status;
+            }
+        }
     }
 }

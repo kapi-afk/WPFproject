@@ -25,5 +25,20 @@ namespace Printinvest_WPF_app.Models
         public byte[] Photo { get; set; } // Опционально
         public List<Order> Orders { get; set; } = new List<Order>();
         public List<Order> AssignedOrders { get; set; } = new List<Order>();
+
+        public override string ToString()
+        {
+            if (!string.IsNullOrWhiteSpace(Name))
+            {
+                return Name;
+            }
+
+            if (!string.IsNullOrWhiteSpace(Login))
+            {
+                return Login;
+            }
+
+            return $"User #{Id}";
+        }
     }
 }

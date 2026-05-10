@@ -86,7 +86,7 @@
                 <TextBlock Grid.Row="0"
                                Grid.Column="0"
                                Grid.ColumnSpan="3"
-                               Text="Профиль клиента"
+                               Text="{DynamicResource ClientProfilePageTitle}"
                                Style="{StaticResource PageTitleStyle}"/>
 
                 <Border
@@ -115,7 +115,7 @@
                                         HorizontalAlignment="Center"/>
                         </StackPanel>
 
-                        <TextBlock Text="Основные данные"
+                        <TextBlock Text="{DynamicResource BasicDataTitle}"
                                        Style="{StaticResource SectionTitleStyle}"
                                        FontSize="18"
                                        Margin="0,0,0,14"/>
@@ -131,7 +131,7 @@
                                 </Grid.RowDefinitions>
 
                                 <StackPanel Grid.Row="0">
-                                    <TextBlock Text="Имя"
+                                    <TextBlock Text="{DynamicResource NamePlaceholder}"
                                                Style="{StaticResource FieldLabelStyle}"/>
                                     <TextBlock Text="{Binding CurrentUser.Name}"
                                                FontSize="18"
@@ -148,7 +148,7 @@
                                                Style="{StaticResource ValidationMessageStyle}"
                                                Visibility="{Binding HasEditNameValidationError, Converter={StaticResource BoolToVis}}"/>
 
-                                    <TextBlock Text="Логин"
+                                    <TextBlock Text="{DynamicResource ColumnLogin}"
                                                Style="{StaticResource FieldLabelStyle}"/>
                                     <TextBlock Text="{Binding CurrentUser.Login}"
                                                FontSize="16"
@@ -164,7 +164,7 @@
                                                Style="{StaticResource ValidationMessageStyle}"
                                                Visibility="{Binding HasEditLoginValidationError, Converter={StaticResource BoolToVis}}"/>
 
-                                    <TextBlock Text="Электронная почта"
+                                    <TextBlock Text="{DynamicResource EmailLabel}"
                                                Style="{StaticResource FieldLabelStyle}"/>
                                     <TextBlock Text="{Binding CurrentUser.Email}"
                                                FontSize="16"
@@ -189,7 +189,7 @@
                                     </Grid.ColumnDefinitions>
 
                                     <Button Grid.Column="0"
-                                                Content="Редактировать"
+                                                Content="{DynamicResource EditButton}"
                                                 Command="{Binding ToggleEditCommand}"
                                                 Width="117"
                                                 Height="32"
@@ -200,14 +200,14 @@
                                     <StackPanel Grid.Column="1"
                                                 Orientation="Horizontal"
                                                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}">
-                                        <Button Content="Отмена"
+                                        <Button Content="{DynamicResource CancelButton}"
                                                 Command="{Binding CancelEditCommand}"
                                                 Width="116"
                                                 Height="34"
                                                 FontSize="12"
                                                 Margin="0,0,10,0"
                                                 Style="{StaticResource SmallSecondaryButtonStyle}"/>
-                                        <Button Content="Сохранить"
+                                        <Button Content="{DynamicResource SaveButton}"
                                                 Command="{Binding SaveCommand}"
                                                 Width="116"
                                                 Height="34"
@@ -218,13 +218,11 @@
                                 </Grid>
                             </Grid>
                         </Border>
-                        <Button Content="Выйти"
+                        <Button Content="{DynamicResource LogoutButton}"
                                     Command="{Binding LogoutCommand}"
                                     Width="96"
-                                    Style="{StaticResource TertiaryButtonStyle}"
-                                    BorderBrush="{DynamicResource CardBorderBrush}"
-                                    BorderThickness="1"
-                                    Padding="10,5"
+                                    Style="{StaticResource SmallSecondaryButtonStyle}"
+                                    Padding="10,0"
                                     Click="Button_Click_1"
                                     Height="31"
                                     HorizontalAlignment="Left"
@@ -240,14 +238,14 @@
                                 Margin="0,0,0,28">
                         <StackPanel>
                             <Grid Margin="0,0,0,6">
-                                <TextBlock Text="Мои заявки"
+                                <TextBlock Text="{DynamicResource MyOrdersTitle}"
                                                Style="{StaticResource SectionTitleStyle}"
                                                VerticalAlignment="Center"/>
                             </Grid>
 
                             <Border Style="{StaticResource InnerCardStyle}"
                                         Visibility="{Binding HasOrders, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}">
-                                <TextBlock Text="У вас пока нет заявок."
+                                <TextBlock Text="{DynamicResource NoOrdersText}"
                                                Style="{StaticResource SectionHintStyle}"
                                                Margin="0"/>
                             </Border>
@@ -273,7 +271,7 @@
                                                     </Grid.ColumnDefinitions>
 
                                                     <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="Заявка"
+                                                        <TextBlock Text="{DynamicResource OrderCardTitle}"
                                                                        Foreground="{DynamicResource SecondaryTextBrush}"
                                                                        FontSize="12"/>
                                                         <TextBlock Text="{Binding DisplayNumber}"
@@ -299,7 +297,7 @@
                                                     </Grid.ColumnDefinitions>
 
                                                     <StackPanel Grid.Column="0">
-                                                        <TextBlock Text="Устройство"
+                                                        <TextBlock Text="{DynamicResource DeviceLabel}"
                                                                        FontSize="12"
                                                                        Foreground="{DynamicResource SecondaryTextBrush}"/>
                                                         <TextBlock Text="{Binding DeviceType}"
@@ -307,7 +305,7 @@
                                                     </StackPanel>
 
                                                     <StackPanel Grid.Column="2">
-                                                        <TextBlock Text="Бренд и модель"
+                                                        <TextBlock Text="{DynamicResource BrandModelLabel}"
                                                                        FontSize="12"
                                                                        Foreground="{DynamicResource SecondaryTextBrush}"/>
                                                         <TextBlock TextWrapping="Wrap">
@@ -321,13 +319,20 @@
                                                                 Orientation="Horizontal"
                                                                 HorizontalAlignment="Right"
                                                                 VerticalAlignment="Bottom">
-                                                        <Button Content="Оплатить"
+                                                        <Button Content="{DynamicResource PayButton}"
                                                                 Command="{Binding DataContext.PayOrderOnlineCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                                 CommandParameter="{Binding}"
                                                                 Width="108"
                                                                 Style="{StaticResource SmallPrimaryButtonStyle}"
                                                                 Margin="0,0,8,0"
                                                                 Visibility="{Binding CanShowOnlinePaymentButton, Converter={StaticResource BoolToVis}}"/>
+                                                        <Button Content="{DynamicResource CancelOrderButton}"
+                                                                Command="{Binding DataContext.CancelOrderCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}"
+                                                                Width="108"
+                                                                Style="{StaticResource SmallDangerButtonStyle}"
+                                                                Margin="0,0,8,0"
+                                                                Visibility="{Binding CanBeCancelledByClient, Converter={StaticResource BoolToVis}}"/>
                                                         <Button Content="{Binding DetailsButtonText}"
                                                                 Command="{Binding DataContext.ToggleOrderDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                                 CommandParameter="{Binding}"
@@ -342,25 +347,25 @@
                                                     <WrapPanel Margin="0,0,0,10">
                                                         <StackPanel Width="180"
                                                                         Margin="0,0,18,10">
-                                                            <TextBlock Text="Мастер"
+                                                            <TextBlock Text="{DynamicResource MasterLabel}"
                                                                            FontSize="12"
                                                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                                            <TextBlock Text="{Binding AssignedMaster.Name, TargetNullValue=Не назначен}"
+                                                        <TextBlock Text="{Binding AssignedMaster.Name, TargetNullValue={StaticResource NotAssignedText}}"
                                                                            TextWrapping="Wrap"/>
                                                         </StackPanel>
 
                                                         <StackPanel Width="180"
                                                                         Margin="0,0,18,10">
-                                                            <TextBlock Text="Передача техники"
+                                                            <TextBlock Text="{DynamicResource DeliveryMethodLabel}"
                                                                            FontSize="12"
                                                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                                            <TextBlock Text="{Binding DeliveryMethod, TargetNullValue=Самовывоз}"
+                                                        <TextBlock Text="{Binding DeliveryMethodDisplay, TargetNullValue={StaticResource PickupText}}"
                                                                            TextWrapping="Wrap"/>
                                                         </StackPanel>
 
                                                         <StackPanel Width="180"
                                                                         Margin="0,0,18,10">
-                                                            <TextBlock Text="Телефон"
+                                                            <TextBlock Text="{DynamicResource PhoneLabel}"
                                                                            FontSize="12"
                                                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                                                             <TextBlock Text="{Binding ContactPhone}"
@@ -368,7 +373,7 @@
                                                         </StackPanel>
                                                         <StackPanel Width="180"
                                                                         Margin="0,0,18,10">
-                                                            <TextBlock Text="Способ оплаты"
+                                                            <TextBlock Text="{DynamicResource PaymentMethodLabel}"
                                                                            FontSize="12"
                                                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                                                             <TextBlock Text="{Binding PaymentMethodDisplay}"
@@ -376,7 +381,7 @@
                                                         </StackPanel>
                                                         <StackPanel Width="180"
                                                                         Margin="0,0,18,10">
-                                                            <TextBlock Text="Статус оплаты"
+                                                            <TextBlock Text="{DynamicResource PaymentStatusLabel}"
                                                                            FontSize="12"
                                                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                                                             <TextBlock Text="{Binding PaymentStatusText}"
@@ -395,7 +400,7 @@
                                                                 </Style.Triggers>
                                                             </Style>
                                                         </StackPanel.Style>
-                                                        <TextBlock Text="Адрес для курьера"
+                                                        <TextBlock Text="{DynamicResource CourierAddressLabel}"
                                                                        FontSize="12"
                                                                        Foreground="{DynamicResource SecondaryTextBrush}"
                                                                        Margin="0,0,0,4"/>
@@ -403,7 +408,7 @@
                                                                        TextWrapping="Wrap"/>
                                                     </StackPanel>
 
-                                                    <TextBlock Text="Описание проблемы"
+                                                    <TextBlock Text="{DynamicResource ProblemDescriptionLabel}"
                                                                    FontSize="12"
                                                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                                                    Margin="0,0,0,4"/>
@@ -411,16 +416,16 @@
                                                                    TextWrapping="Wrap"/>
 
                                                     <StackPanel Margin="0,10,0,0">
-                                                        <TextBlock Text="Комментарий клиента"
+                                                        <TextBlock Text="{DynamicResource ClientCommentLabel}"
                                                                        FontSize="12"
                                                                        Foreground="{DynamicResource SecondaryTextBrush}"
                                                                        Margin="0,0,0,4"/>
-                                                        <TextBlock Text="{Binding ClientComment, TargetNullValue=Нет комментария}"
+                                                        <TextBlock Text="{Binding ClientComment, TargetNullValue={StaticResource NoCommentText}}"
                                                                        TextWrapping="Wrap"/>
                                                     </StackPanel>
                                                     <StackPanel Margin="0,10,0,0"
                                                                 Visibility="{Binding IsOnlinePaymentCompleted, Converter={StaticResource BoolToVis}}">
-                                                        <TextBlock Text="Дата онлайн-оплаты"
+                                                        <TextBlock Text="{DynamicResource OnlinePaymentDateLabel}"
                                                                    FontSize="12"
                                                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                                                    Margin="0,0,0,4"/>
@@ -446,7 +451,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <Button Content="Создать заявку"
+                            <Button Content="{DynamicResource CreateClientOrderButton}"
                                         Command="{Binding ToggleCreateOrderFormCommand}"
                                         Width="148"
                                         Style="{StaticResource MediumPrimaryButtonStyle}"
@@ -457,14 +462,14 @@
 
                     <Border Style="{StaticResource CardStyle}">
                         <StackPanel>
-                            <TextBlock Text="Отзывы о сервисе"
+                            <TextBlock Text="{DynamicResource ServiceReviewsTitle}"
                                            Style="{StaticResource SectionTitleStyle}"
                                            Margin="0,0,0,8"/>
                             <Border Style="{StaticResource InnerCardStyle}"
                                         Padding="20"
                                         Margin="0,0,0,16">
                                 <StackPanel>
-                                    <TextBlock Text="Новый отзыв"
+                                    <TextBlock Text="{DynamicResource NewReviewTitle}"
                                                    FontSize="16"
                                                    FontWeight="SemiBold"
                                                    Margin="0,0,0,10"/>
@@ -473,7 +478,7 @@
                                                  TextWrapping="Wrap"
                                                  Height="90"
                                                  Margin="0,0,0,12"/>
-                                    <Button Content="Оставить отзыв"
+                                    <Button Content="{DynamicResource LeaveReviewButton}"
                                                 Command="{Binding AddReviewCommand}"
                                                 Style="{StaticResource MediumPrimaryButtonStyle}"
                                                 Width="165"
@@ -485,7 +490,7 @@
                             <Border Style="{StaticResource InnerCardStyle}"
                                         Padding="20"
                                         Visibility="{Binding HasReviews, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}">
-                                <TextBlock Text="Пока отзывов нет. Вы можете оставить первый."
+                                <TextBlock Text="{DynamicResource NoReviewsText}"
                                                Style="{StaticResource SectionHintStyle}"
                                                Margin="0"/>
                             </Border>
@@ -537,7 +542,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               MaxHeight="680">
                     <StackPanel>
-                        <TextBlock Text="Новая заявка"
+                        <TextBlock Text="{DynamicResource NewOrderDialogTitle}"
                                Style="{StaticResource PageTitleStyle}"
                                FontSize="26"/>
 
@@ -555,7 +560,7 @@
 
                             <StackPanel Grid.Row="0"
                                         Grid.Column="0">
-                                <TextBlock Text="Тип устройства *"
+                                <TextBlock Text="{DynamicResource DeviceTypeRequiredLabel}"
                                            Style="{StaticResource FieldLabelStyle}"/>
                                 <ComboBox ItemsSource="{Binding DeviceTypes}"
                                           SelectedItem="{Binding NewOrderDeviceType}"
@@ -570,7 +575,7 @@
 
                             <StackPanel Grid.Row="0"
                                         Grid.Column="2">
-                                <TextBlock Text="Модель *"
+                                <TextBlock Text="{DynamicResource ModelRequiredLabel}"
                                            Style="{StaticResource FieldLabelStyle}"/>
                                 <ComboBox ItemsSource="{Binding ModelOptions}"
                                           SelectedItem="{Binding SelectedModelOption}"
@@ -586,7 +591,7 @@
 
                             <StackPanel Grid.Row="1"
                                         Grid.Column="0">
-                                <TextBlock Text="Бренд *"
+                                <TextBlock Text="{DynamicResource BrandRequiredLabel}"
                                            Style="{StaticResource FieldLabelStyle}"/>
                                 <ComboBox ItemsSource="{Binding BrandOptions}"
                                           SelectedItem="{Binding SelectedBrandOption}"
@@ -602,7 +607,7 @@
 
                             <StackPanel Grid.Row="1"
                                         Grid.Column="2">
-                                <TextBlock Text="Неисправность *"
+                                <TextBlock Text="{DynamicResource ProblemRequiredLabel}"
                                            Style="{StaticResource FieldLabelStyle}"/>
                                 <ComboBox ItemsSource="{Binding ProblemOptions}"
                                           SelectedItem="{Binding SelectedProblemOption}"
@@ -620,28 +625,28 @@
 
                             <StackPanel Grid.Row="2"
                                         Grid.Column="0">
-                                <TextBlock Text="Телефон *"
+                                <TextBlock Text="{DynamicResource PhoneRequiredLabel}"
                                            Style="{StaticResource FieldLabelStyle}"/>
                                 <TextBox Text="{Binding NewOrderContactPhone, UpdateSourceTrigger=PropertyChanged}"
                                          Margin="0,0,0,4"
-                                         ToolTip="Например: +375 (29) 123-45-67"
+                                         ToolTip="{DynamicResource PhoneHint}"
                                          Style="{StaticResource RequiredOrderTextBoxStyle}"
                                          Tag="{Binding IsNewOrderContactPhoneInvalid}"/>
-                                <TextBlock Text="Например: +375 (29) 123-45-67"
+                                <TextBlock Text="{DynamicResource PhoneHint}"
                                            Style="{StaticResource InfoTextStyle}"
                                            Margin="0,0,0,12"/>
                             </StackPanel>
 
                             <StackPanel Grid.Row="2"
                                         Grid.Column="2">
-                                <TextBlock Text="Способ оплаты"
+                                <TextBlock Text="{DynamicResource PaymentMethodLabel}"
                                            Style="{StaticResource FieldLabelStyle}"
                                            Margin="0,0,0,4"/>
-                                <CheckBox Content="Онлайн-оплата"
+                                <CheckBox Content="{DynamicResource OnlinePaymentCheckbox}"
                                           IsChecked="{Binding NewOrderIsOnlinePayment}"
                                           FontSize="15"
                                           Margin="0,6,0,6"/>
-                                <TextBlock Text="Если флажок не установлен, оплата будет на месте."
+                                <TextBlock Text="{DynamicResource PaymentHint}"
                                            Style="{StaticResource InfoTextStyle}"
                                            Margin="0,0,0,12"
                                            TextWrapping="Wrap"/>
@@ -651,20 +656,20 @@
                         <Border Style="{StaticResource InnerCardStyle}"
                             Margin="0,0,0,12">
                             <StackPanel>
-                                <TextBlock Text="Фото неисправности"
+                                <TextBlock Text="{DynamicResource ProblemPhotoLabel}"
                                        Style="{StaticResource FieldLabelStyle}"/>
-                                <TextBlock Text="Необязательно, но поможет мастеру быстрее понять проблему."
+                                <TextBlock Text="{DynamicResource ProblemPhotoHint}"
                                        Style="{StaticResource InfoTextStyle}"
                                        Margin="0,4,0,12"/>
 
                                 <StackPanel Orientation="Horizontal"
                                         Margin="0,0,0,10">
-                                    <Button Content="Добавить фото"
+                                    <Button Content="{DynamicResource AddPhotoButton}"
                                         Command="{Binding SelectProblemPhotoCommand}"
                                         Style="{StaticResource MediumPrimaryButtonStyle}"
                                         Width="156"
                                         Margin="0,0,10,0"/>
-                                    <Button Content="Удалить фото"
+                                    <Button Content="{DynamicResource RemovePhotoButton}"
                                         Command="{Binding RemoveProblemPhotoCommand}"
                                         Style="{StaticResource SmallSecondaryButtonStyle}"
                                         Width="118"
@@ -688,7 +693,7 @@
                             </StackPanel>
                         </Border>
 
-                        <TextBlock Text="Комментарий"
+                        <TextBlock Text="{DynamicResource CommentLabel}"
                                Style="{StaticResource FieldLabelStyle}"/>
                         <TextBox Text="{Binding NewOrderClientComment, UpdateSourceTrigger=PropertyChanged}"
                              AcceptsReturn="True"
@@ -698,12 +703,12 @@
 
                         <StackPanel Orientation="Horizontal"
                                 HorizontalAlignment="Left">
-                            <Button Content="Отправить заявку"
+                            <Button Content="{DynamicResource SendOrderButton}"
                                 Command="{Binding CreateOrderCommand}"
                                 Style="{StaticResource MediumPrimaryButtonStyle}"
                                 MinWidth="190"
                                 Margin="0,0,10,0"/>
-                            <Button Content="Отмена"
+                            <Button Content="{DynamicResource CancelButton}"
                                 Command="{Binding CancelCreateOrderFormCommand}"
                                 Style="{StaticResource MediumSecondaryButtonStyle}"
                                 Width="96"/>

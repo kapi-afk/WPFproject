@@ -248,7 +248,9 @@ namespace Printinvest_WPF_app.ViewModels
 
         public bool HasOrders => Orders != null && Orders.Count > 0;
         public bool HasReviews => Reviews != null && Reviews.Count > 0;
-        public string PhotoActionText => CurrentUser?.Photo == null ? "Добавить фото" : "Изменить фото";
+        public string PhotoActionText => CurrentUser?.Photo == null
+            ? App.GetString("AddPhotoButton", "Add photo")
+            : App.GetString("ChangePhotoActionButton", "Change photo");
         public ObservableCollection<string> DeviceTypes { get; } = new ObservableCollection<string>
         {
             "Ноутбук",
@@ -519,7 +521,9 @@ namespace Printinvest_WPF_app.ViewModels
         }
 
         public bool HasSelectedProblemPhoto => NewOrderProblemPhoto != null && NewOrderProblemPhoto.Length > 0;
-        public string NewOrderProblemPhotoStatus => HasSelectedProblemPhoto ? $"Фото выбрано: {NewOrderProblemPhotoName}" : "Фото не добавлено";
+        public string NewOrderProblemPhotoStatus => HasSelectedProblemPhoto
+            ? string.Format(App.GetString("ProblemPhotoSelectedFormat", "Selected photo: {0}"), NewOrderProblemPhotoName)
+            : App.GetString("ProblemPhotoNotAdded", "No photo added");
         public bool ShowOrderValidationErrors
         {
             get => _showOrderValidationErrors;
@@ -558,6 +562,7 @@ namespace Printinvest_WPF_app.ViewModels
         public ICommand RemoveProblemPhotoCommand { get; }
         public ICommand ToggleOrderDetailsCommand { get; }
         public ICommand PayOrderOnlineCommand { get; }
+        public ICommand CancelOrderCommand { get; }
 
         public ServiceClientProfileViewModel()
         {
@@ -583,6 +588,8 @@ namespace Printinvest_WPF_app.ViewModels
             RemoveProblemPhotoCommand = new RelayCommand(RemoveProblemPhoto);
             ToggleOrderDetailsCommand = new RelayCommandSec(ToggleOrderDetails);
             PayOrderOnlineCommand = new RelayCommandSec(PayOrderOnline);
+            CancelOrderCommand = new RelayCommandSec(CancelOrder);
+            App.LanguageChanged += OnLanguageChanged;
 
             if (AreRepositoriesReady)
             {
@@ -932,6 +939,46 @@ namespace Printinvest_WPF_app.ViewModels
                 MessageBoxImage.Information);
         }
 
+        private void CancelOrder(object parameter)
+        {
+            var order = parameter as Order;
+            if (order == null)
+            {
+                return;
+            }
+
+            if (!order.CanBeCancelledByClient)
+            {
+                MessageBox.Show(
+                    "Эту заявку уже нельзя отменить из профиля. Обратитесь к администратору.",
+                    "Отмена недоступна",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            var confirmation = MessageBox.Show(
+                $"Отменить заявку {order.DisplayNumber}?",
+                "Подтверждение отмены",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirmation != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            order.Status = OrderStatus.Cancelled;
+            _orderRepository.Update(order);
+            ReloadOrdersForCurrentUser();
+
+            MessageBox.Show(
+                "Заявка отменена.",
+                "Готово",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
         private void RefreshBrandOptions()
         {
             ReplaceOptions(BrandOptions, GetOptionsForDevice(_brandCatalog, NewOrderDeviceType));
@@ -979,6 +1026,16 @@ namespace Printinvest_WPF_app.ViewModels
                 _orderRepository
                     .GetByUserId(SessionManager.CurrentUser.Id)
                     .Where(order => order.Status != OrderStatus.Completed));
+        }
+
+        private void OnLanguageChanged(object sender, System.EventArgs e)
+        {
+            OnPropertyChanged(nameof(PhotoActionText));
+            OnPropertyChanged(nameof(NewOrderProblemPhotoStatus));
+            if (SessionManager.IsAuthenticated)
+            {
+                ReloadOrdersForCurrentUser();
+            }
         }
 
         private IEnumerable<string> GetOptionsForDevice(Dictionary<string, string[]> catalog, string deviceType)

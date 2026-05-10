@@ -5,8 +5,8 @@
 
     <SolidColorBrush x:Key="NavBackgroundBrush" Color="{StaticResource NavBackgroundColor}"/>
     <SolidColorBrush x:Key="ContentBackgroundBrush" Color="{StaticResource ContentBackgroundColor}"/>
-    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FF111C2E"/>
-    <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FF162235"/>
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FF18263B"/>
+    <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#FF21314A"/>
 
     <SolidColorBrush x:Key="NavTextBrush" Color="#FFE5EDF8" />
     <SolidColorBrush x:Key="NavItemHoverBrush" Color="#FF1E293B" />
@@ -21,11 +21,11 @@
     <SolidColorBrush x:Key="ButtonPressedBrush" Color="#FF175B96" />
     <SolidColorBrush x:Key="ButtonForegroundColor" Color="White" />
 
-    <SolidColorBrush x:Key="SecondaryButtonBackgroundBrush" Color="#FF162235" />
-    <SolidColorBrush x:Key="SecondaryButtonBorderBrush" Color="#FF334155" />
+    <SolidColorBrush x:Key="SecondaryButtonBackgroundBrush" Color="#FF2A4465" />
+    <SolidColorBrush x:Key="SecondaryButtonBorderBrush" Color="#FF456489" />
     <SolidColorBrush x:Key="SecondaryButtonForegroundBrush" Color="#FFF8FAFC" />
-    <SolidColorBrush x:Key="SecondaryButtonHoverBrush" Color="#FF1C2A40" />
-    <SolidColorBrush x:Key="SecondaryButtonPressedBrush" Color="#FF22314A" />
+    <SolidColorBrush x:Key="SecondaryButtonHoverBrush" Color="#FF34537A" />
+    <SolidColorBrush x:Key="SecondaryButtonPressedBrush" Color="#FF243C5A" />
 
     <SolidColorBrush x:Key="DangerButtonBackgroundBrush" Color="#FF3B1117" />
     <SolidColorBrush x:Key="DangerButtonBorderBrush" Color="#FF7F1D1D" />
@@ -35,13 +35,13 @@
     <SolidColorBrush x:Key="LinkBrush" Color="#FF93C5FD" />
     <SolidColorBrush x:Key="LinkHoverBrush" Color="#FFBFDBFE" />
 
-    <SolidColorBrush x:Key="TextBoxBorderColor" Color="#FF334155" />
+    <SolidColorBrush x:Key="TextBoxBorderColor" Color="#FF415572" />
     <SolidColorBrush x:Key="FocusBorderBrush" Color="#FF60A5FA" />
-    <SolidColorBrush x:Key="InputBackgroundBrush" Color="#FF0B1323" />
+    <SolidColorBrush x:Key="InputBackgroundBrush" Color="#FF142033" />
     <SolidColorBrush x:Key="InputForegroundBrush" Color="#FFF8FAFC" />
 
     <SolidColorBrush x:Key="AuthCardBackgroundBrush" Color="#FF111C2E" />
-    <SolidColorBrush x:Key="AuthCardBorderBrush" Color="#FF334155" />
-    <SolidColorBrush x:Key="CardBorderBrush" Color="#FF334155" />
-    <SolidColorBrush x:Key="BorderBrush" Color="#FF334155"/>
+    <SolidColorBrush x:Key="AuthCardBorderBrush" Color="#FF415572" />
+    <SolidColorBrush x:Key="CardBorderBrush" Color="#FF415572" />
+    <SolidColorBrush x:Key="BorderBrush" Color="#FF415572"/>
 </ResourceDictionary>

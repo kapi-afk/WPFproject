@@ -23,8 +23,8 @@ namespace Printinvest_WPF_app.Views
             if (!viewModel.Validate())
             {
                 MessageBox.Show(
-                    "Проверьте данные карты. Заполните все обязательные поля в корректном формате.",
-                    "Ошибка проверки",
+                    App.GetString("PaymentValidationMessage", "Check the card details. Fill in all required fields in the correct format."),
+                    App.GetString("PaymentValidationTitle", "Validation error"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
                 return;

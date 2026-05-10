@@ -22,12 +22,23 @@ namespace Printinvest_WPF_app.Views
 
             viewModel.PrepareMaterialRequest();
 
-            var requestWindow = new MaterialRequestWindow(viewModel)
+            try
             {
-                Owner = this
-            };
+                var requestWindow = new MaterialRequestWindow(viewModel)
+                {
+                    Owner = this
+                };
 
-            requestWindow.ShowDialog();
+                requestWindow.ShowDialog();
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show(
+                    $"Не удалось открыть окно заявки на материал.{System.Environment.NewLine}{ex.Message}",
+                    "Ошибка",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
     }
 }

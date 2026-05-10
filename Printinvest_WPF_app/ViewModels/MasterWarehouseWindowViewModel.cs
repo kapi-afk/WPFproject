@@ -1,7 +1,9 @@
 using Printinvest_WPF_app.Models;
 using Printinvest_WPF_app.Repositories;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -24,20 +26,31 @@ namespace Printinvest_WPF_app.ViewModels
         private string _requestMaterialName;
         private string _requestMaterialCategory;
 
+        public MasterWarehouseWindowViewModel(Order targetOrder)
+        {
+            _warehouseRepository = RepositoryManager.Warehouse;
+            _warehouseRequestRepository = RepositoryManager.WarehouseRequests;
+            _orderRepository = RepositoryManager.Orders;
+            _targetOrder = targetOrder;
+            _allItems = new List<WarehouseItem>();
+            WarehouseItems = new ObservableCollection<WarehouseItem>();
+
+            RefreshCommand = new RelayCommand(LoadData);
+            ConsumeWarehouseItemCommand = new RelayCommand(ConsumeWarehouseItem);
+            RequestMaterialCommand = new RelayCommand(() => CreateMaterialRequest());
+
+            RebuildSortOptions();
+            App.LanguageChanged += OnLanguageChanged;
+            LoadData();
+        }
+
         public ObservableCollection<WarehouseItem> WarehouseItems
         {
             get => _warehouseItems;
             set => SetProperty(ref _warehouseItems, value);
         }
 
-        public ObservableCollection<string> SortOptions { get; } = new ObservableCollection<string>
-        {
-            "По названию",
-            "Сначала меньше остаток",
-            "Сначала больше остаток",
-            "Сначала дешевле",
-            "Сначала дороже"
-        };
+        public ObservableCollection<string> SortOptions { get; } = new ObservableCollection<string>();
 
         public ObservableCollection<string> CategoryFilters { get; } = new ObservableCollection<string>();
 
@@ -112,33 +125,21 @@ namespace Printinvest_WPF_app.ViewModels
             ? "0,00 BYN"
             : $"{_targetOrder.EstimatedRepairCost:N2} BYN";
 
-        public string TargetOrderText => _targetOrder == null
-            ? "Заявка не выбрана. Вы можете только просматривать склад."
-            : $"Материалы для заявки №{_targetOrder.Id}: {_targetOrder.DeviceType} {_targetOrder.DeviceBrand} {_targetOrder.DeviceModel}";
-
-        public string TargetOrderEstimateText => _targetOrder == null
-            ? "0,00 ₽"
-            : $"{_targetOrder.EstimatedRepairCost:N2} ₽";
+        public string LocalizedTargetOrderText => _targetOrder == null
+            ? App.GetString("MaterialRequestNoOrderText", "No order selected. You can only browse the warehouse.")
+            : string.Format(
+                CultureInfo.CurrentCulture,
+                App.GetString("MaterialRequestTargetOrderFormat", "Materials for order No. {0}: {1} {2} {3}"),
+                _targetOrder.Id,
+                _targetOrder.DeviceType,
+                _targetOrder.DeviceBrand,
+                _targetOrder.DeviceModel);
 
         public ICommand RefreshCommand { get; }
         public ICommand ConsumeWarehouseItemCommand { get; }
         public ICommand RequestMaterialCommand { get; }
 
-        public MasterWarehouseWindowViewModel(Order targetOrder)
-        {
-            _warehouseRepository = RepositoryManager.Warehouse;
-            _warehouseRequestRepository = RepositoryManager.WarehouseRequests;
-            _orderRepository = RepositoryManager.Orders;
-            _targetOrder = targetOrder;
-            _allItems = new List<WarehouseItem>();
-            WarehouseItems = new ObservableCollection<WarehouseItem>();
-
-            RefreshCommand = new RelayCommand(LoadData);
-            ConsumeWarehouseItemCommand = new RelayCommand(ConsumeWarehouseItem);
-            RequestMaterialCommand = new RelayCommand(() => CreateMaterialRequest());
-
-            LoadData();
-        }
+        private static string AllCategoriesLabel => App.GetString("WarehouseAllCategories", "All categories");
 
         private void LoadData()
         {
@@ -146,7 +147,7 @@ namespace Printinvest_WPF_app.ViewModels
 
             var selectedCategory = SelectedCategoryFilter;
             CategoryFilters.Clear();
-            CategoryFilters.Add("Все категории");
+            CategoryFilters.Add(AllCategoriesLabel);
 
             foreach (var category in _allItems
                 .Select(item => item.Category)
@@ -167,9 +168,9 @@ namespace Printinvest_WPF_app.ViewModels
                 OnPropertyChanged(nameof(SelectedCategoryFilter));
             }
 
-            if (string.IsNullOrWhiteSpace(SelectedSortOption))
+            if (string.IsNullOrWhiteSpace(SelectedSortOption) || !SortOptions.Contains(SelectedSortOption))
             {
-                SelectedSortOption = SortOptions[0];
+                SelectedSortOption = SortOptions.FirstOrDefault();
             }
             else
             {
@@ -179,7 +180,7 @@ namespace Printinvest_WPF_app.ViewModels
 
         private void ApplyFilters()
         {
-            IEnumerable<WarehouseItem> items = _allItems;
+            IEnumerable<WarehouseItem> items = _allItems ?? Enumerable.Empty<WarehouseItem>();
 
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
@@ -189,28 +190,30 @@ namespace Printinvest_WPF_app.ViewModels
                     (item.Category?.ToLowerInvariant().Contains(search) ?? false));
             }
 
-            if (!string.IsNullOrWhiteSpace(SelectedCategoryFilter) && SelectedCategoryFilter != "Все категории")
+            if (!string.IsNullOrWhiteSpace(SelectedCategoryFilter) && SelectedCategoryFilter != AllCategoriesLabel)
             {
                 items = items.Where(item => item.Category == SelectedCategoryFilter);
             }
 
-            switch (SelectedSortOption)
+            if (SelectedSortOption == App.GetString("WarehouseSortQuantityAsc", "Lower stock first"))
             {
-                case "Сначала меньше остаток":
-                    items = items.OrderBy(item => item.Quantity).ThenBy(item => item.Name);
-                    break;
-                case "Сначала больше остаток":
-                    items = items.OrderByDescending(item => item.Quantity).ThenBy(item => item.Name);
-                    break;
-                case "Сначала дешевле":
-                    items = items.OrderBy(item => item.UnitPrice).ThenBy(item => item.Name);
-                    break;
-                case "Сначала дороже":
-                    items = items.OrderByDescending(item => item.UnitPrice).ThenBy(item => item.Name);
-                    break;
-                default:
-                    items = items.OrderBy(item => item.Name);
-                    break;
+                items = items.OrderBy(item => item.Quantity).ThenBy(item => item.Name);
+            }
+            else if (SelectedSortOption == App.GetString("WarehouseSortQuantityDesc", "Higher stock first"))
+            {
+                items = items.OrderByDescending(item => item.Quantity).ThenBy(item => item.Name);
+            }
+            else if (SelectedSortOption == App.GetString("WarehouseSortPriceAsc", "Cheaper first"))
+            {
+                items = items.OrderBy(item => item.UnitPrice).ThenBy(item => item.Name);
+            }
+            else if (SelectedSortOption == App.GetString("WarehouseSortPriceDesc", "More expensive first"))
+            {
+                items = items.OrderByDescending(item => item.UnitPrice).ThenBy(item => item.Name);
+            }
+            else
+            {
+                items = items.OrderBy(item => item.Name);
             }
 
             var selectedId = SelectedWarehouseItem?.Id;
@@ -294,7 +297,7 @@ namespace Printinvest_WPF_app.ViewModels
                 RequestedCategory = requestedCategory,
                 RequestedQuantity = quantity,
                 Status = actualItem == null || actualItem.Quantity < quantity ? "Новая заявка" : "Запрошено",
-                CreatedAt = System.DateTime.Now
+                CreatedAt = DateTime.Now
             };
 
             _warehouseRequestRepository.Add(request);
@@ -315,8 +318,8 @@ namespace Printinvest_WPF_app.ViewModels
             }
 
             var selectedCategory = SelectedWarehouseItem.Category ?? string.Empty;
-            return string.Equals(SelectedWarehouseItem.Name, requestedName, System.StringComparison.OrdinalIgnoreCase)
-                && string.Equals(selectedCategory, requestedCategory ?? string.Empty, System.StringComparison.OrdinalIgnoreCase);
+            return string.Equals(SelectedWarehouseItem.Name, requestedName, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(selectedCategory, requestedCategory ?? string.Empty, StringComparison.OrdinalIgnoreCase);
         }
 
         private void ConsumeWarehouseItem()
@@ -403,7 +406,7 @@ namespace Printinvest_WPF_app.ViewModels
             SynchronizeTargetOrder(orderToUpdate);
         }
 
-        private bool IsFinalOrderStatus(OrderStatus status)
+        private static bool IsFinalOrderStatus(OrderStatus status)
         {
             return status == OrderStatus.Completed || status == OrderStatus.Cancelled;
         }
@@ -439,8 +442,38 @@ namespace Printinvest_WPF_app.ViewModels
             _targetOrder.MasterWorkCost = sourceOrder.MasterWorkCost;
             _targetOrder.EstimatedRepairCost = sourceOrder.EstimatedRepairCost;
             _targetOrder.CompletedAt = sourceOrder.CompletedAt;
-            OnPropertyChanged(nameof(TargetOrderEstimateText));
             OnPropertyChanged(nameof(TargetOrderEstimatedTotalText));
+            OnPropertyChanged(nameof(LocalizedTargetOrderText));
+        }
+
+        private void OnLanguageChanged(object sender, EventArgs e)
+        {
+            RebuildSortOptions();
+            OnPropertyChanged(nameof(LocalizedTargetOrderText));
+            OnPropertyChanged(nameof(TargetOrderEstimatedTotalText));
+            LoadData();
+        }
+
+        private void RebuildSortOptions()
+        {
+            var previousSelection = _selectedSortOption;
+            SortOptions.Clear();
+            SortOptions.Add(App.GetString("WarehouseSortByName", "By name"));
+            SortOptions.Add(App.GetString("WarehouseSortQuantityAsc", "Lower stock first"));
+            SortOptions.Add(App.GetString("WarehouseSortQuantityDesc", "Higher stock first"));
+            SortOptions.Add(App.GetString("WarehouseSortPriceAsc", "Cheaper first"));
+            SortOptions.Add(App.GetString("WarehouseSortPriceDesc", "More expensive first"));
+
+            if (!string.IsNullOrWhiteSpace(previousSelection) && SortOptions.Contains(previousSelection))
+            {
+                _selectedSortOption = previousSelection;
+                OnPropertyChanged(nameof(SelectedSortOption));
+            }
+            else if (SortOptions.Count > 0)
+            {
+                _selectedSortOption = SortOptions[0];
+                OnPropertyChanged(nameof(SelectedSortOption));
+            }
         }
     }
 }

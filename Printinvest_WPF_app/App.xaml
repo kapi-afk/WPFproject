@@ -9,6 +9,8 @@
             <conv:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter" />
             <conv:PasswordBoxConverter x:Key="PasswordBoxConverter" />
             <conv:OrderStatusConverter x:Key="OrderStatusConverter" />
+            <conv:UserRoleConverter x:Key="UserRoleConverter" />
+            <conv:CatalogOptionConverter x:Key="CatalogOptionConverter" />
             <conv:OrderStatusBackgroundBrushConverter x:Key="OrderStatusBackgroundBrushConverter" />
             <conv:OrderStatusForegroundBrushConverter x:Key="OrderStatusForegroundBrushConverter" />
             <conv:ItemTypeConverter x:Key="ItemTypeConverter" />

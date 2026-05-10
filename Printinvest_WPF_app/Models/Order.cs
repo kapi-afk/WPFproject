@@ -67,7 +67,9 @@ namespace Printinvest_WPF_app.Models
             }
         }
         [NotMapped]
-        public string DetailsButtonText => IsDetailsExpanded ? "Скрыть" : "Подробнее";
+        public string DetailsButtonText => IsDetailsExpanded
+            ? App.GetString("HideButton", "Hide")
+            : App.GetString("DetailsButton", "Details");
         [NotMapped]
         public string DisplayNumber => OrderPublicNumberService.GetOrCreate(this);
         [NotMapped]
@@ -75,15 +77,57 @@ namespace Printinvest_WPF_app.Models
         [NotMapped]
         public bool CanShowOnlinePaymentButton => IsOnlinePayment && !IsOnlinePaymentCompleted;
         [NotMapped]
-        public string PaymentMethodDisplay => string.IsNullOrWhiteSpace(PaymentMethod) ? OnSitePaymentMethod : PaymentMethod;
+        public bool CanBeCancelledByClient =>
+            Status == OrderStatus.Created ||
+            Status == OrderStatus.Assigned ||
+            Status == OrderStatus.Diagnosing;
+        [NotMapped]
+        public string PaymentMethodDisplay
+        {
+            get
+            {
+                var paymentMethod = string.IsNullOrWhiteSpace(PaymentMethod) ? OnSitePaymentMethod : PaymentMethod;
+                if (string.Equals(paymentMethod, OnSitePaymentMethod, StringComparison.Ordinal))
+                {
+                    return App.GetString("PaymentMethodOnSite", "On-site payment");
+                }
+
+                if (string.Equals(paymentMethod, OnlinePaymentMethod, StringComparison.Ordinal))
+                {
+                    return App.GetString("PaymentMethodOnline", "Online payment");
+                }
+
+                return paymentMethod;
+            }
+        }
+        [NotMapped]
+        public string DeliveryMethodDisplay
+        {
+            get
+            {
+                if (string.Equals(DeliveryMethod, "Курьер", StringComparison.Ordinal))
+                {
+                    return App.GetString("DeliveryCourier", "Courier");
+                }
+
+                if (string.IsNullOrWhiteSpace(DeliveryMethod) || string.Equals(DeliveryMethod, "Самовывоз", StringComparison.Ordinal))
+                {
+                    return App.GetString("PickupText", "Pickup");
+                }
+
+                return DeliveryMethod;
+            }
+        }
         [NotMapped]
         public string PaymentStatusText => !IsOnlinePayment
-            ? "Оплата на месте"
-            : (IsOnlinePaymentCompleted ? "Оплачено онлайн" : "Ожидает онлайн-оплаты");
+            ? App.GetString("PaymentOnSiteStatus", "On-site payment")
+            : (IsOnlinePaymentCompleted
+                ? App.GetString("PaymentOnlineCompletedStatus", "Paid online")
+                : App.GetString("PaymentOnlinePendingStatus", "Awaiting online payment"));
         [NotMapped]
         public string PaymentPaidAtText => OnlinePaymentPaidAt.HasValue
             ? OnlinePaymentPaidAt.Value.ToString("dd.MM.yyyy HH:mm")
-            : "Не оплачено";
+            : App.GetString("PaymentNotPaid", "Not paid");
         public string ContactPhone { get; set; }
         public string ClientComment { get; set; }
         public string AdminComment { get; set; }
@@ -196,6 +240,7 @@ namespace Printinvest_WPF_app.Models
                 {
                     _status = value;
                     OnPropertyChanged(nameof(Status));
+                    OnPropertyChanged(nameof(CanBeCancelledByClient));
                 }
             }
         }

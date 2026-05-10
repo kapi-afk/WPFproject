@@ -354,9 +354,7 @@ namespace Printinvest_WPF_app.ViewModels
                 return;
             }
 
-            PasswordValidationMessage = Password.Length < 6
-                ? "\u041F\u0430\u0440\u043E\u043B\u044C \u0441\u043B\u0438\u0448\u043A\u043E\u043C \u043A\u043E\u0440\u043E\u0442\u043A\u0438\u0439. \u041C\u0438\u043D\u0438\u043C\u0443\u043C 6 \u0441\u0438\u043C\u0432\u043E\u043B\u043E\u0432."
-                : string.Empty;
+            PasswordValidationMessage = HashHelper.GetPasswordValidationError(Password);
         }
 
         private void ValidateConfirmPassword(bool showRequired)

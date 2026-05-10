@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Склад"
+        Title="{DynamicResource WarehouseTab}"
         Height="720"
         Width="1120"
         MinWidth="980"
@@ -19,9 +19,8 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Склад материалов"
-                   FontSize="24"
-                   FontWeight="Bold"
+        <TextBlock Text="{DynamicResource WarehouseMaterialsTitle}"
+                   Style="{StaticResource PageTitleStyle}"
                    Foreground="{DynamicResource TextBrush}"
                    Margin="0,0,0,10"/>
 
@@ -45,7 +44,7 @@
                       SelectedItem="{Binding SelectedSortOption}"
                       Margin="0,0,12,0"/>
             <Button Grid.Column="3"
-                    Content="Обновить"
+                    Content="{DynamicResource RefreshButton}"
                     Command="{Binding RefreshCommand}"
                     Width="110"/>
         </Grid>
@@ -67,44 +66,52 @@
                       GridLinesVisibility="Horizontal"
                       HorizontalScrollBarVisibility="Disabled">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Материал" Binding="{Binding Name}" Width="1.8*"/>
-                    <DataGridTextColumn Header="Категория" Binding="{Binding Category}" Width="1.2*"/>
-                    <DataGridTextColumn Header="Остаток" Binding="{Binding Quantity}" Width="0.9*"/>
-                    <DataGridTextColumn Header="Цена" Binding="{Binding UnitPrice, StringFormat={}{0:N2}}" Width="1*"/>
+                    <DataGridTextColumn Header="{DynamicResource ColumnMaterial}" Binding="{Binding Name}" Width="1.8*"/>
+                    <DataGridTextColumn Header="{DynamicResource ColumnCategory}" Binding="{Binding Category}" Width="1.2*"/>
+                    <DataGridTextColumn Header="{DynamicResource ColumnStock}" Binding="{Binding Quantity}" Width="0.9*"/>
+                    <DataGridTextColumn Header="{DynamicResource ColumnPriceByn}" Binding="{Binding UnitPrice, StringFormat={}{0:N2}}" Width="1*"/>
                 </DataGrid.Columns>
             </DataGrid>
 
-            <GroupBox Grid.Column="1" Header="Работа с материалом">
+            <GroupBox Grid.Column="1" Header="{DynamicResource WorkWithMaterialTitle}">
                 <StackPanel Margin="12">
-                    <TextBlock Text="{Binding TargetOrderText}"
+                    <TextBlock Text="{Binding LocalizedTargetOrderText}"
                                TextWrapping="Wrap"
                                Margin="0,0,0,12"/>
-                    <TextBlock Text="Выбранный материал" Margin="0,0,0,4"/>
-                    <TextBlock Text="{Binding SelectedWarehouseItem.Name, TargetNullValue=Не выбран}"
+
+                    <TextBlock Text="{DynamicResource SelectedMaterialLabel}" Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding SelectedWarehouseItem.Name, TargetNullValue={StaticResource NotSelectedMale}}"
                                FontWeight="SemiBold"
                                TextWrapping="Wrap"
                                Margin="0,0,0,10"/>
-                    <TextBlock Text="Категория" Margin="0,0,0,4"/>
-                    <TextBlock Text="{Binding SelectedWarehouseItem.Category, TargetNullValue=Не указана}"
+
+                    <TextBlock Text="{DynamicResource ColumnCategory}" Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding SelectedWarehouseItem.Category, TargetNullValue={StaticResource NotSpecifiedText}}"
                                TextWrapping="Wrap"
                                Margin="0,0,0,10"/>
-                    <TextBlock Text="Остаток" Margin="0,0,0,4"/>
+
+                    <TextBlock Text="{DynamicResource ColumnStock}" Margin="0,0,0,4"/>
                     <TextBlock Text="{Binding SelectedWarehouseItem.Quantity, TargetNullValue=0}"
                                Margin="0,0,0,10"/>
-                    <TextBlock Text="Цена за единицу" Margin="0,0,0,4"/>
+
+                    <TextBlock Text="{DynamicResource UnitPriceLabel}" Margin="0,0,0,4"/>
                     <TextBlock Text="{Binding SelectedWarehouseItem.UnitPrice, StringFormat={}{0:N2}, TargetNullValue=0}"
                                Margin="0,0,0,10"/>
-                    <TextBlock Text="Текущая сумма по заявке" Margin="0,0,0,4"/>
+
+                    <TextBlock Text="{DynamicResource CurrentOrderAmountLabel}" Margin="0,0,0,4"/>
                     <TextBlock Text="{Binding TargetOrderEstimatedTotalText}"
                                FontWeight="SemiBold"
                                Margin="0,0,0,10"/>
-                    <TextBlock Text="Количество для списания" Margin="0,0,0,4"/>
+
+                    <TextBlock Text="{DynamicResource QuantityToConsumeLabel}" Margin="0,0,0,4"/>
                     <TextBox Text="{Binding MaterialUsageQuantity, UpdateSourceTrigger=PropertyChanged}"
                              Margin="0,0,0,10"/>
-                    <Button Content="Создать заявку"
+
+                    <Button Content="{DynamicResource CreateMaterialRequestTitle}"
                             Click="CreateRequest_Click"
                             Margin="0,0,0,8"/>
-                    <Button Content="Списать на заявку"
+
+                    <Button Content="{DynamicResource ConsumeForOrderButton}"
                             Command="{Binding ConsumeWarehouseItemCommand}"/>
                 </StackPanel>
             </GroupBox>

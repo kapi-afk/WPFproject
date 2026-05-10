@@ -1,18 +1,17 @@
+using Microsoft.Win32;
 using Printinvest_WPF_app.ViewModels;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
-using Microsoft.Win32;
 
 namespace Printinvest_WPF_app.Views
 {
     public partial class AdminOrderCreateWindow : Window
     {
-        private const string OtherOption = "Другое";
-
         private readonly Dictionary<string, string[]> _brandCatalog = new Dictionary<string, string[]>
         {
             ["Ноутбук"] = new[] { "Lenovo", "ASUS", "HP", "Acer", "Dell", "Apple", "MSI" },
@@ -100,6 +99,8 @@ namespace Printinvest_WPF_app.Views
         }
 
         private ServiceAdminPanelViewModel ViewModel => DataContext as ServiceAdminPanelViewModel;
+
+        private static string OtherOption => App.GetString("OtherOption", "Other");
 
         private void InitializeFormOptions()
         {
@@ -207,7 +208,7 @@ namespace Printinvest_WPF_app.Views
 
             if (!string.IsNullOrWhiteSpace(deviceType) &&
                 !string.IsNullOrWhiteSpace(brand) &&
-                brand != OtherOption &&
+                !IsOtherValue(brand) &&
                 _brandModelCatalog.TryGetValue(deviceType, out var brandModels) &&
                 brandModels.TryGetValue(brand, out var specificModels))
             {
@@ -249,13 +250,13 @@ namespace Printinvest_WPF_app.Views
 
         private static bool IsOtherSelected(ComboBox comboBox)
         {
-            return string.Equals(comboBox.SelectedItem as string, OtherOption);
+            return IsOtherValue(comboBox.SelectedItem as string);
         }
 
         private static string ResolveOptionValue(ComboBox comboBox, TextBox customTextBox)
         {
             var selectedValue = comboBox.SelectedItem as string;
-            if (string.Equals(selectedValue, OtherOption))
+            if (IsOtherValue(selectedValue))
             {
                 return string.IsNullOrWhiteSpace(customTextBox.Text) ? string.Empty : customTextBox.Text.Trim();
             }
@@ -263,18 +264,26 @@ namespace Printinvest_WPF_app.Views
             return string.IsNullOrWhiteSpace(selectedValue) ? string.Empty : selectedValue.Trim();
         }
 
+        private static bool IsOtherValue(string value)
+        {
+            return string.Equals(value, OtherOption) || string.Equals(value, "Другое");
+        }
+
         private void SyncPhotoState()
         {
             if (ViewModel?.NewOrderProblemPhoto == null || ViewModel.NewOrderProblemPhoto.Length == 0)
             {
-                ProblemPhotoStatusTextBlock.Text = "Фото не добавлено";
+                ProblemPhotoStatusTextBlock.Text = App.GetString("ProblemPhotoNotAdded", "No photo added");
                 ProblemPhotoPreviewBorder.Visibility = Visibility.Collapsed;
                 RemovePhotoButton.Visibility = Visibility.Collapsed;
                 ProblemPhotoPreview.Source = null;
                 return;
             }
 
-            ProblemPhotoStatusTextBlock.Text = $"Фото выбрано: {ViewModel.NewOrderProblemPhotoName}";
+            ProblemPhotoStatusTextBlock.Text = string.Format(
+                CultureInfo.CurrentCulture,
+                App.GetString("ProblemPhotoSelectedFormat", "Selected photo: {0}"),
+                ViewModel.NewOrderProblemPhotoName);
             ProblemPhotoPreviewBorder.Visibility = Visibility.Visible;
             RemovePhotoButton.Visibility = Visibility.Visible;
             ProblemPhotoPreview.Source = LoadImage(ViewModel.NewOrderProblemPhoto);
@@ -282,15 +291,22 @@ namespace Printinvest_WPF_app.Views
 
         private static BitmapImage LoadImage(byte[] bytes)
         {
-            using (var stream = new MemoryStream(bytes))
+            try
             {
-                var image = new BitmapImage();
-                image.BeginInit();
-                image.CacheOption = BitmapCacheOption.OnLoad;
-                image.StreamSource = stream;
-                image.EndInit();
-                image.Freeze();
-                return image;
+                using (var stream = new MemoryStream(bytes))
+                {
+                    var image = new BitmapImage();
+                    image.BeginInit();
+                    image.CacheOption = BitmapCacheOption.OnLoad;
+                    image.StreamSource = stream;
+                    image.EndInit();
+                    image.Freeze();
+                    return image;
+                }
+            }
+            catch
+            {
+                return null;
             }
         }
     }

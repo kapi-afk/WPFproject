@@ -23,8 +23,8 @@ namespace Printinvest_WPF_app.Views
                 return;
             }
 
-            WindowTitleText.Text = "Изменить позицию";
-            Title = "Изменить позицию";
+            WindowTitleText.Text = App.GetString("WarehouseItemEditTitle", "Edit item");
+            Title = App.GetString("WarehouseItemEditTitle", "Edit item");
             NameTextBox.Text = item.Name;
             CategoryTextBox.Text = item.Category;
             QuantityTextBox.Text = item.Quantity.ToString();
@@ -35,7 +35,11 @@ namespace Printinvest_WPF_app.Views
         {
             if (string.IsNullOrWhiteSpace(ItemName))
             {
-                MessageBox.Show("Укажите название позиции.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(
+                    App.GetString("WarehouseNameRequiredError", "Enter the item name."),
+                    App.GetString("WarehouseValidationTitle", "Validation error"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
                 NameTextBox.Focus();
                 NameTextBox.SelectAll();
                 return;
@@ -43,7 +47,11 @@ namespace Printinvest_WPF_app.Views
 
             if (!ContainsLetter(ItemName))
             {
-                MessageBox.Show("Название должно содержать буквы, а не только цифры или символы.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(
+                    App.GetString("WarehouseNameLettersError", "The name must contain letters, not only digits or symbols."),
+                    App.GetString("WarehouseValidationTitle", "Validation error"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
                 NameTextBox.Focus();
                 NameTextBox.SelectAll();
                 return;
@@ -51,7 +59,11 @@ namespace Printinvest_WPF_app.Views
 
             if (string.IsNullOrWhiteSpace(ItemCategory))
             {
-                MessageBox.Show("Укажите категорию позиции.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(
+                    App.GetString("WarehouseCategoryRequiredError", "Enter the item category."),
+                    App.GetString("WarehouseValidationTitle", "Validation error"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
                 CategoryTextBox.Focus();
                 CategoryTextBox.SelectAll();
                 return;
@@ -59,7 +71,11 @@ namespace Printinvest_WPF_app.Views
 
             if (!ContainsLetter(ItemCategory))
             {
-                MessageBox.Show("Категория должна содержать буквы, а не только цифры или символы.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(
+                    App.GetString("WarehouseCategoryLettersError", "The category must contain letters, not only digits or symbols."),
+                    App.GetString("WarehouseValidationTitle", "Validation error"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
                 CategoryTextBox.Focus();
                 CategoryTextBox.SelectAll();
                 return;
@@ -67,7 +83,11 @@ namespace Printinvest_WPF_app.Views
 
             if (!int.TryParse(QuantityTextBox.Text, out var quantity) || quantity <= 0)
             {
-                MessageBox.Show("Количество должно быть целым числом больше нуля.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(
+                    App.GetString("WarehouseQuantityError", "Quantity must be a whole number greater than zero."),
+                    App.GetString("WarehouseValidationTitle", "Validation error"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
                 QuantityTextBox.Focus();
                 QuantityTextBox.SelectAll();
                 return;
@@ -75,7 +95,11 @@ namespace Printinvest_WPF_app.Views
 
             if (!TryParseUnitPrice(UnitPriceTextBox.Text, out var unitPrice) || unitPrice <= 0)
             {
-                MessageBox.Show("Цена должна быть числом больше нуля.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(
+                    App.GetString("WarehouseUnitPriceError", "Price must be a number greater than zero."),
+                    App.GetString("WarehouseValidationTitle", "Validation error"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
                 UnitPriceTextBox.Focus();
                 UnitPriceTextBox.SelectAll();
                 return;

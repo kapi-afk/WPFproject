@@ -30,14 +30,37 @@
         </Grid>
 
         <TabControl Grid.Row="1">
-            <TabItem Header="Ремонтные заявки">
+            <TabItem Header="{DynamicResource MasterOrdersTab}">
                 <Grid Margin="0,10,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="340" />
                     </Grid.ColumnDefinitions>
 
-                    <DataGrid ItemsSource="{Binding Orders}"
+                    <Grid Grid.Row="0"
+                          Grid.ColumnSpan="2"
+                          Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="320" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="{DynamicResource SearchOrdersLabel}"
+                                   Style="{StaticResource FieldLabelStyle}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0"/>
+                        <TextBox Grid.Column="1"
+                                 Text="{Binding OrderSearchText, UpdateSourceTrigger=PropertyChanged}"/>
+                    </Grid>
+
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding Orders}"
                               SelectedItem="{Binding SelectedOrder}"
                               AutoGenerateColumns="False"
                               CanUserAddRows="False"
@@ -47,13 +70,13 @@
                               GridLinesVisibility="Horizontal"
                               HorizontalScrollBarVisibility="Disabled">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Номер" Binding="{Binding DisplayNumber}" Width="95"/>
-                            <DataGridTextColumn Header="Клиент" Binding="{Binding User.Name}" Width="1.1*"/>
-                            <DataGridTextColumn Header="Устройство" Binding="{Binding DeviceType}" Width="1.1*"/>
-                            <DataGridTextColumn Header="Бренд" Binding="{Binding DeviceBrand}" Width="1*"/>
-                            <DataGridTextColumn Header="Модель" Binding="{Binding DeviceModel}" Width="1*"/>
-                            <DataGridTextColumn Header="Проблема" Binding="{Binding ProblemDescription}" Width="2*"/>
-                            <DataGridTemplateColumn Header="Статус" Width="1.25*">
+                            <DataGridTextColumn Header="{DynamicResource ColumnNumber}" Binding="{Binding DisplayNumber}" Width="95"/>
+                            <DataGridTextColumn Header="{DynamicResource ColumnClient}" Binding="{Binding User.Name}" Width="1.1*"/>
+                            <DataGridTextColumn Header="{DynamicResource ColumnDevice}" Binding="{Binding DeviceType}" Width="1.1*"/>
+                            <DataGridTextColumn Header="{DynamicResource ColumnBrand}" Binding="{Binding DeviceBrand}" Width="1*"/>
+                            <DataGridTextColumn Header="{DynamicResource ColumnModel}" Binding="{Binding DeviceModel}" Width="1*"/>
+                            <DataGridTextColumn Header="{DynamicResource ColumnProblem}" Binding="{Binding ProblemDescription}" Width="2*"/>
+                            <DataGridTemplateColumn Header="{DynamicResource ColumnStatus}" Width="1.25*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <ContentControl Content="{Binding Status}"
@@ -66,13 +89,14 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <ScrollViewer Grid.Column="1"
+                    <ScrollViewer Grid.Row="1"
+                                  Grid.Column="1"
                                   VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled">
                         <Border Style="{StaticResource CardStyle}"
                                 Padding="16">
                             <StackPanel>
-                                <TextBlock Text="Работа с заявкой"
+                                <TextBlock Text="{DynamicResource WorkWithOrderTitle}"
                                            Style="{StaticResource SectionTitleStyle}"
                                            FontSize="18"
                                            Margin="0,0,0,12"/>
@@ -87,30 +111,65 @@
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
 
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Заявка:" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,8,8"/>
-                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedOrder.DisplayNumber, TargetNullValue=Не выбрана}" Margin="0,0,0,8"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource SelectedOrderLabel}" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,8,8"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedOrder.DisplayNumber, TargetNullValue={StaticResource NotSelectedFemale}}" Margin="0,0,0,8"/>
 
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Клиент:" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,8,8"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedOrder.User.Name, TargetNullValue=Не выбран}" Margin="0,0,0,8"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{DynamicResource SelectedClientLabel}" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,8,8"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedOrder.User.Name, TargetNullValue={StaticResource NotSelectedMale}}" Margin="0,0,0,8"/>
 
-                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Устройство:" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,8,0"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedOrder.DeviceType, TargetNullValue=Не выбрано}"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{DynamicResource SelectedDeviceLabel}" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,8,0"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedOrder.DeviceType, TargetNullValue={StaticResource NotSelectedNeutral}}"/>
                                 </Grid>
 
-                                <TextBlock Text="Стоимость деталей" Style="{StaticResource FieldLabelStyle}" FontSize="14"/>
+                                <TextBlock Text="{DynamicResource ProblemDescriptionLabel}" Style="{StaticResource FieldLabelStyle}" FontSize="14"/>
+                                <TextBlock Text="{Binding SelectedOrder.ProblemDescription, TargetNullValue={StaticResource NotSelectedNeutral}}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,10"/>
+
+                                <TextBlock Text="{DynamicResource ClientCommentLabel}" Style="{StaticResource FieldLabelStyle}" FontSize="14"/>
+                                <TextBlock Text="{Binding SelectedOrder.ClientComment, TargetNullValue={StaticResource NoCommentText}}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,10"/>
+
+                                <StackPanel Margin="0,0,0,12"
+                                            Visibility="{Binding SelectedOrder.HasProblemPhoto, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="{DynamicResource ProblemPhotoLabel}"
+                                               Style="{StaticResource FieldLabelStyle}"
+                                               FontSize="14"/>
+                                    <Border Background="{DynamicResource InputBackgroundBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="10"
+                                            Padding="8"
+                                            Margin="0,6,0,0">
+                                        <Button Background="Transparent"
+                                                BorderThickness="0"
+                                                Padding="0"
+                                                Cursor="Hand"
+                                                ToolTip="{DynamicResource OpenImageHint}"
+                                                Tag="{Binding SelectedOrder.ProblemPhoto}"
+                                                Click="ProblemPhoto_Click">
+                                            <Image Source="{Binding SelectedOrder.ProblemPhoto, Converter={StaticResource ByteArrayToImageConverter}}"
+                                                   Height="100"
+                                                   Stretch="Uniform"/>
+                                        </Button>
+                                    </Border>
+                                </StackPanel>
+
+                                <TextBlock Text="{DynamicResource PartsCostLabel}" Style="{StaticResource FieldLabelStyle}" FontSize="14"/>
                                 <TextBlock Text="{Binding SelectedOrder.EstimatedPartsCost, StringFormat={}{0:N2} BYN}"
                                            Margin="0,0,0,8"/>
 
-                                <TextBlock Text="Стоимость работы мастера" Style="{StaticResource FieldLabelStyle}" FontSize="14"/>
+                                <TextBlock Text="{DynamicResource MasterWorkCostLabel}" Style="{StaticResource FieldLabelStyle}" FontSize="14"/>
                                 <TextBox Text="{Binding SelectedOrderMasterWorkCost, UpdateSourceTrigger=LostFocus}"
                                          Margin="0,0,0,8"
                                          Height="30"/>
 
-                                <TextBlock Text="Предварительная сумма" Style="{StaticResource FieldLabelStyle}" FontSize="14"/>
+                                <TextBlock Text="{DynamicResource PreliminaryAmountLabel}" Style="{StaticResource FieldLabelStyle}" FontSize="14"/>
                                 <TextBlock Text="{Binding SelectedOrder.EstimatedRepairCost, StringFormat={}{0:N2} BYN}"
                                            Margin="0,0,0,12"/>
 
-                                <TextBlock Text="Новый статус" Style="{StaticResource FieldLabelStyle}"/>
+                                <TextBlock Text="{DynamicResource NewStatusLabel}" Style="{StaticResource FieldLabelStyle}"/>
                                 <ComboBox ItemsSource="{Binding OrderStatuses}"
                                           SelectedItem="{Binding SelectedOrderStatus}"
                                           ItemTemplate="{StaticResource OrderStatusTemplate}"
@@ -124,11 +183,11 @@
                                     </Grid.ColumnDefinitions>
 
                                     <Button Grid.Column="0"
-                                            Content="Сохранить"
+                                            Content="{DynamicResource SaveButton}"
                                             Style="{StaticResource MediumPrimaryButtonStyle}"
                                             Command="{Binding UpdateOrderStatusCommand}"/>
                                     <Button Grid.Column="2"
-                                            Content="Открыть склад"
+                                            Content="{DynamicResource OpenWarehouseButton}"
                                             Style="{StaticResource MediumSecondaryButtonStyle}"
                                             Command="{Binding OpenWarehouseWindowCommand}"/>
                                 </Grid>
@@ -138,7 +197,7 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Заявки на материалы">
+            <TabItem Header="{DynamicResource MaterialRequestsTab}">
                 <Grid Margin="0,10,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -146,7 +205,7 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Text="Заявки на материалы"
+                    <TextBlock Text="{DynamicResource MaterialRequestsTitle}"
                                Style="{StaticResource SectionTitleStyle}"/>
                     <Grid Grid.Row="1" Margin="0,0,0,12">
                         <Grid.ColumnDefinitions>
@@ -156,7 +215,7 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Grid.Column="0"
-                                   Text="Поиск по заказу"
+                                   Text="{DynamicResource SearchOrderLabel}"
                                    Style="{StaticResource FieldLabelStyle}"
                                    VerticalAlignment="Center"
                                    Margin="0,0,8,0"/>
@@ -171,11 +230,11 @@
                               HeadersVisibility="Column"
                               GridLinesVisibility="Horizontal">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Заказ №" Binding="{Binding OrderDisplayNumber}" Width="0.9*"/>
-                            <DataGridTextColumn Header="Материал" Binding="{Binding RequestedItemName}" Width="2*"/>
-                            <DataGridTextColumn Header="Категория" Binding="{Binding RequestedCategory}" Width="1.3*"/>
-                            <DataGridTextColumn Header="Кол-во" Binding="{Binding RequestedQuantity}" Width="0.7*"/>
-                            <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="1*"/>
+                            <DataGridTextColumn Header="{DynamicResource ColumnOrderNumberShort}" Binding="{Binding OrderDisplayNumber}" Width="0.9*"/>
+                            <DataGridTextColumn Header="{DynamicResource ColumnMaterial}" Binding="{Binding RequestedItemName}" Width="2*"/>
+                            <DataGridTextColumn Header="{DynamicResource ColumnCategory}" Binding="{Binding RequestedCategory}" Width="1.3*"/>
+                            <DataGridTextColumn Header="{DynamicResource ColumnQuantity}" Binding="{Binding RequestedQuantity}" Width="0.7*"/>
+                            <DataGridTextColumn Header="{DynamicResource ColumnStatus}" Binding="{Binding DisplayStatus}" Width="1*"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
