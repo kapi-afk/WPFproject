@@ -22,7 +22,7 @@ namespace Printinvest_WPF_app.Models
         public string Email { get; set; }
         public UserRole Role { get; set; }
         public string MasterSpecializations { get; set; }
-        public byte[] Photo { get; set; } // Опционально
+        public byte[] Photo { get; set; }
         public List<Order> Orders { get; set; } = new List<Order>();
         public List<Order> AssignedOrders { get; set; } = new List<Order>();
 

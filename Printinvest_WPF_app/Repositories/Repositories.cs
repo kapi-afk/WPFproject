@@ -14,10 +14,6 @@ namespace Printinvest_WPF_app.Repositories
     {
         private static AppDbContext _context;
         public static UserRepository Users { get; private set; }
-        public static ProductRepository Products { get; private set; }
-        public static ServiceRepository Services { get; private set; }
-        public static AnalyticRepository Analytics { get; private set; }
-        public static CartRepository Carts { get; private set; }
         public static CommentRepository Comments { get; private set; }
         public static OrderRepository Orders { get; private set; }
         public static WarehouseRepository Warehouse { get; private set; }
@@ -33,10 +29,6 @@ namespace Printinvest_WPF_app.Repositories
             EnsureWarehouseRequestSchema();
 
             Users = new UserRepository(_context);
-            Products = new ProductRepository(_context);
-            Services = new ServiceRepository(_context);
-            Analytics = new AnalyticRepository(_context);
-            Carts = new CartRepository(_context);
             Comments = new CommentRepository(_context);
             Orders = new OrderRepository(_context);
             Warehouse = new WarehouseRepository(_context);

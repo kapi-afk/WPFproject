@@ -186,33 +186,24 @@
     </ApplicationDefinition>
     <Compile Include="Converters\BoolToVisConverter.cs" />
     <Compile Include="Converters\ByteArrayToImageConverter.cs" />
-    <Compile Include="Converters\CartItemTotalPriceConverter.cs" />
     <Compile Include="Converters\CatalogOptionConverter.cs" />
-    <Compile Include="Converters\FilterNameConverter.cs" />
     <Compile Include="Converters\HashHelper.cs" />
-    <Compile Include="Converters\ItemTypeConverter.cs" />
     <Compile Include="Converters\OrderStatusBackgroundBrushConverter.cs" />
     <Compile Include="Converters\OrderStatusConverter.cs" />
     <Compile Include="Converters\OrderStatusForegroundBrushConverter.cs" />
     <Compile Include="Converters\PasswordBoxConverter.cs" />
     <Compile Include="Converters\SessionManager.cs" />
     <Compile Include="Converters\UserRoleConverter.cs" />
-    <Compile Include="Models\Analytic.cs" />
-    <Compile Include="Models\Cart.cs" />
     <Compile Include="Models\Comment.cs" />
     <Compile Include="Models\Items.cs" />
     <Compile Include="Models\Order.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Models\WarehouseItem.cs" />
     <Compile Include="Models\WarehouseRequest.cs" />
-    <Compile Include="Repositories\AnalyticRepository.cs" />
     <Compile Include="Repositories\AppDbContext.cs" />
-    <Compile Include="Repositories\CartRepository.cs" />
     <Compile Include="Repositories\CommentRepository.cs" />
     <Compile Include="Repositories\OrderRepository.cs" />
-    <Compile Include="Repositories\ProductRepository.cs" />
     <Compile Include="Repositories\Repositories.cs" />
-    <Compile Include="Repositories\ServiceRepository.cs" />
     <Compile Include="Repositories\UserRepository.cs" />
     <Compile Include="Repositories\WarehouseRepository.cs" />
     <Compile Include="Repositories\WarehouseRequestRepository.cs" />
@@ -220,12 +211,8 @@
     <Compile Include="Utilities\OrderEmailService.cs" />
     <Compile Include="Utilities\OrderPublicNumberService.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
-    <Compile Include="ViewModels\CatalogViewModel.cs" />
-    <Compile Include="ViewModels\ItemDetailsViewModel.cs" />
     <Compile Include="ViewModels\LoginViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
-    <Compile Include="ViewModels\ProductViewModel.cs" />
-    <Compile Include="ViewModels\RepairOrderViewModel.cs" />
     <Compile Include="ViewModels\RecoverViewModel.cs" />
     <Compile Include="ViewModels\RegisterViewModel.cs" />
     <Compile Include="ViewModels\RelayCommand.cs" />
@@ -234,9 +221,6 @@
     <Compile Include="ViewModels\ServiceAdminPanelViewModel.cs" />
     <Compile Include="ViewModels\ServiceClientProfileViewModel.cs" />
     <Compile Include="ViewModels\ServiceMasterPanelViewModel.cs" />
-    <Compile Include="Views\ItemDetailsPage.xaml.cs">
-      <DependentUpon>ItemDetailsPage.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Views\AdminOrderCreateWindow.xaml.cs">
       <DependentUpon>AdminOrderCreateWindow.xaml</DependentUpon>
     </Compile>
@@ -270,12 +254,6 @@
     <Compile Include="Views\Pages\CartPage.xaml.cs">
       <DependentUpon>CartPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Pages\CatalogPage.xaml.cs">
-      <DependentUpon>CatalogPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\Pages\HomePage.xaml.cs">
-      <DependentUpon>HomePage.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Views\Pages\LoginPage.xaml.cs">
       <DependentUpon>LoginPage.xaml</DependentUpon>
     </Compile>
@@ -308,10 +286,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Themes\LightTheme.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\ItemDetailsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -371,14 +345,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Pages\CatalogPage.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\Pages\HomePage.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Views\Pages\LoginPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -418,6 +384,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="ClassDiagram1.cd" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

@@ -8,9 +8,6 @@ namespace Printinvest_WPF_app.Contex
         public DbSet<User> Users { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Service> Services { get; set; }
-        public DbSet<Analytic> Analytics { get; set; }
-        public DbSet<Cart> Carts { get; set; }
-        public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
@@ -78,57 +75,6 @@ namespace Printinvest_WPF_app.Contex
             modelBuilder.Entity<Service>()
                 .Property(s => s.Photo)
                 .HasColumnType("VARBINARY(MAX)"); // Добавлено для поддержки изображений
-
-            // Конфигурация Analytic
-            modelBuilder.Entity<Analytic>()
-                .HasKey(a => a.Id);
-            modelBuilder.Entity<Analytic>()
-                .HasOne(a => a.User)
-                .WithMany()
-                .HasForeignKey(a => a.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<Analytic>()
-                .HasOne(a => a.Product)
-                .WithMany()
-                .HasForeignKey(a => a.ProductId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .IsRequired(false);
-            modelBuilder.Entity<Analytic>()
-                .HasOne(a => a.Service)
-                .WithMany()
-                .HasForeignKey(a => a.ServiceId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .IsRequired(false);
-
-            // Конфигурация Cart
-            modelBuilder.Entity<Cart>()
-                .HasKey(c => c.Id);
-            modelBuilder.Entity<Cart>()
-                .HasOne(c => c.User)
-                .WithMany()
-                .HasForeignKey(c => c.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Конфигурация CartItem
-            modelBuilder.Entity<CartItem>()
-                .HasKey(ci => ci.Id);
-            modelBuilder.Entity<CartItem>()
-                .HasOne(ci => ci.Cart)
-                .WithMany(c => c.Items)
-                .HasForeignKey(ci => ci.CartId)
-                .OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<CartItem>()
-                .HasOne(ci => ci.Product)
-                .WithMany()
-                .HasForeignKey(ci => ci.ProductId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .IsRequired(false);
-            modelBuilder.Entity<CartItem>()
-                .HasOne(ci => ci.Service)
-                .WithMany()
-                .HasForeignKey(ci => ci.ServiceId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .IsRequired(false);
 
             // Конфигурация Comment
             modelBuilder.Entity<Comment>()

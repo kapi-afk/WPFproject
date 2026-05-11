@@ -13,10 +13,6 @@
             <conv:CatalogOptionConverter x:Key="CatalogOptionConverter" />
             <conv:OrderStatusBackgroundBrushConverter x:Key="OrderStatusBackgroundBrushConverter" />
             <conv:OrderStatusForegroundBrushConverter x:Key="OrderStatusForegroundBrushConverter" />
-            <conv:ItemTypeConverter x:Key="ItemTypeConverter" />
-            <conv:CartItemTotalPriceConverter x:Key="CartItemTotalPriceConverter"/>
-            <conv:CartItemPriceConverter x:Key="CartItemPriceConverter"/>
-            <conv:FilterNameConverter x:Key="FilterNameConverter" />
             <DataTemplate x:Key="OrderStatusTemplate">
                 <TextBlock Text="{Binding Converter={StaticResource OrderStatusConverter}}" />
             </DataTemplate>

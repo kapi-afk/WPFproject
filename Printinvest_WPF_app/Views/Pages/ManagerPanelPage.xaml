@@ -109,6 +109,7 @@
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
 
                                     <TextBlock Grid.Row="0" Grid.Column="0" Text="{DynamicResource SelectedOrderLabel}" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,8,8"/>
@@ -118,7 +119,10 @@
                                     <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedOrder.User.Name, TargetNullValue={StaticResource NotSelectedMale}}" Margin="0,0,0,8"/>
 
                                     <TextBlock Grid.Row="2" Grid.Column="0" Text="{DynamicResource SelectedDeviceLabel}" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,8,0"/>
-                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedOrder.DeviceType, TargetNullValue={StaticResource NotSelectedNeutral}}"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedOrder.DeviceType, TargetNullValue={StaticResource NotSelectedNeutral}}" Margin="0,0,0,8"/>
+
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{DynamicResource ClientPhoneLabel}" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,8,0"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedOrder.ContactPhone, TargetNullValue={StaticResource NotSpecifiedText}}"/>
                                 </Grid>
 
                                 <TextBlock Text="{DynamicResource ProblemDescriptionLabel}" Style="{StaticResource FieldLabelStyle}" FontSize="14"/>
