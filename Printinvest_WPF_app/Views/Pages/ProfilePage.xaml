@@ -237,10 +237,23 @@
                                 Padding="28"
                                 Margin="0,0,0,28">
                         <StackPanel>
-                            <Grid Margin="0,0,0,6">
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
                                 <TextBlock Text="{DynamicResource MyOrdersTitle}"
-                                               Style="{StaticResource SectionTitleStyle}"
-                                               VerticalAlignment="Center"/>
+                                           Style="{StaticResource SectionTitleStyle}"
+                                           VerticalAlignment="Center"/>
+
+                                <Button Grid.Column="1"
+                                        Content="{DynamicResource CreateClientOrderButton}"
+                                        Command="{Binding ToggleCreateOrderFormCommand}"
+                                        Width="148"
+                                        Style="{StaticResource MediumPrimaryButtonStyle}"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Top"/>
                             </Grid>
 
                             <Border Style="{StaticResource InnerCardStyle}"
@@ -259,6 +272,7 @@
                                                     Margin="0,0,0,16">
                                             <Grid>
                                                 <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
                                                     <RowDefinition Height="Auto"/>
                                                     <RowDefinition Height="Auto"/>
                                                     <RowDefinition Height="Auto"/>
@@ -287,13 +301,11 @@
                                                 </Grid>
 
                                                 <Grid Grid.Row="1"
-                                                          Margin="0,0,0,8">
+                                                      Margin="0,0,0,8">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*"/>
                                                         <ColumnDefinition Width="22"/>
                                                         <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="240"/>
                                                     </Grid.ColumnDefinitions>
 
                                                     <StackPanel Grid.Column="0">
@@ -314,124 +326,192 @@
                                                                 <Run Text="{Binding DeviceModel}"/>
                                                         </TextBlock>
                                                     </StackPanel>
+                                                </Grid>
 
-                                                    <StackPanel Grid.Column="4"
-                                                                Orientation="Horizontal"
-                                                                HorizontalAlignment="Right"
-                                                                VerticalAlignment="Bottom">
+                                                <Grid Grid.Row="2"
+                                                      Margin="0,8,0,12">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <WrapPanel Grid.Column="0"
+                                                               Orientation="Horizontal"
+                                                               HorizontalAlignment="Left"
+                                                               VerticalAlignment="Center">
+                                                        <WrapPanel.Style>
+                                                            <Style TargetType="WrapPanel">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                <Style.Triggers>
+                                                                    <MultiDataTrigger>
+                                                                        <MultiDataTrigger.Conditions>
+                                                                            <Condition Binding="{Binding IsDetailsExpanded}" Value="False"/>
+                                                                            <Condition Binding="{Binding CanShowOnlinePaymentButton}" Value="True"/>
+                                                                        </MultiDataTrigger.Conditions>
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                    </MultiDataTrigger>
+                                                                    <MultiDataTrigger>
+                                                                        <MultiDataTrigger.Conditions>
+                                                                            <Condition Binding="{Binding IsDetailsExpanded}" Value="False"/>
+                                                                            <Condition Binding="{Binding CanBeCancelledByClient}" Value="True"/>
+                                                                        </MultiDataTrigger.Conditions>
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                    </MultiDataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </WrapPanel.Style>
                                                         <Button Content="{DynamicResource PayButton}"
                                                                 Command="{Binding DataContext.PayOrderOnlineCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                                 CommandParameter="{Binding}"
                                                                 Width="108"
                                                                 Style="{StaticResource SmallPrimaryButtonStyle}"
-                                                                Margin="0,0,8,0"
+                                                                Margin="0,0,10,0"
                                                                 Visibility="{Binding CanShowOnlinePaymentButton, Converter={StaticResource BoolToVis}}"/>
                                                         <Button Content="{DynamicResource CancelOrderButton}"
                                                                 Command="{Binding DataContext.CancelOrderCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                                 CommandParameter="{Binding}"
                                                                 Width="108"
                                                                 Style="{StaticResource SmallDangerButtonStyle}"
-                                                                Margin="0,0,8,0"
+                                                                Margin="0,0,10,0"
                                                                 Visibility="{Binding CanBeCancelledByClient, Converter={StaticResource BoolToVis}}"/>
-                                                        <Button Content="{Binding DetailsButtonText}"
-                                                                Command="{Binding DataContext.ToggleOrderDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                                CommandParameter="{Binding}"
-                                                                Width="116"
-                                                                Style="{StaticResource SmallSecondaryButtonStyle}"
-                                                                Margin="0"/>
-                                                    </StackPanel>
-                                                </Grid>
-
-                                                <StackPanel Grid.Row="2"
-                                                                Visibility="{Binding IsDetailsExpanded, Converter={StaticResource BoolToVis}}">
-                                                    <WrapPanel Margin="0,0,0,10">
-                                                        <StackPanel Width="180"
-                                                                        Margin="0,0,18,10">
-                                                            <TextBlock Text="{DynamicResource MasterLabel}"
-                                                                           FontSize="12"
-                                                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                                        <TextBlock Text="{Binding AssignedMaster.Name, TargetNullValue={StaticResource NotAssignedText}}"
-                                                                           TextWrapping="Wrap"/>
-                                                        </StackPanel>
-
-                                                        <StackPanel Width="180"
-                                                                        Margin="0,0,18,10">
-                                                            <TextBlock Text="{DynamicResource DeliveryMethodLabel}"
-                                                                           FontSize="12"
-                                                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                                        <TextBlock Text="{Binding DeliveryMethodDisplay, TargetNullValue={StaticResource PickupText}}"
-                                                                           TextWrapping="Wrap"/>
-                                                        </StackPanel>
-
-                                                        <StackPanel Width="180"
-                                                                        Margin="0,0,18,10">
-                                                            <TextBlock Text="{DynamicResource PhoneLabel}"
-                                                                           FontSize="12"
-                                                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                                            <TextBlock Text="{Binding ContactPhone}"
-                                                                           TextWrapping="Wrap"/>
-                                                        </StackPanel>
-                                                        <StackPanel Width="180"
-                                                                        Margin="0,0,18,10">
-                                                            <TextBlock Text="{DynamicResource PaymentMethodLabel}"
-                                                                           FontSize="12"
-                                                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                                            <TextBlock Text="{Binding PaymentMethodDisplay}"
-                                                                           TextWrapping="Wrap"/>
-                                                        </StackPanel>
-                                                        <StackPanel Width="180"
-                                                                        Margin="0,0,18,10">
-                                                            <TextBlock Text="{DynamicResource PaymentStatusLabel}"
-                                                                           FontSize="12"
-                                                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                                            <TextBlock Text="{Binding PaymentStatusText}"
-                                                                           TextWrapping="Wrap"/>
-                                                        </StackPanel>
                                                     </WrapPanel>
 
-                                                    <StackPanel Margin="0,0,0,10">
-                                                        <StackPanel.Style>
-                                                            <Style TargetType="StackPanel">
-                                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding DeliveryMethod}" Value="Курьер">
-                                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </StackPanel.Style>
-                                                        <TextBlock Text="{DynamicResource CourierAddressLabel}"
+                                                    <Button Grid.Column="1"
+                                                            Content="{Binding DetailsButtonText}"
+                                                            Command="{Binding DataContext.ToggleOrderDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource GhostButtonStyle}"
+                                                            HorizontalAlignment="Right"
+                                                            VerticalAlignment="Center"
+                                                            Margin="16,0,0,0"/>
+                                                </Grid>
+
+                                                <StackPanel Grid.Row="3"
+                                                            Visibility="{Binding IsDetailsExpanded, Converter={StaticResource BoolToVis}}">
+                                                    <Grid Margin="0,0,0,10">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="24"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                        </Grid.RowDefinitions>
+
+                                                        <StackPanel Grid.Row="0"
+                                                                    Grid.Column="0"
+                                                                    Margin="0,0,0,10">
+                                                            <TextBlock Text="{DynamicResource MasterLabel}"
+                                                                       FontSize="12"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                            <TextBlock Text="{Binding AssignedMaster.Name, TargetNullValue={StaticResource NotAssignedText}}"
+                                                                       TextWrapping="Wrap"/>
+                                                        </StackPanel>
+
+                                                        <StackPanel Grid.Row="0"
+                                                                    Grid.Column="2"
+                                                                    Margin="0,0,0,10">
+                                                            <TextBlock Text="{DynamicResource PhoneLabel}"
+                                                                       FontSize="12"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                            <TextBlock Text="{Binding ContactPhone}"
+                                                                       TextWrapping="Wrap"/>
+                                                        </StackPanel>
+
+                                                        <StackPanel Grid.Row="1"
+                                                                    Grid.Column="0"
+                                                                    Margin="0,0,0,10">
+                                                            <TextBlock Text="{DynamicResource DeliveryMethodLabel}"
+                                                                       FontSize="12"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                            <TextBlock Text="{Binding DeliveryMethodDisplay, TargetNullValue={StaticResource PickupText}}"
+                                                                       TextWrapping="Wrap"/>
+                                                        </StackPanel>
+
+                                                        <StackPanel Grid.Row="1"
+                                                                    Grid.Column="2"
+                                                                    Margin="0,0,0,10">
+                                                            <TextBlock Text="{DynamicResource PaymentMethodLabel}"
+                                                                       FontSize="12"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                            <TextBlock Text="{Binding PaymentMethodDisplay}"
+                                                                       TextWrapping="Wrap"/>
+                                                        </StackPanel>
+
+                                                        <StackPanel Grid.Row="2"
+                                                                    Grid.Column="0"
+                                                                    Margin="0,0,0,10">
+                                                            <TextBlock Text="{DynamicResource PaymentStatusLabel}"
+                                                                       FontSize="12"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                            <TextBlock Text="{Binding PaymentStatusText}"
+                                                                       TextWrapping="Wrap"/>
+                                                        </StackPanel>
+
+                                                        <StackPanel Grid.Row="2"
+                                                                    Grid.Column="2">
+                                                            <StackPanel.Style>
+                                                                <Style TargetType="StackPanel">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsOnlinePaymentCompleted}" Value="True">
+                                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </StackPanel.Style>
+                                                            <TextBlock Text="{DynamicResource OnlinePaymentDateLabel}"
+                                                                       FontSize="12"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                            <TextBlock Text="{Binding PaymentPaidAtText}"
+                                                                       TextWrapping="Wrap"/>
+                                                        </StackPanel>
+
+                                                        <StackPanel Grid.Row="3"
+                                                                    Grid.ColumnSpan="3"
+                                                                    Margin="0,0,0,10">
+                                                            <StackPanel.Style>
+                                                                <Style TargetType="StackPanel">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding DeliveryMethod}" Value="Курьер">
+                                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </StackPanel.Style>
+                                                            <TextBlock Text="{DynamicResource CourierAddressLabel}"
                                                                        FontSize="12"
                                                                        Foreground="{DynamicResource SecondaryTextBrush}"
                                                                        Margin="0,0,0,4"/>
-                                                        <TextBlock Text="{Binding DeliveryAddress}"
+                                                            <TextBlock Text="{Binding DeliveryAddress}"
                                                                        TextWrapping="Wrap"/>
-                                                    </StackPanel>
+                                                        </StackPanel>
 
-                                                    <TextBlock Text="{DynamicResource ProblemDescriptionLabel}"
-                                                                   FontSize="12"
-                                                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                                                   Margin="0,0,0,4"/>
-                                                    <TextBlock Text="{Binding ProblemDescription}"
-                                                                   TextWrapping="Wrap"/>
-
-                                                    <StackPanel Margin="0,10,0,0">
-                                                        <TextBlock Text="{DynamicResource ClientCommentLabel}"
+                                                        <StackPanel Grid.Row="4"
+                                                                    Grid.Column="0">
+                                                            <TextBlock Text="{DynamicResource ProblemDescriptionLabel}"
                                                                        FontSize="12"
                                                                        Foreground="{DynamicResource SecondaryTextBrush}"
                                                                        Margin="0,0,0,4"/>
-                                                        <TextBlock Text="{Binding ClientComment, TargetNullValue={StaticResource NoCommentText}}"
+                                                            <TextBlock Text="{Binding ProblemDescription}"
                                                                        TextWrapping="Wrap"/>
-                                                    </StackPanel>
-                                                    <StackPanel Margin="0,10,0,0"
-                                                                Visibility="{Binding IsOnlinePaymentCompleted, Converter={StaticResource BoolToVis}}">
-                                                        <TextBlock Text="{DynamicResource OnlinePaymentDateLabel}"
-                                                                   FontSize="12"
-                                                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                                                   Margin="0,0,0,4"/>
-                                                        <TextBlock Text="{Binding PaymentPaidAtText}"
-                                                                   TextWrapping="Wrap"/>
-                                                    </StackPanel>
+                                                        </StackPanel>
+
+                                                        <StackPanel Grid.Row="4"
+                                                                    Grid.Column="2">
+                                                            <TextBlock Text="{DynamicResource ClientCommentLabel}"
+                                                                       FontSize="12"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                       Margin="0,0,0,4"/>
+                                                            <TextBlock Text="{Binding ClientComment, TargetNullValue={StaticResource NoCommentText}}"
+                                                                       TextWrapping="Wrap"/>
+                                                        </StackPanel>
+                                                    </Grid>
 
                                                     <Border Background="{DynamicResource PanelBackgroundBrush}"
                                                                 BorderBrush="{DynamicResource CardBorderBrush}"
@@ -444,6 +524,46 @@
                                                                    Height="120"
                                                                    Stretch="Uniform"/>
                                                     </Border>
+
+                                                    <WrapPanel Orientation="Horizontal"
+                                                               Margin="0,14,0,0"
+                                                               HorizontalAlignment="Left">
+                                                        <WrapPanel.Style>
+                                                            <Style TargetType="WrapPanel">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                <Style.Triggers>
+                                                                    <MultiDataTrigger>
+                                                                        <MultiDataTrigger.Conditions>
+                                                                            <Condition Binding="{Binding IsDetailsExpanded}" Value="True"/>
+                                                                            <Condition Binding="{Binding CanShowOnlinePaymentButton}" Value="True"/>
+                                                                        </MultiDataTrigger.Conditions>
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                    </MultiDataTrigger>
+                                                                    <MultiDataTrigger>
+                                                                        <MultiDataTrigger.Conditions>
+                                                                            <Condition Binding="{Binding IsDetailsExpanded}" Value="True"/>
+                                                                            <Condition Binding="{Binding CanBeCancelledByClient}" Value="True"/>
+                                                                        </MultiDataTrigger.Conditions>
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                    </MultiDataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </WrapPanel.Style>
+                                                        <Button Content="{DynamicResource PayButton}"
+                                                                Command="{Binding DataContext.PayOrderOnlineCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}"
+                                                                Width="108"
+                                                                Style="{StaticResource SmallPrimaryButtonStyle}"
+                                                                Margin="0,0,10,0"
+                                                                Visibility="{Binding CanShowOnlinePaymentButton, Converter={StaticResource BoolToVis}}"/>
+                                                        <Button Content="{DynamicResource CancelOrderButton}"
+                                                                Command="{Binding DataContext.CancelOrderCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}"
+                                                                Width="108"
+                                                                Style="{StaticResource SmallDangerButtonStyle}"
+                                                                Margin="0,0,10,0"
+                                                                Visibility="{Binding CanBeCancelledByClient, Converter={StaticResource BoolToVis}}"/>
+                                                    </WrapPanel>
                                                 </StackPanel>
                                             </Grid>
                                         </Border>
@@ -451,12 +571,6 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <Button Content="{DynamicResource CreateClientOrderButton}"
-                                        Command="{Binding ToggleCreateOrderFormCommand}"
-                                        Width="148"
-                                        Style="{StaticResource MediumPrimaryButtonStyle}"
-                                        Margin="0,14,0,0"
-                                        HorizontalAlignment="Right"/>
                         </StackPanel>
                     </Border>
 

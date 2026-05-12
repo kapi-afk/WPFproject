@@ -78,9 +78,10 @@ namespace Printinvest_WPF_app.Models
         public bool CanShowOnlinePaymentButton => IsOnlinePayment && !IsOnlinePaymentCompleted;
         [NotMapped]
         public bool CanBeCancelledByClient =>
-            Status == OrderStatus.Created ||
-            Status == OrderStatus.Assigned ||
-            Status == OrderStatus.Diagnosing;
+            !IsOnlinePaymentCompleted &&
+            (Status == OrderStatus.Created ||
+             Status == OrderStatus.Assigned ||
+             Status == OrderStatus.Diagnosing);
         [NotMapped]
         public string PaymentMethodDisplay
         {
@@ -210,6 +211,7 @@ namespace Printinvest_WPF_app.Models
                     _isOnlinePaymentCompleted = value;
                     OnPropertyChanged(nameof(IsOnlinePaymentCompleted));
                     OnPropertyChanged(nameof(CanShowOnlinePaymentButton));
+                    OnPropertyChanged(nameof(CanBeCancelledByClient));
                     OnPropertyChanged(nameof(PaymentStatusText));
                     OnPropertyChanged(nameof(PaymentPaidAtText));
                 }

@@ -947,6 +947,16 @@ namespace Printinvest_WPF_app.ViewModels
                 return;
             }
 
+            if (order.IsOnlinePaymentCompleted)
+            {
+                MessageBox.Show(
+                    "Оплаченную заявку нельзя отменить из профиля. Если нужна помощь, обратитесь к администратору.",
+                    "Отмена недоступна",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
             if (!order.CanBeCancelledByClient)
             {
                 MessageBox.Show(

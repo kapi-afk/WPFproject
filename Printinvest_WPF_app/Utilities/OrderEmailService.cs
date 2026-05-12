@@ -17,6 +17,38 @@ namespace Printinvest_WPF_app.Utilities
 {
     public static class OrderEmailService
     {
+        public static bool TrySendPasswordRecoveryCode(User user, string recoveryCode, DateTime expiresAt)
+        {
+            try
+            {
+                if (user == null)
+                {
+                    TraceEmailIssue("Password recovery email skipped: user is null.");
+                    return false;
+                }
+
+                if (string.IsNullOrWhiteSpace(user.Email))
+                {
+                    TraceEmailIssue($"Password recovery email skipped: user #{user.Id} has empty email.");
+                    return false;
+                }
+
+                var subject = "Код восстановления пароля";
+                var body =
+                    $"Здравствуйте, {user.Name ?? user.Login}!{Environment.NewLine}{Environment.NewLine}" +
+                    $"Ваш код восстановления пароля: {recoveryCode}{Environment.NewLine}" +
+                    $"Срок действия кода: до {expiresAt:dd.MM.yyyy HH:mm}.{Environment.NewLine}{Environment.NewLine}" +
+                    "Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.";
+
+                return TrySendPlainTextEmail(user.Email, subject, body);
+            }
+            catch (Exception ex)
+            {
+                TraceEmailIssue($"Password recovery email failed. Recipient={user?.Email}; Exception={ex}");
+                return false;
+            }
+        }
+
         public static void TrySendOrderStatusChangedEmail(Order order, OrderStatus previousStatus)
         {
             try
@@ -190,6 +222,78 @@ namespace Printinvest_WPF_app.Utilities
             return $"\u0421\u0442\u0430\u0442\u0443\u0441 \u0437\u0430\u044f\u0432\u043a\u0438 {orderNumber} \u0438\u0437\u043c\u0435\u043d\u0435\u043d";
         }
 
+        private static bool TrySendPlainTextEmail(string recipientEmail, string subject, string body)
+        {
+            var senderEmail = Properties.Settings.Default.NotificationEmailAddress;
+            var senderPassword = NormalizeSmtpPassword(Properties.Settings.Default.NotificationEmailPassword);
+            var smtpHost = Properties.Settings.Default.NotificationSmtpHost;
+            var smtpPort = Properties.Settings.Default.NotificationSmtpPort;
+            var enableSsl = Properties.Settings.Default.NotificationEnableSsl;
+
+            if (string.IsNullOrWhiteSpace(recipientEmail))
+            {
+                TraceEmailIssue("Generic email send skipped: recipient email is empty.");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(senderEmail) ||
+                string.IsNullOrWhiteSpace(senderPassword) ||
+                IsPlaceholderSmtpPassword(senderPassword))
+            {
+                TraceEmailIssue("Generic email send skipped: SMTP settings are not configured.");
+                return false;
+            }
+
+            EnsureModernTls();
+            var attempts = BuildConnectionAttempts(smtpHost, smtpPort, enableSsl);
+            Exception lastException = null;
+
+            foreach (var attempt in attempts)
+            {
+                try
+                {
+                    using (var message = new MimeMessage())
+                    using (var client = new MailKit.Net.Smtp.SmtpClient())
+                    {
+                        message.From.Add(new MailboxAddress(Properties.Settings.Default.NotificationEmailDisplayName, senderEmail));
+                        message.To.Add(MailboxAddress.Parse(recipientEmail));
+                        message.Subject = subject;
+                        message.Body = new TextPart("plain") { Text = body };
+
+                        client.Timeout = 15000;
+                        client.CheckCertificateRevocation = false;
+                        client.ServerCertificateValidationCallback =
+                            (sender, certificate, chain, sslPolicyErrors) =>
+                                ValidateServerCertificate(attempt.Host, certificate, sslPolicyErrors);
+                        client.Connect(attempt.Host, attempt.Port, attempt.SocketOptions);
+                        client.Authenticate(senderEmail, senderPassword);
+                        client.Send(message);
+                        client.Disconnect(true);
+                        TraceEmailIssue($"Generic email sent via MailKit. Host={attempt.Host}; Port={attempt.Port}; Recipient={recipientEmail}");
+                        return true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    lastException = ex;
+                    TraceEmailIssue(
+                        $"Generic email attempt failed. Host={attempt.Host}; Port={attempt.Port}; " +
+                        $"SocketOptions={attempt.SocketOptions}; Recipient={recipientEmail}; Exception={ex.Message}");
+                }
+            }
+
+            try
+            {
+                TrySendLegacyPlainTextEmail(recipientEmail, subject, body, senderEmail, senderPassword, smtpHost, smtpPort, enableSsl, lastException);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                TraceEmailIssue($"Generic email failed after fallback. Recipient={recipientEmail}; Exception={ex}");
+                return false;
+            }
+        }
+
         private static void TrySendLegacySmtpEmail(
             Order order,
             string senderEmail,
@@ -232,6 +336,58 @@ namespace Printinvest_WPF_app.Utilities
 
                 TraceEmailIssue(
                     $"Order email notification sent via legacy SMTP fallback. Recipient={order.User.Email}");
+            }
+            catch (Exception fallbackException)
+            {
+                throw new AggregateException(
+                    "MailKit and legacy SMTP sending failed.",
+                    mailKitException ?? new InvalidOperationException("MailKit attempts failed."),
+                    fallbackException);
+            }
+        }
+
+        private static void TrySendLegacyPlainTextEmail(
+            string recipientEmail,
+            string subject,
+            string body,
+            string senderEmail,
+            string senderPassword,
+            string smtpHost,
+            int smtpPort,
+            bool enableSsl,
+            Exception mailKitException)
+        {
+            try
+            {
+                var previousCertificateCallback = ServicePointManager.ServerCertificateValidationCallback;
+                try
+                {
+                    using (var message = new MailMessage())
+                    using (var client = new SmtpClient())
+                    {
+                        message.From = new MailAddress(senderEmail, Properties.Settings.Default.NotificationEmailDisplayName);
+                        message.To.Add(recipientEmail);
+                        message.Subject = subject;
+                        message.Body = body;
+                        message.BodyEncoding = Encoding.UTF8;
+                        message.SubjectEncoding = Encoding.UTF8;
+
+                        client.Host = smtpHost;
+                        client.Port = smtpPort == 465 ? 587 : smtpPort;
+                        client.EnableSsl = enableSsl;
+                        client.Credentials = new NetworkCredential(senderEmail, senderPassword);
+                        client.Timeout = 15000;
+
+                        ServicePointManager.ServerCertificateValidationCallback = (_, __, ___, ____) => true;
+                        client.Send(message);
+                    }
+                }
+                finally
+                {
+                    ServicePointManager.ServerCertificateValidationCallback = previousCertificateCallback;
+                }
+
+                TraceEmailIssue($"Generic email sent via legacy SMTP fallback. Recipient={recipientEmail}");
             }
             catch (Exception fallbackException)
             {
