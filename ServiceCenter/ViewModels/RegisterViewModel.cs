@@ -40,9 +40,7 @@ namespace ServiceCenter.ViewModels
             {
                 if (SetProperty(ref _login, value))
                 {
-                    ClearGlobalError();
-                    ValidateLogin(_hasAttemptedRegister);
-                    RefreshRegisterState();
+                    HandleInputChanged(() => ValidateLogin(_hasAttemptedRegister));
                 }
             }
         }
@@ -54,10 +52,9 @@ namespace ServiceCenter.ViewModels
             {
                 if (SetProperty(ref _password, value))
                 {
-                    ClearGlobalError();
-                    ValidatePassword(_hasAttemptedRegister);
-                    ValidateConfirmPassword(_hasAttemptedRegister);
-                    RefreshRegisterState();
+                    HandleInputChanged(
+                        () => ValidatePassword(_hasAttemptedRegister),
+                        () => ValidateConfirmPassword(_hasAttemptedRegister));
                 }
             }
         }
@@ -69,9 +66,7 @@ namespace ServiceCenter.ViewModels
             {
                 if (SetProperty(ref _confirmPassword, value))
                 {
-                    ClearGlobalError();
-                    ValidateConfirmPassword(_hasAttemptedRegister);
-                    RefreshRegisterState();
+                    HandleInputChanged(() => ValidateConfirmPassword(_hasAttemptedRegister));
                 }
             }
         }
@@ -83,9 +78,7 @@ namespace ServiceCenter.ViewModels
             {
                 if (SetProperty(ref _lastName, value))
                 {
-                    ClearGlobalError();
-                    ValidateLastName(_hasAttemptedRegister);
-                    RefreshRegisterState();
+                    HandleInputChanged(() => ValidateLastName(_hasAttemptedRegister));
                 }
             }
         }
@@ -97,9 +90,7 @@ namespace ServiceCenter.ViewModels
             {
                 if (SetProperty(ref _firstName, value))
                 {
-                    ClearGlobalError();
-                    ValidateFirstName(_hasAttemptedRegister);
-                    RefreshRegisterState();
+                    HandleInputChanged(() => ValidateFirstName(_hasAttemptedRegister));
                 }
             }
         }
@@ -111,9 +102,7 @@ namespace ServiceCenter.ViewModels
             {
                 if (SetProperty(ref _middleName, value))
                 {
-                    ClearGlobalError();
-                    ValidateMiddleName(_hasAttemptedRegister);
-                    RefreshRegisterState();
+                    HandleInputChanged(() => ValidateMiddleName(_hasAttemptedRegister));
                 }
             }
         }
@@ -125,9 +114,7 @@ namespace ServiceCenter.ViewModels
             {
                 if (SetProperty(ref _email, value))
                 {
-                    ClearGlobalError();
-                    ValidateEmail(_hasAttemptedRegister);
-                    RefreshRegisterState();
+                    HandleInputChanged(() => ValidateEmail(_hasAttemptedRegister));
                 }
             }
         }
@@ -218,15 +205,17 @@ namespace ServiceCenter.ViewModels
             .Where(part => !string.IsNullOrWhiteSpace(part))
             .Select(part => part.Trim()));
 
+        private bool HasRequiredRegisterFields =>
+            !string.IsNullOrWhiteSpace(Login) &&
+            !string.IsNullOrWhiteSpace(Password) &&
+            !string.IsNullOrWhiteSpace(ConfirmPassword) &&
+            !string.IsNullOrWhiteSpace(LastName) &&
+            !string.IsNullOrWhiteSpace(FirstName) &&
+            !string.IsNullOrWhiteSpace(Email);
+
         private bool CanRegisterExecute()
         {
-            return !string.IsNullOrWhiteSpace(Login) &&
-                   !string.IsNullOrWhiteSpace(Password) &&
-                   !string.IsNullOrWhiteSpace(ConfirmPassword) &&
-                   !string.IsNullOrWhiteSpace(LastName) &&
-                   !string.IsNullOrWhiteSpace(FirstName) &&
-                   !string.IsNullOrWhiteSpace(Email) &&
-                   !HasValidationErrors;
+            return HasRequiredRegisterFields && !HasValidationErrors;
         }
 
         private void RegisterExecute()
@@ -242,18 +231,7 @@ namespace ServiceCenter.ViewModels
                     return;
                 }
 
-                var normalizedLogin = Login.Trim();
-                var normalizedEmail = NormalizeEmail(Email);
-
-                var newUser = new Models.User
-                {
-                    Login = normalizedLogin,
-                    HashPassword = HashHelper.HashPassword(Password),
-                    Name = FullName,
-                    Email = normalizedEmail,
-                    Role = Models.UserRole.Client
-                };
-
+                var newUser = CreateUser();
                 _userRepository.Add(newUser);
                 SessionManager.Login(newUser);
                 Navigate("Profile");
@@ -306,9 +284,10 @@ namespace ServiceCenter.ViewModels
 
             if (string.IsNullOrWhiteSpace(normalizedLogin))
             {
-                LoginValidationMessage = showRequired
-                    ? GetString("RegistrationRequiredLogin", "Enter your login.")
-                    : string.Empty;
+                LoginValidationMessage = GetRequiredValidationMessage(
+                    showRequired,
+                    "RegistrationRequiredLogin",
+                    "Enter your login.");
                 return;
             }
 
@@ -324,9 +303,10 @@ namespace ServiceCenter.ViewModels
 
             if (string.IsNullOrWhiteSpace(normalizedEmail))
             {
-                EmailValidationMessage = showRequired
-                    ? GetString("RegistrationRequiredEmail", "Enter your email address.")
-                    : string.Empty;
+                EmailValidationMessage = GetRequiredValidationMessage(
+                    showRequired,
+                    "RegistrationRequiredEmail",
+                    "Enter your email address.");
                 return;
             }
 
@@ -349,9 +329,10 @@ namespace ServiceCenter.ViewModels
         {
             if (string.IsNullOrWhiteSpace(Password))
             {
-                PasswordValidationMessage = showRequired
-                    ? GetString("PasswordRequiredMessage", "Enter a password.")
-                    : string.Empty;
+                PasswordValidationMessage = GetRequiredValidationMessage(
+                    showRequired,
+                    "PasswordRequiredMessage",
+                    "Enter a password.");
                 return;
             }
 
@@ -362,9 +343,10 @@ namespace ServiceCenter.ViewModels
         {
             if (string.IsNullOrWhiteSpace(ConfirmPassword))
             {
-                ConfirmPasswordValidationMessage = showRequired
-                    ? GetString("RegistrationRequiredConfirmPassword", "Repeat the password.")
-                    : string.Empty;
+                ConfirmPasswordValidationMessage = GetRequiredValidationMessage(
+                    showRequired,
+                    "RegistrationRequiredConfirmPassword",
+                    "Repeat the password.");
                 return;
             }
 
@@ -396,12 +378,43 @@ namespace ServiceCenter.ViewModels
             }
         }
 
+        private Models.User CreateUser()
+        {
+            return new Models.User
+            {
+                Login = Login.Trim(),
+                HashPassword = HashHelper.HashPassword(Password),
+                Name = FullName,
+                Email = NormalizeEmail(Email),
+                Role = Models.UserRole.Client
+            };
+        }
+
+        private static string GetRequiredValidationMessage(bool showRequired, string key, string fallback)
+        {
+            return showRequired
+                ? GetString(key, fallback)
+                : string.Empty;
+        }
+
         private void ClearGlobalError()
         {
             if (!string.IsNullOrWhiteSpace(ErrorMessage))
             {
                 ErrorMessage = string.Empty;
             }
+        }
+
+        private void HandleInputChanged(params Action[] validationActions)
+        {
+            ClearGlobalError();
+
+            foreach (var validationAction in validationActions)
+            {
+                validationAction();
+            }
+
+            RefreshRegisterState();
         }
 
         private static void RefreshRegisterState()

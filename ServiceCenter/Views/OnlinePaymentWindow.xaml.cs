@@ -1,5 +1,6 @@
-﻿using ServiceCenter.Models;
+using ServiceCenter.Models;
 using ServiceCenter.ViewModels;
+using System;
 using System.Windows;
 
 namespace ServiceCenter.Views
@@ -14,23 +15,34 @@ namespace ServiceCenter.Views
 
         private void Pay_Click(object sender, RoutedEventArgs e)
         {
-            var viewModel = DataContext as OnlinePaymentViewModel;
-            if (viewModel == null)
+            try
             {
-                return;
-            }
+                var viewModel = DataContext as OnlinePaymentViewModel;
+                if (viewModel == null)
+                {
+                    return;
+                }
 
-            if (!viewModel.Validate())
+                if (!viewModel.Validate())
+                {
+                    MessageBox.Show(
+                        App.GetString("PaymentValidationMessage", "Check the card details. Fill in all required fields in the correct format."),
+                        App.GetString("PaymentValidationTitle", "Validation error"),
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                DialogResult = true;
+            }
+            catch (Exception ex)
             {
                 MessageBox.Show(
-                    App.GetString("PaymentValidationMessage", "Check the card details. Fill in all required fields in the correct format."),
-                    App.GetString("PaymentValidationTitle", "Validation error"),
+                    $"Не удалось подтвердить оплату.{Environment.NewLine}{ex.Message}",
+                    "Ошибка оплаты",
                     MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
+                    MessageBoxImage.Error);
             }
-
-            DialogResult = true;
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)

@@ -24,7 +24,6 @@ namespace ServiceCenter.Repositories
             return _context.Orders
                 .Include(o => o.User)
                 .Include(o => o.AssignedMaster)
-                .Include(o => o.Items)
                 .OrderByDescending(o => o.CreatedAt)
                 .ToList();
         }
@@ -34,7 +33,6 @@ namespace ServiceCenter.Repositories
             return _context.Orders
                 .Include(o => o.User)
                 .Include(o => o.AssignedMaster)
-                .Include(o => o.Items)
                 .FirstOrDefault(o => o.Id == id);
         }
 
@@ -43,7 +41,6 @@ namespace ServiceCenter.Repositories
             return _context.Orders
                 .Include(o => o.User)
                 .Include(o => o.AssignedMaster)
-                .Include(o => o.Items)
                 .Where(o => o.UserId == userId)
                 .OrderByDescending(o => o.CreatedAt)
                 .ToList();
@@ -54,7 +51,6 @@ namespace ServiceCenter.Repositories
             return _context.Orders
                 .Include(o => o.User)
                 .Include(o => o.AssignedMaster)
-                .Include(o => o.Items)
                 .Where(o => o.AssignedMasterId == masterId)
                 .OrderByDescending(o => o.CreatedAt)
                 .ToList();

@@ -74,8 +74,8 @@ namespace ServiceCenter.Views
             catch
             {
                 MessageBox.Show(
-                    "РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ С„РѕС‚Рѕ РЅРµРёСЃРїСЂР°РІРЅРѕСЃС‚Рё. Р’РѕР·РјРѕР¶РЅРѕ, РёР·РѕР±СЂР°Р¶РµРЅРёРµ РїРѕРІСЂРµР¶РґРµРЅРѕ.",
-                    "РћС€РёР±РєР°",
+                    "Не удалось открыть фото неисправности. Возможно, изображение повреждено.",
+                    App.GetString("ErrorTitle", "Ошибка"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
                 return;

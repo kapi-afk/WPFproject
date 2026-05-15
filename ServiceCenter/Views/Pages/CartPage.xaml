@@ -69,7 +69,7 @@
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0"
-                       Text="РќРѕРІР°СЏ Р·Р°СЏРІРєР° РЅР° СЂРµРјРѕРЅС‚"
+                       Text="{DynamicResource NewOrderDialogTitle}"
                        Style="{StaticResource PageTitleStyle}"/>
 
             <Border Grid.Row="1"
@@ -93,7 +93,7 @@
 
                         <StackPanel Grid.Row="0"
                                     Grid.Column="0">
-                            <TextBlock Text="РўРёРї СѓСЃС‚СЂРѕР№СЃС‚РІР° *"
+                            <TextBlock Text="{DynamicResource DeviceTypeRequiredLabel}"
                                        Style="{StaticResource FieldLabelStyle}"/>
                             <ComboBox ItemsSource="{Binding DeviceTypes}"
                                       SelectedItem="{Binding NewOrderDeviceType}"
@@ -108,7 +108,7 @@
 
                         <StackPanel Grid.Row="0"
                                     Grid.Column="2">
-                            <TextBlock Text="РњРѕРґРµР»СЊ *"
+                            <TextBlock Text="{DynamicResource ModelRequiredLabel}"
                                        Style="{StaticResource FieldLabelStyle}"/>
                             <ComboBox ItemsSource="{Binding ModelOptions}"
                                       SelectedItem="{Binding SelectedModelOption}"
@@ -124,7 +124,7 @@
 
                         <StackPanel Grid.Row="1"
                                     Grid.Column="0">
-                            <TextBlock Text="Р‘СЂРµРЅРґ *"
+                            <TextBlock Text="{DynamicResource BrandRequiredLabel}"
                                        Style="{StaticResource FieldLabelStyle}"/>
                             <ComboBox ItemsSource="{Binding BrandOptions}"
                                       SelectedItem="{Binding SelectedBrandOption}"
@@ -140,7 +140,7 @@
 
                         <StackPanel Grid.Row="1"
                                     Grid.Column="2">
-                            <TextBlock Text="РќРµРёСЃРїСЂР°РІРЅРѕСЃС‚СЊ *"
+                            <TextBlock Text="{DynamicResource ProblemRequiredLabel}"
                                        Style="{StaticResource FieldLabelStyle}"/>
                             <ComboBox ItemsSource="{Binding ProblemOptions}"
                                       SelectedItem="{Binding SelectedProblemOption}"
@@ -158,28 +158,28 @@
 
                         <StackPanel Grid.Row="2"
                                     Grid.Column="0">
-                            <TextBlock Text="РўРµР»РµС„РѕРЅ *"
+                            <TextBlock Text="{DynamicResource PhoneRequiredLabel}"
                                        Style="{StaticResource FieldLabelStyle}"/>
                             <TextBox Text="{Binding NewOrderContactPhone, UpdateSourceTrigger=PropertyChanged}"
                                      Margin="0,0,0,4"
-                                     ToolTip="РќР°РїСЂРёРјРµСЂ: +375 (29) 123-45-67"
+                                     ToolTip="{DynamicResource PhoneHint}"
                                      Style="{StaticResource RequiredOrderTextBoxStyle}"
                                      Tag="{Binding IsNewOrderContactPhoneInvalid}"/>
-                            <TextBlock Text="РќР°РїСЂРёРјРµСЂ: +375 (29) 123-45-67"
+                            <TextBlock Text="{DynamicResource PhoneHint}"
                                        Style="{StaticResource InfoTextStyle}"
                                        Margin="0,0,0,12"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="2"
                                     Grid.Column="2">
-                            <TextBlock Text="РЎРїРѕСЃРѕР± РѕРїР»Р°С‚С‹"
+                            <TextBlock Text="{DynamicResource PaymentMethodLabel}"
                                        Style="{StaticResource FieldLabelStyle}"
                                        Margin="0,0,0,4"/>
-                            <CheckBox Content="РћРЅР»Р°Р№РЅ-РѕРїР»Р°С‚Р°"
+                            <CheckBox Content="{DynamicResource OnlinePaymentCheckbox}"
                                       IsChecked="{Binding NewOrderIsOnlinePayment}"
                                       FontSize="15"
                                       Margin="0,6,0,6"/>
-                            <TextBlock Text="Р•СЃР»Рё С„Р»Р°Р¶РѕРє РЅРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅ, РѕРїР»Р°С‚Р° Р±СѓРґРµС‚ РЅР° РјРµСЃС‚Рµ."
+                            <TextBlock Text="{DynamicResource PaymentHint}"
                                        Style="{StaticResource InfoTextStyle}"
                                        Margin="0,0,0,12"
                                        TextWrapping="Wrap"/>
@@ -189,20 +189,20 @@
                     <Border Style="{StaticResource InnerCardStyle}"
                             Margin="0,0,0,12">
                         <StackPanel>
-                            <TextBlock Text="Р¤РѕС‚Рѕ РЅРµРёСЃРїСЂР°РІРЅРѕСЃС‚Рё"
+                            <TextBlock Text="{DynamicResource ProblemPhotoLabel}"
                                        Style="{StaticResource FieldLabelStyle}"/>
-                            <TextBlock Text="РќРµРѕР±СЏР·Р°С‚РµР»СЊРЅРѕ, РЅРѕ РїРѕРјРѕР¶РµС‚ РјР°СЃС‚РµСЂСѓ Р±С‹СЃС‚СЂРµРµ РїРѕРЅСЏС‚СЊ РїСЂРѕР±Р»РµРјСѓ."
+                            <TextBlock Text="{DynamicResource ProblemPhotoHint}"
                                        Style="{StaticResource InfoTextStyle}"
                                        Margin="0,4,0,12"/>
 
                             <StackPanel Orientation="Horizontal"
                                         Margin="0,0,0,10">
-                                <Button Content="Р”РѕР±Р°РІРёС‚СЊ С„РѕС‚Рѕ"
+                                <Button Content="{DynamicResource AddPhotoButton}"
                                         Command="{Binding SelectProblemPhotoCommand}"
                                         Style="{StaticResource MediumPrimaryButtonStyle}"
                                         Width="176"
                                         Margin="0,0,10,0"/>
-                                <Button Content="РЈРґР°Р»РёС‚СЊ С„РѕС‚Рѕ"
+                                <Button Content="{DynamicResource RemovePhotoButton}"
                                         Command="{Binding RemoveProblemPhotoCommand}"
                                         Style="{StaticResource SmallSecondaryButtonStyle}"
                                         Width="118"
@@ -226,7 +226,7 @@
                         </StackPanel>
                     </Border>
 
-                    <TextBlock Text="РљРѕРјРјРµРЅС‚Р°СЂРёР№"
+                    <TextBlock Text="{DynamicResource CommentLabel}"
                                Style="{StaticResource FieldLabelStyle}"/>
                     <TextBox Text="{Binding NewOrderClientComment, UpdateSourceTrigger=PropertyChanged}"
                              AcceptsReturn="True"
@@ -236,12 +236,12 @@
 
                     <StackPanel Orientation="Horizontal"
                                 HorizontalAlignment="Left">
-                        <Button Content="РћС‚РїСЂР°РІРёС‚СЊ Р·Р°СЏРІРєСѓ"
+                        <Button Content="{DynamicResource SendOrderButton}"
                                 Command="{Binding CreateOrderCommand}"
                                 Style="{StaticResource MediumPrimaryButtonStyle}"
                                 MinWidth="190"
                                 Margin="0,0,10,0"/>
-                        <Button Content="РћС‚РјРµРЅР°"
+                        <Button Content="{DynamicResource CancelButton}"
                                 Command="{Binding CancelCreateOrderFormCommand}"
                                 Style="{StaticResource MediumSecondaryButtonStyle}"
                                 Width="96"/>

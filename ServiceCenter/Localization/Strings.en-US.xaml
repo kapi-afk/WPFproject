@@ -68,6 +68,8 @@
     <sys:String x:Key="OrderStatusCancelled">Cancelled</sys:String>
     <sys:String x:Key="ErrorInvalidCredentials">Invalid login or password</sys:String>
     <sys:String x:Key="ErrorTitle">Error</sys:String>
+    <sys:String x:Key="ValidationTitle">Validation error</sys:String>
+    <sys:String x:Key="SuccessTitle">Done</sys:String>
     <sys:String x:Key="LoginFailedMessage">Sign-in error: {0}</sys:String>
     <sys:String x:Key="GenericErrorFormat">Error: {0}</sys:String>
     <sys:String x:Key="ErrorUserExists">User with this login already exists</sys:String>

@@ -25,6 +25,7 @@ namespace ServiceCenter.ViewModels
         private readonly OrderRepository _orderRepository;
         private readonly WarehouseRepository _warehouseRepository;
         private readonly WarehouseRequestRepository _warehouseRequestRepository;
+        private readonly AdminActionLogRepository _adminActionLogRepository;
         private List<Order> _allOrders;
         private List<WarehouseItem> _allWarehouseItems;
         private ObservableCollection<User> _users;
@@ -32,6 +33,7 @@ namespace ServiceCenter.ViewModels
         private ObservableCollection<Order> _orders;
         private ObservableCollection<WarehouseItem> _warehouseItems;
         private ObservableCollection<WarehouseRequest> _warehouseRequests;
+        private ObservableCollection<AdminActionLog> _adminActionLogs;
         private User _selectedUser;
         private UserRole _selectedUserRole;
         private bool _isLoadingSelectedUserData;
@@ -119,7 +121,8 @@ namespace ServiceCenter.ViewModels
             _userRepository != null &&
             _orderRepository != null &&
             _warehouseRepository != null &&
-            _warehouseRequestRepository != null;
+            _warehouseRequestRepository != null &&
+            _adminActionLogRepository != null;
 
         public ObservableCollection<User> Users
         {
@@ -151,6 +154,12 @@ namespace ServiceCenter.ViewModels
             set => SetProperty(ref _warehouseRequests, value);
         }
 
+        public ObservableCollection<AdminActionLog> AdminActionLogs
+        {
+            get => _adminActionLogs;
+            set => SetProperty(ref _adminActionLogs, value);
+        }
+
         public ObservableCollection<string> WarehouseSortOptions { get; } = new ObservableCollection<string>();
 
         public ObservableCollection<string> WarehouseCategoryFilters { get; } = new ObservableCollection<string>();
@@ -176,18 +185,18 @@ namespace ServiceCenter.ViewModels
 
         public ObservableCollection<string> DeviceTypes { get; } = new ObservableCollection<string>
         {
-            "Ноутбук",
-            "Стационарный ПК",
-            "Моноблок",
-            "Монитор",
-            "Принтер",
-            "Другое"
+            OrderCatalogData.LaptopDeviceType,
+            OrderCatalogData.DesktopPcDeviceType,
+            OrderCatalogData.AllInOneDeviceType,
+            OrderCatalogData.MonitorDeviceType,
+            OrderCatalogData.PrinterDeviceType,
+            OrderCatalogData.OtherOption
         };
 
         public ObservableCollection<string> DeliveryMethods { get; } = new ObservableCollection<string>
         {
-            "Самовывоз",
-            "Курьер"
+            OrderCatalogData.PickupDeliveryMethod,
+            OrderCatalogData.CourierDeliveryMethod
         };
 
         public ObservableCollection<string> PaymentMethods { get; } = new ObservableCollection<string>
@@ -985,12 +994,14 @@ namespace ServiceCenter.ViewModels
             _orderRepository = RepositoryManager.Orders;
             _warehouseRepository = RepositoryManager.Warehouse;
             _warehouseRequestRepository = RepositoryManager.WarehouseRequests;
+            _adminActionLogRepository = RepositoryManager.AdminActionLogs;
 
             Users = new ObservableCollection<User>();
             Masters = new ObservableCollection<User>();
             Orders = new ObservableCollection<Order>();
             WarehouseItems = new ObservableCollection<WarehouseItem>();
             WarehouseRequests = new ObservableCollection<WarehouseRequest>();
+            AdminActionLogs = new ObservableCollection<AdminActionLog>();
             _allOrders = new List<Order>();
             _allWarehouseItems = new List<WarehouseItem>();
             NewUserRole = UserRole.Master;
@@ -1049,6 +1060,7 @@ namespace ServiceCenter.ViewModels
             WarehouseRequests = new ObservableCollection<WarehouseRequest>(
                 _warehouseRequestRepository.GetAll()
                     .Where(request => request.Status != "Обработано"));
+            AdminActionLogs = new ObservableCollection<AdminActionLog>(_adminActionLogRepository.GetAll());
 
             TotalOrdersCount = _allOrders.Count;
             ActiveOrdersCount = _allOrders.Count(order => order.Status != OrderStatus.Completed && order.Status != OrderStatus.Cancelled);
@@ -1066,6 +1078,7 @@ namespace ServiceCenter.ViewModels
             _allOrders = new List<Order>();
             WarehouseItems = new ObservableCollection<WarehouseItem>();
             WarehouseRequests = new ObservableCollection<WarehouseRequest>();
+            AdminActionLogs = new ObservableCollection<AdminActionLog>();
             _allWarehouseItems = new List<WarehouseItem>();
 
             if (WarehouseCategoryFilters.Count == 0)
@@ -1332,6 +1345,9 @@ namespace ServiceCenter.ViewModels
             };
 
             _userRepository.Add(user);
+            LogAdminAction("Создание", "Пользователь",
+                $"Создан пользователь \"{user.Login}\" с ролью {user.Role}.",
+                user.Id);
             ResetNewUserForm();
             WasLastUserCreateSuccessful = true;
             LoadData();
@@ -1425,6 +1441,9 @@ namespace ServiceCenter.ViewModels
             }
 
             _userRepository.Update(SelectedUser);
+            LogAdminAction("Изменение", "Пользователь",
+                $"Обновлен пользователь \"{SelectedUser.Login}\". Новая роль: {SelectedUser.Role}.",
+                SelectedUser.Id);
 
             if (SessionManager.CurrentUser != null && SessionManager.CurrentUser.Id == SelectedUser.Id)
             {
@@ -1463,7 +1482,12 @@ namespace ServiceCenter.ViewModels
                 return;
             }
 
+            var deletedUserId = userToDelete.Id;
+            var deletedUserLogin = userToDelete.Login;
             _userRepository.Delete(userToDelete.Id);
+            LogAdminAction("Удаление", "Пользователь",
+                $"Удален пользователь \"{deletedUserLogin}\".",
+                deletedUserId);
             if (SelectedUser != null && SelectedUser.Id == userToDelete.Id)
             {
                 SelectedUser = null;
@@ -1487,6 +1511,9 @@ namespace ServiceCenter.ViewModels
             SelectedOrder.Status = GetAutoOrderStatusForAdminSave();
 
             _orderRepository.Update(SelectedOrder);
+            LogAdminAction("Изменение", "Заявка",
+                $"Обновлена заявка {SelectedOrder.DisplayNumber}. Статус: {SelectedOrder.Status}. Мастер: {SelectedMaster?.Name ?? "не назначен"}.",
+                SelectedOrder.Id);
             LoadData();
         }
 
@@ -1509,7 +1536,12 @@ namespace ServiceCenter.ViewModels
                 return;
             }
 
+            var deletedOrderId = SelectedOrder.Id;
+            var deletedOrderNumber = SelectedOrder.DisplayNumber;
             _orderRepository.Delete(SelectedOrder.Id);
+            LogAdminAction("Удаление", "Заявка",
+                $"Удалена заявка {deletedOrderNumber}.",
+                deletedOrderId);
             SelectedOrder = null;
             LoadData();
         }
@@ -1569,7 +1601,6 @@ namespace ServiceCenter.ViewModels
             NotifyAdminOrderValidationStateChanged();
 
             if (string.IsNullOrWhiteSpace(NewOrderDeviceType) ||
-                string.IsNullOrWhiteSpace(NewOrderDeliveryMethod) ||
                 HasAdminOrderValidationErrors)
             {
                 MessageBox.Show(
@@ -1582,6 +1613,7 @@ namespace ServiceCenter.ViewModels
 
             var email = NewOrderClientEmail.Trim();
             var user = _userRepository.GetByEmail(email);
+            var createdNewClient = user == null;
             if (user == null)
             {
                 user = new User
@@ -1608,8 +1640,8 @@ namespace ServiceCenter.ViewModels
                 DeviceBrand = NewOrderDeviceBrand.Trim(),
                 DeviceModel = NewOrderDeviceModel.Trim(),
                 ProblemDescription = NewOrderProblemDescription.Trim(),
-                DeliveryMethod = NewOrderDeliveryMethod,
-                DeliveryAddress = IsCourierDeliverySelected ? NewOrderDeliveryAddress.Trim() : null,
+                DeliveryMethod = OrderCatalogData.PickupDeliveryMethod,
+                DeliveryAddress = null,
                 ContactPhone = NewOrderContactPhone.Trim(),
                 ClientComment = string.IsNullOrWhiteSpace(NewOrderClientComment) ? null : NewOrderClientComment.Trim(),
                 ProblemPhoto = NewOrderProblemPhoto,
@@ -1620,6 +1652,11 @@ namespace ServiceCenter.ViewModels
 
             AssignBestMaster(order);
             _orderRepository.Add(order);
+            LogAdminAction("Создание", "Заявка",
+                $"Оформлена заявка {order.DisplayNumber} для клиента \"{user.Name}\" ({user.Email}). " +
+                $"Статус: {order.Status}. " +
+                (createdNewClient ? "Клиент был создан автоматически." : "Использован существующий клиент."),
+                order.Id);
             ResetNewOrderForm();
             LoadData();
             SelectedOrder = Orders.FirstOrDefault(item => item.Id == order.Id);
@@ -1642,7 +1679,7 @@ namespace ServiceCenter.ViewModels
             IsNewOrderDeviceBrandCustomEntry = false;
             IsNewOrderDeviceModelCustomEntry = false;
             IsNewOrderProblemCustomEntry = false;
-            NewOrderDeliveryMethod = DeliveryMethods[0];
+            NewOrderDeliveryMethod = OrderCatalogData.PickupDeliveryMethod;
             NewOrderDeliveryAddress = string.Empty;
             NewOrderClientComment = string.Empty;
             NewOrderPaymentMethod = PaymentMethods[0];
@@ -1710,13 +1747,17 @@ namespace ServiceCenter.ViewModels
 
             if (item == null)
             {
-                _warehouseRepository.Add(new WarehouseItem
+                var newItem = new WarehouseItem
                 {
                     Name = window.ItemName,
                     Category = window.ItemCategory,
                     Quantity = window.ItemQuantity,
                     UnitPrice = window.ItemUnitPrice
-                });
+                };
+                _warehouseRepository.Add(newItem);
+                LogAdminAction("Создание", "Склад",
+                    $"Добавлена позиция склада \"{newItem.Name}\".",
+                    newItem.Id);
             }
             else
             {
@@ -1725,6 +1766,9 @@ namespace ServiceCenter.ViewModels
                 item.Quantity = window.ItemQuantity;
                 item.UnitPrice = window.ItemUnitPrice;
                 _warehouseRepository.Update(item);
+                LogAdminAction("Изменение", "Склад",
+                    $"Изменена позиция склада \"{item.Name}\".",
+                    item.Id);
             }
 
             LoadData();
@@ -1752,7 +1796,12 @@ namespace ServiceCenter.ViewModels
             }
 
             SelectedWarehouseItem = item;
+            var deletedWarehouseItemId = item.Id;
+            var deletedWarehouseItemName = item.Name;
             _warehouseRepository.Delete(item.Id);
+            LogAdminAction("Удаление", "Склад",
+                $"Удалена позиция склада \"{deletedWarehouseItemName}\".",
+                deletedWarehouseItemId);
             LoadData();
             CancelWarehouseForm();
         }
@@ -1778,6 +1827,9 @@ namespace ServiceCenter.ViewModels
 
             request.Status = "Обработано";
             _warehouseRequestRepository.Update(request);
+            LogAdminAction("Обработка", "Запрос материала",
+                $"Обработан запрос материала для заявки {request.OrderDisplayNumber}: \"{request.RequestedItemName}\" x{request.RequestedQuantity}.",
+                request.Id);
             UpdateOrderAfterWarehouseRequestResolved(request.OrderId);
             LoadData();
         }
@@ -1838,12 +1890,8 @@ namespace ServiceCenter.ViewModels
 
         private string GetNewUserSpecializations()
         {
-            if (NewUserRole != UserRole.Master)
-            {
-                return null;
-            }
-
-            return MasterAssignmentService.BuildSpecializations(
+            return BuildMasterSpecializations(
+                NewUserRole,
                 NewUserSpecializesLaptops,
                 NewUserSpecializesComputers,
                 NewUserSpecializesOfficeEquipment);
@@ -1851,12 +1899,8 @@ namespace ServiceCenter.ViewModels
 
         private string GetSelectedUserSpecializations()
         {
-            if (SelectedUserRole != UserRole.Master)
-            {
-                return null;
-            }
-
-            return MasterAssignmentService.BuildSpecializations(
+            return BuildMasterSpecializations(
+                SelectedUserRole,
                 SelectedUserSpecializesLaptops,
                 SelectedUserSpecializesComputers,
                 SelectedUserSpecializesOfficeEquipment);
@@ -1897,10 +1941,7 @@ namespace ServiceCenter.ViewModels
                 return;
             }
 
-            var existingUser = _userRepository.GetByLogin(normalizedLogin);
-            NewUserLoginValidationMessage = existingUser == null
-                ? string.Empty
-                : "Этот логин уже занят. Поменяйте логин.";
+            NewUserLoginValidationMessage = GetLoginValidationMessage(normalizedLogin, null);
         }
 
         private void ValidateNewUserPassword(bool showRequired)
@@ -2045,10 +2086,7 @@ namespace ServiceCenter.ViewModels
                 return;
             }
 
-            var existingUser = _userRepository.GetByLogin(normalizedLogin);
-            SelectedUserLoginValidationMessage = existingUser == null || existingUser.Id == SelectedUser?.Id
-                ? string.Empty
-                : "Этот логин уже занят. Поменяйте логин.";
+            SelectedUserLoginValidationMessage = GetLoginValidationMessage(normalizedLogin, SelectedUser?.Id);
         }
 
         private void ValidateSelectedUserEmail(bool showRequired)
@@ -2312,9 +2350,7 @@ namespace ServiceCenter.ViewModels
                    string.IsNullOrWhiteSpace(NewOrderDeviceType) ||
                    string.IsNullOrWhiteSpace(NewOrderDeviceBrand) ||
                    string.IsNullOrWhiteSpace(NewOrderDeviceModel) ||
-                   string.IsNullOrWhiteSpace(NewOrderProblemDescription) ||
-                   string.IsNullOrWhiteSpace(NewOrderDeliveryMethod) ||
-                   (IsCourierDeliverySelected && string.IsNullOrWhiteSpace(NewOrderDeliveryAddress));
+                   string.IsNullOrWhiteSpace(NewOrderProblemDescription);
         }
 
         private bool HasInvalidAdminOrderData()
@@ -2338,26 +2374,7 @@ namespace ServiceCenter.ViewModels
 
             if (HasInvalidAdminOrderData())
             {
-                var invalidFields = new List<string>();
-                if (HasFilledButInvalidEmail(NewOrderClientEmail))
-                {
-                    invalidFields.Add("email");
-                }
-
-                if (HasFilledButInvalidPhoneNumber(NewOrderContactPhone))
-                {
-                    invalidFields.Add("номер телефона");
-                }
-
-                if (HasInvalidCustomOrderField(NewOrderDeviceType, IsNewOrderDeviceTypeCustomEntry) ||
-                    HasInvalidCustomOrderField(NewOrderDeviceBrand, IsNewOrderDeviceBrandCustomEntry) ||
-                    HasInvalidCustomOrderField(NewOrderDeviceModel, IsNewOrderDeviceModelCustomEntry) ||
-                    HasInvalidCustomOrderField(NewOrderProblemDescription, IsNewOrderProblemCustomEntry))
-                {
-                    invalidFields.Add("значения, введённые для варианта \"Другое\"");
-                }
-
-                messages.Add($"Проверьте корректность введённых данных: {string.Join(" и ", invalidFields)}.");
+                messages.Add(BuildInvalidAdminOrderDataMessage());
             }
 
             return messages.Count == 0
@@ -2416,6 +2433,57 @@ namespace ServiceCenter.ViewModels
                    !IsValidCustomOrderText(value);
         }
 
+        private static string BuildMasterSpecializations(
+            UserRole role,
+            bool specializesLaptops,
+            bool specializesComputers,
+            bool specializesOfficeEquipment)
+        {
+            if (role != UserRole.Master)
+            {
+                return null;
+            }
+
+            return MasterAssignmentService.BuildSpecializations(
+                specializesLaptops,
+                specializesComputers,
+                specializesOfficeEquipment);
+        }
+
+        private string GetLoginValidationMessage(string normalizedLogin, int? currentUserId)
+        {
+            var existingUser = _userRepository.GetByLogin(normalizedLogin);
+            return existingUser == null || existingUser.Id == currentUserId
+                ? string.Empty
+                : "Этот логин уже занят. Поменяйте логин.";
+        }
+
+        private string BuildInvalidAdminOrderDataMessage()
+        {
+            return $"Проверьте корректность введённых данных: {string.Join(" и ", GetInvalidAdminOrderFields())}.";
+        }
+
+        private IEnumerable<string> GetInvalidAdminOrderFields()
+        {
+            if (HasFilledButInvalidEmail(NewOrderClientEmail))
+            {
+                yield return "email";
+            }
+
+            if (HasFilledButInvalidPhoneNumber(NewOrderContactPhone))
+            {
+                yield return "номер телефона";
+            }
+
+            if (HasInvalidCustomOrderField(NewOrderDeviceType, IsNewOrderDeviceTypeCustomEntry) ||
+                HasInvalidCustomOrderField(NewOrderDeviceBrand, IsNewOrderDeviceBrandCustomEntry) ||
+                HasInvalidCustomOrderField(NewOrderDeviceModel, IsNewOrderDeviceModelCustomEntry) ||
+                HasInvalidCustomOrderField(NewOrderProblemDescription, IsNewOrderProblemCustomEntry))
+            {
+                yield return "значения, введённые для варианта \"Другое\"";
+            }
+        }
+
         private void SetValidationMessage(ref string field, string value, string propertyName, string flagPropertyName)
         {
             if (SetProperty(ref field, value, propertyName))
@@ -2460,6 +2528,30 @@ namespace ServiceCenter.ViewModels
             if (mainViewModel != null)
             {
                 mainViewModel.CurrentPage = new LoginPage();
+            }
+        }
+
+        private void LogAdminAction(string actionType, string entityType, string description, int? entityId = null)
+        {
+            if (_adminActionLogRepository == null || !SessionManager.IsAdmin)
+            {
+                return;
+            }
+
+            try
+            {
+                _adminActionLogRepository.Add(new AdminActionLog
+                {
+                    AdminLogin = SessionManager.CurrentUser?.Login ?? "admin",
+                    ActionType = actionType,
+                    EntityType = entityType,
+                    EntityId = entityId,
+                    Description = description,
+                    CreatedAt = DateTime.Now
+                });
+            }
+            catch
+            {
             }
         }
     }

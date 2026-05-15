@@ -3,9 +3,6 @@ using System.Windows.Controls;
 
 namespace ServiceCenter.Views.Pages
 {
-    /// <summary>
-    /// Р›РѕРіРёРєР° РІР·Р°РёРјРѕРґРµР№СЃС‚РІРёСЏ РґР»СЏ RecoverPage.xaml
-    /// </summary>
     public partial class RecoverPage : Page
     {
         public RecoverPage()

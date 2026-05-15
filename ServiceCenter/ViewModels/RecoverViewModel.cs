@@ -31,7 +31,7 @@ namespace ServiceCenter.ViewModels
             _userRepository = RepositoryManager.Users;
             RecoverCommand = new RelayCommand(RecoverExecute, CanRecoverExecute);
             ResetPasswordCommand = new RelayCommand(ResetPasswordExecute, CanResetPasswordExecute);
-            NavigateToLoginCommand = new RelayCommand(() => Navigate("Login"));
+            NavigateToLoginCommand = new RelayCommand(NavigateToLogin);
         }
 
         public string Login
@@ -113,10 +113,9 @@ namespace ServiceCenter.ViewModels
             try
             {
                 ClearMessages();
-                var user = _userRepository.GetByLogin(Login);
-                if (user == null)
+
+                if (!TryGetUserByLogin(out var user))
                 {
-                    ErrorMessage = GetString("ErrorUserNotFound", "User not found.");
                     return;
                 }
 
@@ -152,55 +151,31 @@ namespace ServiceCenter.ViewModels
             try
             {
                 ClearMessages();
-                var user = _userRepository.GetByLogin(Login);
-                if (user == null)
+
+                if (!TryGetUserByLogin(out var user))
                 {
-                    ErrorMessage = GetString("ErrorUserNotFound", "User not found.");
                     return;
                 }
 
-                if (!TryGetRecoveryRequest(user.Login, out var recoveryRequest))
+                if (!TryValidateRecoveryRequest(user.Login, out var recoveryRequest))
                 {
-                    ErrorMessage = GetString("RecoverCodeRequiredMessage", "Request a recovery code first.");
                     return;
                 }
 
-                if (recoveryRequest.ExpiresAt <= DateTime.Now)
-                {
-                    RemoveRecoveryRequest(user.Login);
-                    IsRecoveryCodeSent = false;
-                    ErrorMessage = GetString("RecoverCodeExpiredMessage", "The recovery code has expired. Request a new one.");
-                    return;
-                }
-
-                if (!string.Equals((RecoveryCode ?? string.Empty).Trim(), recoveryRequest.Code, StringComparison.Ordinal))
+                if (!string.Equals(NormalizeRecoveryCode(RecoveryCode), recoveryRequest.Code, StringComparison.Ordinal))
                 {
                     ErrorMessage = GetString("RecoverCodeInvalidMessage", "The recovery code is invalid.");
                     return;
                 }
 
-                var passwordValidationError = HashHelper.GetPasswordValidationError(NewPassword);
-                if (!string.IsNullOrWhiteSpace(passwordValidationError))
+                if (!TryValidateNewPassword())
                 {
-                    ErrorMessage = passwordValidationError;
-                    return;
-                }
-
-                if (!string.Equals(NewPassword, ConfirmPassword, StringComparison.Ordinal))
-                {
-                    ErrorMessage = GetString("RecoverPasswordsMismatchMessage", "Passwords do not match.");
                     return;
                 }
 
                 user.HashPassword = HashHelper.HashPassword(NewPassword);
                 _userRepository.Update(user);
-
-                RemoveRecoveryRequest(user.Login);
-                RecoveryCode = string.Empty;
-                NewPassword = string.Empty;
-                ConfirmPassword = string.Empty;
-                IsRecoveryCodeSent = false;
-                SuccessMessage = GetString("RecoverPasswordChangedMessage", "The password has been changed successfully. You can sign in now.");
+                CompletePasswordReset(user.Login);
             }
             catch (Exception ex)
             {
@@ -214,7 +189,66 @@ namespace ServiceCenter.ViewModels
             SuccessMessage = string.Empty;
         }
 
-        private void Navigate(string page)
+        private bool TryGetUserByLogin(out Models.User user)
+        {
+            user = _userRepository.GetByLogin(Login);
+            if (user != null)
+            {
+                return true;
+            }
+
+            ErrorMessage = GetString("ErrorUserNotFound", "User not found.");
+            return false;
+        }
+
+        private bool TryValidateRecoveryRequest(string login, out RecoveryRequestInfo recoveryRequest)
+        {
+            if (!TryGetRecoveryRequest(login, out recoveryRequest))
+            {
+                ErrorMessage = GetString("RecoverCodeRequiredMessage", "Request a recovery code first.");
+                return false;
+            }
+
+            if (recoveryRequest.ExpiresAt > DateTime.Now)
+            {
+                return true;
+            }
+
+            RemoveRecoveryRequest(login);
+            IsRecoveryCodeSent = false;
+            ErrorMessage = GetString("RecoverCodeExpiredMessage", "The recovery code has expired. Request a new one.");
+            return false;
+        }
+
+        private bool TryValidateNewPassword()
+        {
+            var passwordValidationError = HashHelper.GetPasswordValidationError(NewPassword);
+            if (!string.IsNullOrWhiteSpace(passwordValidationError))
+            {
+                ErrorMessage = passwordValidationError;
+                return false;
+            }
+
+            if (string.Equals(NewPassword, ConfirmPassword, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            ErrorMessage = GetString("RecoverPasswordsMismatchMessage", "Passwords do not match.");
+            return false;
+        }
+
+        private void CompletePasswordReset(string login)
+        {
+            RemoveRecoveryRequest(login);
+            RecoveryCode = string.Empty;
+            NewPassword = string.Empty;
+            ConfirmPassword = string.Empty;
+            IsRecoveryCodeSent = false;
+            SuccessMessage = GetString("RecoverPasswordChangedMessage", "The password has been changed successfully. You can sign in now.");
+        }
+
+        private void NavigateToLogin()
         {
             var mainWindow = Application.Current.MainWindow;
             if (mainWindow?.DataContext is MainViewModel mainViewModel)
@@ -282,6 +316,13 @@ namespace ServiceCenter.ViewModels
             return string.IsNullOrWhiteSpace(login)
                 ? string.Empty
                 : login.Trim().ToLowerInvariant();
+        }
+
+        private static string NormalizeRecoveryCode(string recoveryCode)
+        {
+            return string.IsNullOrWhiteSpace(recoveryCode)
+                ? string.Empty
+                : recoveryCode.Trim();
         }
 
         private static string GetString(string key, string fallback)

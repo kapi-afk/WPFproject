@@ -7,9 +7,9 @@ namespace ServiceCenter.Utilities
 {
     public static class MasterAssignmentService
     {
-        public const string LaptopSpecialization = "РќРѕСѓС‚Р±СѓРєРё";
-        public const string ComputerSpecialization = "РџРљ";
-        public const string OfficeEquipmentSpecialization = "РћСЂРіС‚РµС…РЅРёРєР°";
+        public const string LaptopSpecialization = "Ноутбуки";
+        public const string ComputerSpecialization = "ПК";
+        public const string OfficeEquipmentSpecialization = "Оргтехника";
 
         public static User FindBestMaster(string deviceType, IEnumerable<User> masters, IEnumerable<Order> orders)
         {
@@ -80,26 +80,26 @@ namespace ServiceCenter.Utilities
         {
             var normalizedDeviceType = Normalize(deviceType);
 
-            if (normalizedDeviceType.Contains("РЅРѕСѓС‚") ||
+            if (normalizedDeviceType.Contains("ноут") ||
                 normalizedDeviceType.Contains("laptop"))
             {
                 return LaptopSpecialization;
             }
 
-            if (normalizedDeviceType.Contains("РїРє") ||
-                normalizedDeviceType.Contains("РєРѕРјРїСЊСЋС‚") ||
-                normalizedDeviceType.Contains("СЃРёСЃС‚РµРј") ||
-                normalizedDeviceType.Contains("РјРѕРЅРѕР±Р»РѕРє") ||
+            if (normalizedDeviceType.Contains("пк") ||
+                normalizedDeviceType.Contains("компьют") ||
+                normalizedDeviceType.Contains("систем") ||
+                normalizedDeviceType.Contains("моноблок") ||
                 normalizedDeviceType.Contains("desktop") ||
                 normalizedDeviceType.Contains("allinone"))
             {
                 return ComputerSpecialization;
             }
 
-            if (normalizedDeviceType.Contains("РјРѕРЅРёС‚РѕСЂ") ||
-                normalizedDeviceType.Contains("РїСЂРёРЅС‚РµСЂ") ||
-                normalizedDeviceType.Contains("РјС„Сѓ") ||
-                normalizedDeviceType.Contains("РїРµС‡Р°С‚СЊ") ||
+            if (normalizedDeviceType.Contains("монитор") ||
+                normalizedDeviceType.Contains("принтер") ||
+                normalizedDeviceType.Contains("мфу") ||
+                normalizedDeviceType.Contains("печать") ||
                 normalizedDeviceType.Contains("monitor") ||
                 normalizedDeviceType.Contains("printer"))
             {
@@ -108,16 +108,21 @@ namespace ServiceCenter.Utilities
 
             switch (deviceType)
             {
+                case "Ноутбук":
                 case "РќРѕСѓС‚Р±СѓРє":
                 case "Laptop":
                     return LaptopSpecialization;
+                case "Стационарный ПК":
                 case "РЎС‚Р°С†РёРѕРЅР°СЂРЅС‹Р№ РџРљ":
                 case "Desktop PC":
+                case "Моноблок":
                 case "РњРѕРЅРѕР±Р»РѕРє":
                 case "All-in-one":
                     return ComputerSpecialization;
+                case "Монитор":
                 case "РњРѕРЅРёС‚РѕСЂ":
                 case "Monitor":
+                case "Принтер":
                 case "РџСЂРёРЅС‚РµСЂ":
                 case "Printer":
                     return OfficeEquipmentSpecialization;

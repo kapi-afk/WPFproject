@@ -6,9 +6,6 @@ using System.Windows.Media.Imaging;
 
 namespace ServiceCenter.Views.Pages
 {
-    /// <summary>
-    /// Р›РѕРіРёРєР° РІР·Р°РёРјРѕРґРµР№СЃС‚РІРёСЏ РґР»СЏ ManagerPanelPage.xaml
-    /// </summary>
     public partial class ManagerPanelPage : Page
     {
         public ManagerPanelPage()
@@ -39,8 +36,8 @@ namespace ServiceCenter.Views.Pages
             catch
             {
                 MessageBox.Show(
-                    "РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ С„РѕС‚Рѕ РЅРµРёСЃРїСЂР°РІРЅРѕСЃС‚Рё. Р’РѕР·РјРѕР¶РЅРѕ, РёР·РѕР±СЂР°Р¶РµРЅРёРµ РїРѕРІСЂРµР¶РґРµРЅРѕ.",
-                    "РћС€РёР±РєР°",
+                    "Не удалось открыть фото неисправности. Возможно, изображение повреждено.",
+                    App.GetString("ErrorTitle", "Ошибка"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
                 return;

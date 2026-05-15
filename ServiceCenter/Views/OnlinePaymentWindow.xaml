@@ -46,16 +46,16 @@
                     <TextBlock FontWeight="SemiBold">
                         <Run Text="{DynamicResource OrderCardTitle}" />
                         <Run Text=" " />
-                        <Run Text="{Binding OrderNumber}" />
+                        <Run Text="{Binding OrderNumber, Mode=OneWay}" />
                     </TextBlock>
-                    <TextBlock Text="{Binding DeviceDisplay}"
+                    <TextBlock Text="{Binding DeviceDisplay, Mode=OneWay}"
                                Margin="0,6,0,6"
                                TextWrapping="Wrap"/>
                     <TextBlock FontSize="18"
                                FontWeight="Bold">
                         <Run Text="{DynamicResource AmountToPayLabel}" />
                         <Run Text=" " />
-                        <Run Text="{Binding AmountToPay, StringFormat={}{0:N2} BYN}" />
+                        <Run Text="{Binding AmountToPay, Mode=OneWay, StringFormat={}{0:N2} BYN}" />
                     </TextBlock>
                 </StackPanel>
             </Border>

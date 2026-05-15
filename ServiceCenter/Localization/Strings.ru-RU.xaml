@@ -68,6 +68,8 @@
     <sys:String x:Key="OrderStatusCancelled">Отменён</sys:String>
     <sys:String x:Key="ErrorInvalidCredentials">Неверный логин или пароль</sys:String>
     <sys:String x:Key="ErrorTitle">Ошибка</sys:String>
+    <sys:String x:Key="ValidationTitle">Ошибка проверки</sys:String>
+    <sys:String x:Key="SuccessTitle">Готово</sys:String>
     <sys:String x:Key="LoginFailedMessage">Ошибка входа: {0}</sys:String>
     <sys:String x:Key="GenericErrorFormat">Ошибка: {0}</sys:String>
     <sys:String x:Key="ErrorUserExists">Пользователь с таким логином уже существует</sys:String>
@@ -130,7 +132,7 @@
     <sys:String x:Key="StatisticsTab">Статистика</sys:String>
     <sys:String x:Key="WarehouseTab">Склад</sys:String>
     <sys:String x:Key="CreateAccountButton">Создать учетную запись</sys:String>
-    <sys:String x:Key="ManageOrderButton">Редактировние заявки</sys:String>
+    <sys:String x:Key="ManageOrderButton">Редактирование заявки</sys:String>
     <sys:String x:Key="CreateOrderButton">Оформить заявку</sys:String>
     <sys:String x:Key="CreateWarehouseItemButton">Добавить позицию</sys:String>
     <sys:String x:Key="MasterRequestsButton">Заявки мастеров</sys:String>

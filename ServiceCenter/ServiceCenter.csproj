@@ -37,7 +37,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>LOGO-WHITEpng.ico</ApplicationIcon>
+    <ApplicationIcon>free-icon-pc-tower-4275113.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BCrypt.Net-Next, Version=4.0.3.0, Culture=neutral, PublicKeyToken=1e11be04b6288443, processorArchitecture=MSIL">
@@ -194,12 +194,13 @@
     <Compile Include="Converters\PasswordBoxConverter.cs" />
     <Compile Include="Converters\SessionManager.cs" />
     <Compile Include="Converters\UserRoleConverter.cs" />
+    <Compile Include="Models\AdminActionLog.cs" />
     <Compile Include="Models\Comment.cs" />
-    <Compile Include="Models\Items.cs" />
     <Compile Include="Models\Order.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Models\WarehouseItem.cs" />
     <Compile Include="Models\WarehouseRequest.cs" />
+    <Compile Include="Repositories\AdminActionLogRepository.cs" />
     <Compile Include="Repositories\AppDbContext.cs" />
     <Compile Include="Repositories\CommentRepository.cs" />
     <Compile Include="Repositories\OrderRepository.cs" />
@@ -208,6 +209,7 @@
     <Compile Include="Repositories\WarehouseRepository.cs" />
     <Compile Include="Repositories\WarehouseRequestRepository.cs" />
     <Compile Include="Utilities\MasterAssignmentService.cs" />
+    <Compile Include="Utilities\OrderCatalogData.cs" />
     <Compile Include="Utilities\OrderEmailService.cs" />
     <Compile Include="Utilities\OrderPublicNumberService.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
@@ -395,7 +397,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="LOGO-WHITEpng.ico" />
+    <Resource Include="free-icon-pc-tower-4275113.ico" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\cart.png" />

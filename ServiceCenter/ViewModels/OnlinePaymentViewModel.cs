@@ -126,7 +126,7 @@ namespace ServiceCenter.ViewModels
                 return false;
             }
 
-            return Regex.IsMatch(normalizedValue, @"^[A-ZРђ-РЇРЃ\s\-']+$", RegexOptions.IgnoreCase);
+            return Regex.IsMatch(normalizedValue, @"^[A-ZА-ЯЁ\s\-']+$", RegexOptions.IgnoreCase);
         }
 
         private static bool IsValidCardNumber(string value)

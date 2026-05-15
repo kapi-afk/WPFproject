@@ -26,20 +26,26 @@ namespace ServiceCenter.Models
         {
             get
             {
-                if (string.Equals(Status, "РќСѓР¶РЅРѕ", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(Status, "Р—Р°РїСЂРѕС€РµРЅРѕ", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(Status, "РќРѕРІР°СЏ Р·Р°СЏРІРєР°", StringComparison.OrdinalIgnoreCase))
+                if (MatchesStatus("Нужно", "РќСѓР¶РЅРѕ") ||
+                    MatchesStatus("Запрошено", "Р—Р°РїСЂРѕС€РµРЅРѕ") ||
+                    MatchesStatus("Новая заявка", "РќРѕРІР°СЏ Р·Р°СЏРІРєР°"))
                 {
                     return App.GetString("WarehouseRequestStatusPending", "Requested");
                 }
 
-                if (string.Equals(Status, "РћР±СЂР°Р±РѕС‚Р°РЅРѕ", StringComparison.OrdinalIgnoreCase))
+                if (MatchesStatus("Обработано", "РћР±СЂР°Р±РѕС‚Р°РЅРѕ"))
                 {
                     return App.GetString("WarehouseRequestStatusProcessed", "Processed");
                 }
 
                 return Status;
             }
+        }
+
+        private bool MatchesStatus(string expected, string legacyExpected)
+        {
+            return string.Equals(Status, expected, StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(Status, legacyExpected, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

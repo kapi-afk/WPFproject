@@ -34,8 +34,8 @@ namespace ServiceCenter.Views
             catch (System.Exception ex)
             {
                 MessageBox.Show(
-                    $"РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ РѕРєРЅРѕ Р·Р°СЏРІРєРё РЅР° РјР°С‚РµСЂРёР°Р».{System.Environment.NewLine}{ex.Message}",
-                    "РћС€РёР±РєР°",
+                    $"Не удалось открыть окно заявки на материал.{System.Environment.NewLine}{ex.Message}",
+                    App.GetString("ErrorTitle", "Ошибка"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }

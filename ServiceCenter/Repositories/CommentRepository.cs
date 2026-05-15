@@ -22,7 +22,6 @@ namespace ServiceCenter.Repositories
         {
             return _context.Comments
                 .Include(c => c.User)
-                .Include(c => c.Product)
                 .OrderByDescending(c => c.Timestamp)
                 .ToList();
         }
@@ -32,20 +31,10 @@ namespace ServiceCenter.Repositories
             return _context.Comments.Find(id);
         }
 
-        public List<Comment> GetByProductId(int productId)
-        {
-            return _context.Comments.Include(c => c.User)
-                .Where(c => c.ProductId == productId)
-                .OrderByDescending(c => c.Timestamp)
-                .Take(50)
-                .ToList();
-        }
-
         public List<Comment> GetPublicReviews()
         {
             return _context.Comments
                 .Include(c => c.User)
-                .Where(c => c.ProductId == null)
                 .OrderByDescending(c => c.Timestamp)
                 .Take(50)
                 .ToList();

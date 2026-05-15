@@ -6,13 +6,11 @@ namespace ServiceCenter.Contex
     public class AppDbContext : DbContext
     {
         public DbSet<User> Users { get; set; }
-        public DbSet<Product> Products { get; set; }
-        public DbSet<Service> Services { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Order> Orders { get; set; }
-        public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<WarehouseItem> WarehouseItems { get; set; }
         public DbSet<WarehouseRequest> WarehouseRequests { get; set; }
+        public DbSet<AdminActionLog> AdminActionLogs { get; set; }
 
         public AppDbContext() { }
 
@@ -54,37 +52,9 @@ namespace ServiceCenter.Contex
                 .Property(u => u.Photo)
                 .HasColumnType("VARBINARY(MAX)"); // Исправлено с BLOB на VARBINARY(MAX)
 
-            // Конфигурация Product
-            modelBuilder.Entity<Product>()
-                .HasKey(p => p.Id);
-            modelBuilder.Entity<Product>()
-                .Property(p => p.Name)
-                .HasMaxLength(100)
-                .IsRequired();
-            modelBuilder.Entity<Product>()
-                .Property(p => p.Photo)
-                .HasColumnType("VARBINARY(MAX)"); // Добавлено для поддержки изображений
-
-            // Конфигурация Service
-            modelBuilder.Entity<Service>()
-                .HasKey(s => s.Id);
-            modelBuilder.Entity<Service>()
-                .Property(s => s.Name)
-                .HasMaxLength(100)
-                .IsRequired();
-            modelBuilder.Entity<Service>()
-                .Property(s => s.Photo)
-                .HasColumnType("VARBINARY(MAX)"); // Добавлено для поддержки изображений
-
             // Конфигурация Comment
             modelBuilder.Entity<Comment>()
                 .HasKey(c => c.Id);
-            modelBuilder.Entity<Comment>()
-                .HasOne(c => c.Product)
-                .WithMany()
-                .HasForeignKey(c => c.ProductId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .IsRequired(false);
             modelBuilder.Entity<Comment>()
                 .HasOne(c => c.User)
                 .WithMany()
@@ -233,26 +203,27 @@ namespace ServiceCenter.Contex
                 .HasMaxLength(40)
                 .IsRequired();
 
-            // Конфигурация OrderItem
-            modelBuilder.Entity<OrderItem>()
-                .HasKey(oi => oi.Id);
-            modelBuilder.Entity<OrderItem>()
-                .HasOne(oi => oi.Order)
-                .WithMany(o => o.Items)
-                .HasForeignKey(oi => oi.OrderId)
-                .OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<OrderItem>()
-                .HasOne(oi => oi.Product)
-                .WithMany()
-                .HasForeignKey(oi => oi.ProductId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .IsRequired(false);
-            modelBuilder.Entity<OrderItem>()
-                .HasOne(oi => oi.Service)
-                .WithMany()
-                .HasForeignKey(oi => oi.ServiceId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .IsRequired(false);
+            modelBuilder.Entity<AdminActionLog>()
+                .HasKey(log => log.Id);
+            modelBuilder.Entity<AdminActionLog>()
+                .Property(log => log.AdminLogin)
+                .HasMaxLength(50)
+                .IsRequired();
+            modelBuilder.Entity<AdminActionLog>()
+                .Property(log => log.ActionType)
+                .HasMaxLength(40)
+                .IsRequired();
+            modelBuilder.Entity<AdminActionLog>()
+                .Property(log => log.EntityType)
+                .HasMaxLength(40)
+                .IsRequired();
+            modelBuilder.Entity<AdminActionLog>()
+                .Property(log => log.Description)
+                .HasMaxLength(500)
+                .IsRequired();
+            modelBuilder.Entity<AdminActionLog>()
+                .Property(log => log.CreatedAt)
+                .IsRequired();
         }
     }
 }

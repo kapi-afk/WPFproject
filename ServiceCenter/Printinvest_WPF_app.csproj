@@ -195,7 +195,6 @@
     <Compile Include="Converters\SessionManager.cs" />
     <Compile Include="Converters\UserRoleConverter.cs" />
     <Compile Include="Models\Comment.cs" />
-    <Compile Include="Models\Items.cs" />
     <Compile Include="Models\Order.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Models\WarehouseItem.cs" />
@@ -208,6 +207,7 @@
     <Compile Include="Repositories\WarehouseRepository.cs" />
     <Compile Include="Repositories\WarehouseRequestRepository.cs" />
     <Compile Include="Utilities\MasterAssignmentService.cs" />
+    <Compile Include="Utilities\OrderCatalogData.cs" />
     <Compile Include="Utilities\OrderEmailService.cs" />
     <Compile Include="Utilities\OrderPublicNumberService.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />

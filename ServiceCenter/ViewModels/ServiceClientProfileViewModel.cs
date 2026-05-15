@@ -4,8 +4,10 @@ using ServiceCenter.Repositories;
 using ServiceCenter.Utilities;
 using ServiceCenter.Views;
 using ServiceCenter.Views.Pages;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Mail;
@@ -17,85 +19,15 @@ namespace ServiceCenter.ViewModels
 {
     public class ServiceClientProfileViewModel : BaseViewModel
     {
-        private const string OtherOption = "Другое";
+        private const string OtherOption = OrderCatalogData.OtherOption;
 
         private readonly UserRepository _userRepository;
         private readonly OrderRepository _orderRepository;
         private readonly CommentRepository _commentRepository;
-        private readonly Dictionary<string, string[]> _brandCatalog = new Dictionary<string, string[]>
-        {
-            ["Ноутбук"] = new[] { "Lenovo", "ASUS", "HP", "Acer", "Dell", "Apple", "MSI" },
-            ["Стационарный ПК"] = new[] { "Dell", "HP", "Lenovo", "ASUS", "MSI", "Acer" },
-            ["Моноблок"] = new[] { "Lenovo", "HP", "Apple", "Acer", "ASUS" },
-            ["Монитор"] = new[] { "Samsung", "LG", "AOC", "Philips", "Dell", "BenQ" },
-            ["Принтер"] = new[] { "HP", "Canon", "Epson", "Brother", "Xerox" },
-            ["Другое"] = new string[0]
-        };
-        private readonly Dictionary<string, string[]> _defaultModelCatalog = new Dictionary<string, string[]>
-        {
-            ["Ноутбук"] = new[] { "IdeaPad", "ThinkPad", "VivoBook", "Pavilion", "Aspire", "MacBook" },
-            ["Стационарный ПК"] = new[] { "OptiPlex", "ProDesk", "ThinkCentre", "ROG", "MAG", "Nitro" },
-            ["Моноблок"] = new[] { "iMac", "IdeaCentre AIO", "Aspire C", "Zen AiO", "ProOne" },
-            ["Монитор"] = new[] { "Odyssey", "UltraGear", "ThinkVision", "P-series", "GW", "24MK" },
-            ["Принтер"] = new[] { "LaserJet", "DeskJet", "PIXMA", "EcoTank", "HL-L", "WorkCentre" },
-            ["Другое"] = new string[0]
-        };
-        private readonly Dictionary<string, Dictionary<string, string[]>> _brandModelCatalog = new Dictionary<string, Dictionary<string, string[]>>
-        {
-            ["Ноутбук"] = new Dictionary<string, string[]>
-            {
-                ["Lenovo"] = new[] { "IdeaPad", "ThinkPad", "Legion", "Yoga" },
-                ["ASUS"] = new[] { "VivoBook", "Zenbook", "ROG", "TUF" },
-                ["HP"] = new[] { "Pavilion", "Victus", "ProBook", "EliteBook" },
-                ["Acer"] = new[] { "Aspire", "Nitro", "Swift", "Predator" },
-                ["Dell"] = new[] { "Inspiron", "Latitude", "Vostro", "XPS" },
-                ["Apple"] = new[] { "MacBook Air", "MacBook Pro" },
-                ["MSI"] = new[] { "Modern", "Katana", "Prestige", "Stealth" }
-            },
-            ["Стационарный ПК"] = new Dictionary<string, string[]>
-            {
-                ["Dell"] = new[] { "OptiPlex", "Precision", "Inspiron" },
-                ["HP"] = new[] { "ProDesk", "EliteDesk", "Pavilion" },
-                ["Lenovo"] = new[] { "ThinkCentre", "IdeaCentre", "Legion" },
-                ["ASUS"] = new[] { "ROG", "ExpertCenter", "ProArt" },
-                ["MSI"] = new[] { "MAG", "Aegis", "Trident" },
-                ["Acer"] = new[] { "Aspire", "Veriton", "Predator" }
-            },
-            ["Моноблок"] = new Dictionary<string, string[]>
-            {
-                ["Lenovo"] = new[] { "IdeaCentre AIO", "Yoga AIO" },
-                ["HP"] = new[] { "All-in-One", "ProOne" },
-                ["Apple"] = new[] { "iMac" },
-                ["Acer"] = new[] { "Aspire C" },
-                ["ASUS"] = new[] { "Zen AiO", "Vivo AiO" }
-            },
-            ["Монитор"] = new Dictionary<string, string[]>
-            {
-                ["Samsung"] = new[] { "Odyssey", "ViewFinity", "S24" },
-                ["LG"] = new[] { "UltraGear", "UltraWide", "24MK" },
-                ["AOC"] = new[] { "Gaming", "Value Line", "Professional" },
-                ["Philips"] = new[] { "P-line", "V-line", "Momentum" },
-                ["Dell"] = new[] { "P-series", "S-series", "UltraSharp" },
-                ["BenQ"] = new[] { "GW", "EX", "PD" }
-            },
-            ["Принтер"] = new Dictionary<string, string[]>
-            {
-                ["HP"] = new[] { "LaserJet", "DeskJet", "OfficeJet" },
-                ["Canon"] = new[] { "PIXMA", "i-SENSYS", "MAXIFY" },
-                ["Epson"] = new[] { "EcoTank", "WorkForce", "L-series" },
-                ["Brother"] = new[] { "HL-L", "DCP", "MFC" },
-                ["Xerox"] = new[] { "Phaser", "VersaLink", "WorkCentre" }
-            }
-        };
-        private readonly Dictionary<string, string[]> _problemCatalog = new Dictionary<string, string[]>
-        {
-            ["Ноутбук"] = new[] { "Не включается", "Сильно греется", "Шумит", "Не заряжается", "Разбит экран", "Тормозит" },
-            ["Стационарный ПК"] = new[] { "Не включается", "Перезагружается", "Шумит", "Нет изображения", "Тормозит", "Не видит диск" },
-            ["Моноблок"] = new[] { "Не включается", "Нет изображения", "Сильно греется", "Тормозит", "Не работает сенсор" },
-            ["Монитор"] = new[] { "Нет изображения", "Мерцает экран", "Полосы на экране", "Разбит экран", "Не работает подсветка" },
-            ["Принтер"] = new[] { "Не печатает", "Зажевывает бумагу", "Полосы при печати", "Ошибка картриджа", "Не подключается" },
-            ["Другое"] = new[] { "Не включается", "Работает нестабильно", "Проблема с экраном", "Проблема с подключением" }
-        };
+        private readonly Dictionary<string, string[]> _brandCatalog = OrderCatalogData.BrandCatalog;
+        private readonly Dictionary<string, string[]> _defaultModelCatalog = OrderCatalogData.DefaultModelCatalog;
+        private readonly Dictionary<string, Dictionary<string, string[]>> _brandModelCatalog = OrderCatalogData.BrandModelCatalog;
+        private readonly Dictionary<string, string[]> _problemCatalog = OrderCatalogData.ProblemCatalog;
         private User _currentUser;
         private bool _isEditing;
         private string _editName;
@@ -108,6 +40,8 @@ namespace ServiceCenter.ViewModels
         private bool _hasAttemptedProfileSave;
         private string _newReviewText;
         private ObservableCollection<Order> _orders;
+        private ObservableCollection<Order> _cancelledOrders;
+        private ObservableCollection<Order> _completedOrders;
         private ObservableCollection<Comment> _reviews;
         private string _newOrderDeviceType;
         private string _customDeviceType;
@@ -230,6 +164,31 @@ namespace ServiceCenter.ViewModels
                 if (SetProperty(ref _orders, value))
                 {
                     OnPropertyChanged(nameof(HasOrders));
+                    OnPropertyChanged(nameof(HasActiveOrders));
+                }
+            }
+        }
+
+        public ObservableCollection<Order> CancelledOrders
+        {
+            get => _cancelledOrders;
+            set
+            {
+                if (SetProperty(ref _cancelledOrders, value))
+                {
+                    OnPropertyChanged(nameof(HasCancelledOrders));
+                }
+            }
+        }
+
+        public ObservableCollection<Order> CompletedOrders
+        {
+            get => _completedOrders;
+            set
+            {
+                if (SetProperty(ref _completedOrders, value))
+                {
+                    OnPropertyChanged(nameof(HasCompletedOrders));
                 }
             }
         }
@@ -247,6 +206,9 @@ namespace ServiceCenter.ViewModels
         }
 
         public bool HasOrders => Orders != null && Orders.Count > 0;
+        public bool HasActiveOrders => Orders != null && Orders.Count > 0;
+        public bool HasCancelledOrders => CancelledOrders != null && CancelledOrders.Count > 0;
+        public bool HasCompletedOrders => CompletedOrders != null && CompletedOrders.Count > 0;
         public bool HasReviews => Reviews != null && Reviews.Count > 0;
         public string PhotoActionText => CurrentUser?.Photo == null
             ? App.GetString("AddPhotoButton", "Add photo")
@@ -571,6 +533,8 @@ namespace ServiceCenter.ViewModels
             _commentRepository = RepositoryManager.Comments;
             CurrentUser = SessionManager.CurrentUser ?? new User { Name = "Guest", Login = "guest", Role = UserRole.Client };
             Orders = new ObservableCollection<Order>();
+            CancelledOrders = new ObservableCollection<Order>();
+            CompletedOrders = new ObservableCollection<Order>();
             Reviews = new ObservableCollection<Comment>();
             ResetOrderForm();
 
@@ -603,6 +567,8 @@ namespace ServiceCenter.ViewModels
             {
                 Reviews = new ObservableCollection<Comment>();
                 Orders = new ObservableCollection<Order>();
+                CancelledOrders = new ObservableCollection<Order>();
+                CompletedOrders = new ObservableCollection<Order>();
                 return;
             }
 
@@ -622,13 +588,15 @@ namespace ServiceCenter.ViewModels
                 }
                 else
                 {
-                    Orders = new ObservableCollection<Order>();
+                    UpdateOrderCollections(Enumerable.Empty<Order>());
                 }
             }
             catch (System.Exception ex)
             {
                 Reviews = new ObservableCollection<Comment>();
                 Orders = new ObservableCollection<Order>();
+                CancelledOrders = new ObservableCollection<Order>();
+                CompletedOrders = new ObservableCollection<Order>();
                 MessageBox.Show($"Не удалось загрузить профиль клиента: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -784,7 +752,7 @@ namespace ServiceCenter.ViewModels
                 DeviceBrand = resolvedBrand,
                 DeviceModel = resolvedModel,
                 ProblemDescription = resolvedProblem,
-                DeliveryMethod = "Самовывоз",
+                DeliveryMethod = OrderCatalogData.PickupDeliveryMethod,
                 DeliveryAddress = null,
                 ProblemPhoto = NewOrderProblemPhoto,
                 ContactPhone = NewOrderContactPhone.Trim(),
@@ -893,50 +861,68 @@ namespace ServiceCenter.ViewModels
 
         private void PayOrderOnline(object parameter)
         {
-            var order = parameter as Order;
-            if (order == null)
+            try
             {
-                return;
-            }
+                var order = parameter as Order;
+                if (order == null)
+                {
+                    return;
+                }
 
-            if (!order.IsOnlinePayment || order.IsOnlinePaymentCompleted)
-            {
-                return;
-            }
+                if (!order.IsOnlinePayment || order.IsOnlinePaymentCompleted)
+                {
+                    return;
+                }
 
-            if (order.EstimatedRepairCost <= 0)
-            {
+                if (_orderRepository == null)
+                {
+                    throw new InvalidOperationException("Репозиторий заявок не инициализирован.");
+                }
+
+                if (order.EstimatedRepairCost <= 0)
+                {
+                    MessageBox.Show(
+                        "Онлайн-оплата станет доступна после того, как по заявке будет рассчитана предварительная сумма.",
+                        "Сумма еще не рассчитана",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    return;
+                }
+
+                var paymentWindow = new OnlinePaymentWindow(order);
+                if (Application.Current.MainWindow != null)
+                {
+                    paymentWindow.Owner = Application.Current.MainWindow;
+                }
+
+                var paymentResult = paymentWindow.ShowDialog();
+                if (paymentResult != true)
+                {
+                    return;
+                }
+
+                order.IsOnlinePaymentCompleted = true;
+                order.OnlinePaymentPaidAt = DateTime.Now;
+                order.Status = OrderStatus.Completed;
+                order.CompletedAt = DateTime.Now;
+                _orderRepository.Update(order);
+                ReloadOrdersForCurrentUser();
+
                 MessageBox.Show(
-                    "Онлайн-оплата станет доступна после того, как по заявке будет рассчитана предварительная сумма.",
-                    "Сумма еще не рассчитана",
+                    "Онлайн-оплата успешно проведена. Заявка закрыта и убрана из вашего списка.",
+                    "Оплата выполнена",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
-                return;
             }
-
-            var paymentWindow = new OnlinePaymentWindow(order);
-            if (Application.Current.MainWindow != null)
+            catch (Exception ex)
             {
-                paymentWindow.Owner = Application.Current.MainWindow;
+                TracePaymentError(ex);
+                MessageBox.Show(
+                    $"Не удалось выполнить оплату.{Environment.NewLine}{ex.Message}",
+                    "Ошибка оплаты",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
-
-            if (paymentWindow.ShowDialog() != true)
-            {
-                return;
-            }
-
-            order.IsOnlinePaymentCompleted = true;
-            order.OnlinePaymentPaidAt = System.DateTime.Now;
-            order.Status = OrderStatus.Completed;
-            order.CompletedAt = System.DateTime.Now;
-            _orderRepository.Update(order);
-            ReloadOrdersForCurrentUser();
-
-            MessageBox.Show(
-                "Онлайн-оплата успешно проведена. Заявка закрыта и убрана из вашего списка.",
-                "Оплата выполнена",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
         }
 
         private void CancelOrder(object parameter)
@@ -1028,14 +1014,22 @@ namespace ServiceCenter.ViewModels
         {
             if (!SessionManager.IsAuthenticated || SessionManager.CurrentUser == null)
             {
-                Orders = new ObservableCollection<Order>();
+                UpdateOrderCollections(Enumerable.Empty<Order>());
                 return;
             }
 
+            UpdateOrderCollections(_orderRepository.GetByUserId(SessionManager.CurrentUser.Id));
+        }
+
+        private void UpdateOrderCollections(IEnumerable<Order> userOrders)
+        {
+            var sourceOrders = (userOrders ?? Enumerable.Empty<Order>()).ToList();
             Orders = new ObservableCollection<Order>(
-                _orderRepository
-                    .GetByUserId(SessionManager.CurrentUser.Id)
-                    .Where(order => order.Status != OrderStatus.Completed));
+                sourceOrders.Where(order => order.Status != OrderStatus.Completed && order.Status != OrderStatus.Cancelled));
+            CancelledOrders = new ObservableCollection<Order>(
+                sourceOrders.Where(order => order.Status == OrderStatus.Cancelled));
+            CompletedOrders = new ObservableCollection<Order>(
+                sourceOrders.Where(order => order.Status == OrderStatus.Completed));
         }
 
         private void OnLanguageChanged(object sender, System.EventArgs e)
@@ -1055,7 +1049,7 @@ namespace ServiceCenter.ViewModels
                 return values;
             }
 
-            return new string[0];
+            return System.Array.Empty<string>();
         }
 
         private IEnumerable<string> GetModelOptions()
@@ -1136,21 +1130,7 @@ namespace ServiceCenter.ViewModels
 
             if (HasInvalidOrderData())
             {
-                var invalidFields = new List<string>();
-                if (HasFilledButInvalidPhoneNumber(NewOrderContactPhone))
-                {
-                    invalidFields.Add("номер телефона");
-                }
-
-                if (HasInvalidCustomOrderField(NewOrderDeviceType, IsCustomDeviceTypeVisible) ||
-                    HasInvalidCustomOrderField(NewOrderDeviceBrand, IsCustomBrandVisible) ||
-                    HasInvalidCustomOrderField(NewOrderDeviceModel, IsCustomModelVisible) ||
-                    HasInvalidCustomOrderField(NewOrderProblemDescription, IsCustomProblemVisible))
-                {
-                    invalidFields.Add("значения, введённые для варианта \"Другое\"");
-                }
-
-                messages.Add($"Проверьте корректность введённых данных: {string.Join(" и ", invalidFields)}.");
+                messages.Add(BuildInvalidOrderDataMessage());
             }
 
             return messages.Count == 0
@@ -1191,11 +1171,9 @@ namespace ServiceCenter.ViewModels
                 return;
             }
 
-            var existingUser = _userRepository
-                .GetAll()
-                .FirstOrDefault(user =>
-                    user.Id != CurrentUser.Id &&
-                    string.Equals(user.Login, normalizedLogin, System.StringComparison.OrdinalIgnoreCase));
+            var existingUser = FindConflictingUser(user =>
+                user.Id != CurrentUser.Id &&
+                string.Equals(user.Login, normalizedLogin, System.StringComparison.OrdinalIgnoreCase));
 
             EditLoginValidationMessage = existingUser == null
                 ? string.Empty
@@ -1223,15 +1201,41 @@ namespace ServiceCenter.ViewModels
                 return;
             }
 
-            var existingUser = _userRepository
-                .GetAll()
-                .FirstOrDefault(user =>
-                    user.Id != CurrentUser.Id &&
-                    string.Equals(user.Email, normalizedEmail, System.StringComparison.OrdinalIgnoreCase));
+            var existingUser = FindConflictingUser(user =>
+                user.Id != CurrentUser.Id &&
+                string.Equals(user.Email, normalizedEmail, System.StringComparison.OrdinalIgnoreCase));
 
             EditEmailValidationMessage = existingUser == null
                 ? string.Empty
                 : "Эта электронная почта уже зарегистрирована.";
+        }
+
+        private string BuildInvalidOrderDataMessage()
+        {
+            return $"Проверьте корректность введённых данных: {string.Join(" и ", GetInvalidOrderFields())}.";
+        }
+
+        private IEnumerable<string> GetInvalidOrderFields()
+        {
+            if (HasFilledButInvalidPhoneNumber(NewOrderContactPhone))
+            {
+                yield return "номер телефона";
+            }
+
+            if (HasInvalidCustomOrderField(NewOrderDeviceType, IsCustomDeviceTypeVisible) ||
+                HasInvalidCustomOrderField(NewOrderDeviceBrand, IsCustomBrandVisible) ||
+                HasInvalidCustomOrderField(NewOrderDeviceModel, IsCustomModelVisible) ||
+                HasInvalidCustomOrderField(NewOrderProblemDescription, IsCustomProblemVisible))
+            {
+                yield return "значения, введённые для варианта \"Другое\"";
+            }
+        }
+
+        private User FindConflictingUser(System.Func<User, bool> predicate)
+        {
+            return _userRepository?
+                .GetAll()
+                .FirstOrDefault(predicate);
         }
 
         private void ClearProfileValidation()
@@ -1323,6 +1327,22 @@ namespace ServiceCenter.ViewModels
             if (SetProperty(ref field, value, propertyName))
             {
                 OnPropertyChanged(flagPropertyName);
+            }
+        }
+
+        private static void TracePaymentError(Exception exception)
+        {
+            try
+            {
+                var message = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {exception}{Environment.NewLine}";
+                Debug.WriteLine(message);
+                File.AppendAllText(
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "payment-errors.log"),
+                    message);
+            }
+            catch
+            {
+                // Ошибка логирования не должна ломать пользовательский сценарий.
             }
         }
     }

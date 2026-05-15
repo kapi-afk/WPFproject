@@ -33,12 +33,12 @@ namespace ServiceCenter.Utilities
                     return false;
                 }
 
-                var subject = "РљРѕРґ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ РїР°СЂРѕР»СЏ";
+                var subject = "Код восстановления пароля";
                 var body =
-                    $"Р—РґСЂР°РІСЃС‚РІСѓР№С‚Рµ, {user.Name ?? user.Login}!{Environment.NewLine}{Environment.NewLine}" +
-                    $"Р’Р°С€ РєРѕРґ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ РїР°СЂРѕР»СЏ: {recoveryCode}{Environment.NewLine}" +
-                    $"РЎСЂРѕРє РґРµР№СЃС‚РІРёСЏ РєРѕРґР°: РґРѕ {expiresAt:dd.MM.yyyy HH:mm}.{Environment.NewLine}{Environment.NewLine}" +
-                    "Р•СЃР»Рё РІС‹ РЅРµ Р·Р°РїСЂР°С€РёРІР°Р»Рё РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ РїР°СЂРѕР»СЏ, РїСЂРѕСЃС‚Рѕ РїСЂРѕРёРіРЅРѕСЂРёСЂСѓР№С‚Рµ СЌС‚Рѕ РїРёСЃСЊРјРѕ.";
+                    $"Здравствуйте, {user.Name ?? user.Login}!{Environment.NewLine}{Environment.NewLine}" +
+                    $"Ваш код восстановления пароля: {recoveryCode}{Environment.NewLine}" +
+                    $"Срок действия кода: до {expiresAt:dd.MM.yyyy HH:mm}.{Environment.NewLine}{Environment.NewLine}" +
+                    "Если вы не запрашивали восстановление пароля, просто проигнорируйте это письмо.";
 
                 return TrySendPlainTextEmail(user.Email, subject, body);
             }
@@ -77,17 +77,10 @@ namespace ServiceCenter.Utilities
                     return;
                 }
 
-                var senderEmail = Properties.Settings.Default.NotificationEmailAddress;
-                var senderPassword = NormalizeSmtpPassword(Properties.Settings.Default.NotificationEmailPassword);
-                var smtpHost = Properties.Settings.Default.NotificationSmtpHost;
-                var smtpPort = Properties.Settings.Default.NotificationSmtpPort;
-                var enableSsl = Properties.Settings.Default.NotificationEnableSsl;
-                var webhookUrl = Properties.Settings.Default.NotificationWebhookUrl;
-                if (string.IsNullOrWhiteSpace(senderEmail) ||
-                    string.IsNullOrWhiteSpace(senderPassword) ||
-                    IsPlaceholderSmtpPassword(senderPassword))
+                var settings = GetNotificationSettings();
+                if (!HasConfiguredSmtp(settings))
                 {
-                    if (!TrySendWebhookEmail(order, senderEmail, webhookUrl))
+                    if (!TrySendWebhookEmail(order, settings.SenderEmail, settings.WebhookUrl))
                     {
                         TraceEmailIssue("Order email notification skipped: SMTP settings are not configured and webhook fallback is unavailable.");
                     }
@@ -100,28 +93,23 @@ namespace ServiceCenter.Utilities
                     $"Order email notification started. OrderId={order.Id}; PublicNumber={order.DisplayNumber}; " +
                     $"Recipient={order.User.Email}; OldStatus={previousStatus}; NewStatus={order.Status}");
 
-                if (TrySendWebhookEmail(order, senderEmail, webhookUrl))
+                if (TrySendWebhookEmail(order, settings.SenderEmail, settings.WebhookUrl))
                 {
                     return;
                 }
 
-                var message = BuildMessage(order, senderEmail);
-                var attempts = BuildConnectionAttempts(smtpHost, smtpPort, enableSsl);
+                var message = BuildMessage(order, settings.SenderEmail);
+                var attempts = BuildConnectionAttempts(settings.SmtpHost, settings.SmtpPort, settings.EnableSsl);
                 Exception lastException = null;
 
                 foreach (var attempt in attempts)
                 {
                     try
                     {
-                        using (var client = new MailKit.Net.Smtp.SmtpClient())
+                        using (var client = CreateMailKitClient(attempt.Host))
                         {
-                            client.Timeout = 15000;
-                            client.CheckCertificateRevocation = false;
-                            client.ServerCertificateValidationCallback =
-                                (sender, certificate, chain, sslPolicyErrors) =>
-                                    ValidateServerCertificate(attempt.Host, certificate, sslPolicyErrors);
                             client.Connect(attempt.Host, attempt.Port, attempt.SocketOptions);
-                            client.Authenticate(senderEmail, senderPassword);
+                            client.Authenticate(settings.SenderEmail, settings.SenderPassword);
                             client.Send(message);
                             client.Disconnect(true);
                             TraceEmailIssue(
@@ -138,7 +126,14 @@ namespace ServiceCenter.Utilities
                     }
                 }
 
-                TrySendLegacySmtpEmail(order, senderEmail, senderPassword, smtpHost, smtpPort, enableSsl, lastException);
+                TrySendLegacySmtpEmail(
+                    order,
+                    settings.SenderEmail,
+                    settings.SenderPassword,
+                    settings.SmtpHost,
+                    settings.SmtpPort,
+                    settings.EnableSsl,
+                    lastException);
             }
             catch (Exception ex)
             {
@@ -205,15 +200,11 @@ namespace ServiceCenter.Utilities
 
         private static MimeMessage BuildMessage(Order order, string senderEmail)
         {
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(Properties.Settings.Default.NotificationEmailDisplayName, senderEmail));
-            message.To.Add(MailboxAddress.Parse(order.User.Email));
-            message.Subject = BuildStatusChangedSubject(order);
-            message.Body = new TextPart("plain")
-            {
-                Text = BuildStatusChangedBody(order)
-            };
-            return message;
+            return CreatePlainTextMimeMessage(
+                senderEmail,
+                order.User.Email,
+                BuildStatusChangedSubject(order),
+                BuildStatusChangedBody(order));
         }
 
         private static string BuildStatusChangedSubject(Order order)
@@ -224,11 +215,7 @@ namespace ServiceCenter.Utilities
 
         private static bool TrySendPlainTextEmail(string recipientEmail, string subject, string body)
         {
-            var senderEmail = Properties.Settings.Default.NotificationEmailAddress;
-            var senderPassword = NormalizeSmtpPassword(Properties.Settings.Default.NotificationEmailPassword);
-            var smtpHost = Properties.Settings.Default.NotificationSmtpHost;
-            var smtpPort = Properties.Settings.Default.NotificationSmtpPort;
-            var enableSsl = Properties.Settings.Default.NotificationEnableSsl;
+            var settings = GetNotificationSettings();
 
             if (string.IsNullOrWhiteSpace(recipientEmail))
             {
@@ -236,37 +223,25 @@ namespace ServiceCenter.Utilities
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(senderEmail) ||
-                string.IsNullOrWhiteSpace(senderPassword) ||
-                IsPlaceholderSmtpPassword(senderPassword))
+            if (!HasConfiguredSmtp(settings))
             {
                 TraceEmailIssue("Generic email send skipped: SMTP settings are not configured.");
                 return false;
             }
 
             EnsureModernTls();
-            var attempts = BuildConnectionAttempts(smtpHost, smtpPort, enableSsl);
+            var attempts = BuildConnectionAttempts(settings.SmtpHost, settings.SmtpPort, settings.EnableSsl);
             Exception lastException = null;
 
             foreach (var attempt in attempts)
             {
                 try
                 {
-                    using (var message = new MimeMessage())
-                    using (var client = new MailKit.Net.Smtp.SmtpClient())
+                    using (var message = CreatePlainTextMimeMessage(settings.SenderEmail, recipientEmail, subject, body))
+                    using (var client = CreateMailKitClient(attempt.Host))
                     {
-                        message.From.Add(new MailboxAddress(Properties.Settings.Default.NotificationEmailDisplayName, senderEmail));
-                        message.To.Add(MailboxAddress.Parse(recipientEmail));
-                        message.Subject = subject;
-                        message.Body = new TextPart("plain") { Text = body };
-
-                        client.Timeout = 15000;
-                        client.CheckCertificateRevocation = false;
-                        client.ServerCertificateValidationCallback =
-                            (sender, certificate, chain, sslPolicyErrors) =>
-                                ValidateServerCertificate(attempt.Host, certificate, sslPolicyErrors);
                         client.Connect(attempt.Host, attempt.Port, attempt.SocketOptions);
-                        client.Authenticate(senderEmail, senderPassword);
+                        client.Authenticate(settings.SenderEmail, settings.SenderPassword);
                         client.Send(message);
                         client.Disconnect(true);
                         TraceEmailIssue($"Generic email sent via MailKit. Host={attempt.Host}; Port={attempt.Port}; Recipient={recipientEmail}");
@@ -284,7 +259,16 @@ namespace ServiceCenter.Utilities
 
             try
             {
-                TrySendLegacyPlainTextEmail(recipientEmail, subject, body, senderEmail, senderPassword, smtpHost, smtpPort, enableSsl, lastException);
+                TrySendLegacyPlainTextEmail(
+                    recipientEmail,
+                    subject,
+                    body,
+                    settings.SenderEmail,
+                    settings.SenderPassword,
+                    settings.SmtpHost,
+                    settings.SmtpPort,
+                    settings.EnableSsl,
+                    lastException);
                 return true;
             }
             catch (Exception ex)
@@ -305,34 +289,22 @@ namespace ServiceCenter.Utilities
         {
             try
             {
-                var previousCertificateCallback = ServicePointManager.ServerCertificateValidationCallback;
-                try
+                RunWithTemporaryCertificateValidationBypass(() =>
                 {
                     using (var message = new MailMessage())
                     using (var client = new SmtpClient())
                     {
-                        var orderNumber = string.IsNullOrWhiteSpace(order.DisplayNumber) ? order.Id.ToString() : order.DisplayNumber;
                         message.From = new MailAddress(senderEmail, Properties.Settings.Default.NotificationEmailDisplayName);
                         message.To.Add(order.User.Email);
-                        message.Subject = $"РЎС‚Р°С‚СѓСЃ Р·Р°СЏРІРєРё {orderNumber} РёР·РјРµРЅРµРЅ";
+                        message.Subject = BuildStatusChangedSubject(order);
                         message.Body = BuildStatusChangedBody(order);
                         message.BodyEncoding = Encoding.UTF8;
                         message.SubjectEncoding = Encoding.UTF8;
 
-                        client.Host = smtpHost;
-                        client.Port = smtpPort == 465 ? 587 : smtpPort;
-                        client.EnableSsl = enableSsl;
-                        client.Credentials = new NetworkCredential(senderEmail, senderPassword);
-                        client.Timeout = 15000;
-
-                        ServicePointManager.ServerCertificateValidationCallback = (_, __, ___, ____) => true;
+                        ConfigureLegacySmtpClient(client, senderEmail, senderPassword, smtpHost, smtpPort, enableSsl);
                         client.Send(message);
                     }
-                }
-                finally
-                {
-                    ServicePointManager.ServerCertificateValidationCallback = previousCertificateCallback;
-                }
+                });
 
                 TraceEmailIssue(
                     $"Order email notification sent via legacy SMTP fallback. Recipient={order.User.Email}");
@@ -359,8 +331,7 @@ namespace ServiceCenter.Utilities
         {
             try
             {
-                var previousCertificateCallback = ServicePointManager.ServerCertificateValidationCallback;
-                try
+                RunWithTemporaryCertificateValidationBypass(() =>
                 {
                     using (var message = new MailMessage())
                     using (var client = new SmtpClient())
@@ -372,20 +343,10 @@ namespace ServiceCenter.Utilities
                         message.BodyEncoding = Encoding.UTF8;
                         message.SubjectEncoding = Encoding.UTF8;
 
-                        client.Host = smtpHost;
-                        client.Port = smtpPort == 465 ? 587 : smtpPort;
-                        client.EnableSsl = enableSsl;
-                        client.Credentials = new NetworkCredential(senderEmail, senderPassword);
-                        client.Timeout = 15000;
-
-                        ServicePointManager.ServerCertificateValidationCallback = (_, __, ___, ____) => true;
+                        ConfigureLegacySmtpClient(client, senderEmail, senderPassword, smtpHost, smtpPort, enableSsl);
                         client.Send(message);
                     }
-                }
-                finally
-                {
-                    ServicePointManager.ServerCertificateValidationCallback = previousCertificateCallback;
-                }
+                });
 
                 TraceEmailIssue($"Generic email sent via legacy SMTP fallback. Recipient={recipientEmail}");
             }
@@ -438,6 +399,82 @@ namespace ServiceCenter.Utilities
             }
 
             attempts.Add(new SmtpConnectionAttempt(host, port, socketOptions));
+        }
+
+        private static NotificationEmailSettings GetNotificationSettings()
+        {
+            return new NotificationEmailSettings(
+                Properties.Settings.Default.NotificationEmailAddress,
+                NormalizeSmtpPassword(Properties.Settings.Default.NotificationEmailPassword),
+                Properties.Settings.Default.NotificationSmtpHost,
+                Properties.Settings.Default.NotificationSmtpPort,
+                Properties.Settings.Default.NotificationEnableSsl,
+                Properties.Settings.Default.NotificationWebhookUrl);
+        }
+
+        private static bool HasConfiguredSmtp(NotificationEmailSettings settings)
+        {
+            return !string.IsNullOrWhiteSpace(settings.SenderEmail) &&
+                   !string.IsNullOrWhiteSpace(settings.SenderPassword) &&
+                   !IsPlaceholderSmtpPassword(settings.SenderPassword);
+        }
+
+        private static MimeMessage CreatePlainTextMimeMessage(string senderEmail, string recipientEmail, string subject, string body)
+        {
+            return new MimeMessage
+            {
+                From = { new MailboxAddress(Properties.Settings.Default.NotificationEmailDisplayName, senderEmail) },
+                To = { MailboxAddress.Parse(recipientEmail) },
+                Subject = subject,
+                Body = new TextPart("plain") { Text = body }
+            };
+        }
+
+        private static MailKit.Net.Smtp.SmtpClient CreateMailKitClient(string host)
+        {
+            return new MailKit.Net.Smtp.SmtpClient
+            {
+                Timeout = 15000,
+                CheckCertificateRevocation = false,
+                ServerCertificateValidationCallback =
+                    (sender, certificate, chain, sslPolicyErrors) =>
+                        ValidateServerCertificate(host, certificate, sslPolicyErrors)
+            };
+        }
+
+        private static void ConfigureLegacySmtpClient(
+            SmtpClient client,
+            string senderEmail,
+            string senderPassword,
+            string smtpHost,
+            int smtpPort,
+            bool enableSsl)
+        {
+            client.Host = smtpHost;
+            client.Port = GetLegacySmtpPort(smtpPort);
+            client.EnableSsl = enableSsl;
+            client.Credentials = new NetworkCredential(senderEmail, senderPassword);
+            client.Timeout = 15000;
+        }
+
+        private static int GetLegacySmtpPort(int smtpPort)
+        {
+            return smtpPort == 465 ? 587 : smtpPort;
+        }
+
+        private static void RunWithTemporaryCertificateValidationBypass(Action sendAction)
+        {
+            var previousCertificateCallback = ServicePointManager.ServerCertificateValidationCallback;
+
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = (_, __, ___, ____) => true;
+                sendAction();
+            }
+            finally
+            {
+                ServicePointManager.ServerCertificateValidationCallback = previousCertificateCallback;
+            }
         }
 
         private static string NormalizeSmtpPassword(string password)
@@ -601,6 +638,32 @@ namespace ServiceCenter.Utilities
             public string Host { get; }
             public int Port { get; }
             public SecureSocketOptions SocketOptions { get; }
+        }
+
+        private sealed class NotificationEmailSettings
+        {
+            public NotificationEmailSettings(
+                string senderEmail,
+                string senderPassword,
+                string smtpHost,
+                int smtpPort,
+                bool enableSsl,
+                string webhookUrl)
+            {
+                SenderEmail = senderEmail;
+                SenderPassword = senderPassword;
+                SmtpHost = smtpHost;
+                SmtpPort = smtpPort;
+                EnableSsl = enableSsl;
+                WebhookUrl = webhookUrl;
+            }
+
+            public string SenderEmail { get; }
+            public string SenderPassword { get; }
+            public string SmtpHost { get; }
+            public int SmtpPort { get; }
+            public bool EnableSsl { get; }
+            public string WebhookUrl { get; }
         }
     }
 }

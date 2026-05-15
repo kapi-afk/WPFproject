@@ -18,6 +18,7 @@ namespace ServiceCenter.Repositories
         public static OrderRepository Orders { get; private set; }
         public static WarehouseRepository Warehouse { get; private set; }
         public static WarehouseRequestRepository WarehouseRequests { get; private set; }
+        public static AdminActionLogRepository AdminActionLogs { get; private set; }
 
         public static void Initialize()
         {
@@ -27,12 +28,14 @@ namespace ServiceCenter.Repositories
             EnsureUserSchema();
             EnsureWarehouseSchema();
             EnsureWarehouseRequestSchema();
+            EnsureAdminActionLogSchema();
 
             Users = new UserRepository(_context);
             Comments = new CommentRepository(_context);
             Orders = new OrderRepository(_context);
             Warehouse = new WarehouseRepository(_context);
             WarehouseRequests = new WarehouseRequestRepository(_context);
+            AdminActionLogs = new AdminActionLogRepository(_context);
             Orders.EnsurePublicNumbers();
 
             var admin = Users.GetByLogin("admin");
@@ -242,6 +245,24 @@ BEGIN
         CONSTRAINT [FK_WarehouseRequests_Orders] FOREIGN KEY ([OrderId]) REFERENCES [Orders]([Id]) ON DELETE CASCADE,
         CONSTRAINT [FK_WarehouseRequests_Users] FOREIGN KEY ([MasterId]) REFERENCES [Users]([Id]),
         CONSTRAINT [FK_WarehouseRequests_WarehouseItems] FOREIGN KEY ([WarehouseItemId]) REFERENCES [WarehouseItems]([Id]) ON DELETE SET NULL
+    );
+END");
+        }
+
+        private static void EnsureAdminActionLogSchema()
+        {
+            _context.Database.ExecuteSqlRaw(@"
+IF OBJECT_ID(N'[AdminActionLogs]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [AdminActionLogs]
+    (
+        [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        [AdminLogin] NVARCHAR(50) NOT NULL,
+        [ActionType] NVARCHAR(40) NOT NULL,
+        [EntityType] NVARCHAR(40) NOT NULL,
+        [EntityId] INT NULL,
+        [Description] NVARCHAR(500) NOT NULL,
+        [CreatedAt] DATETIME2 NOT NULL
     );
 END");
         }

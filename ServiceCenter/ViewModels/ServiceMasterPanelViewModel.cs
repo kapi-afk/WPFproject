@@ -3,6 +3,7 @@ using ServiceCenter.Repositories;
 using ServiceCenter.Views;
 using ServiceCenter.Views.Pages;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -25,6 +26,10 @@ namespace ServiceCenter.ViewModels
         private string _materialRequestSearchText;
         private int _completedOrdersCount;
         private int _activeOrdersCount;
+
+        private static string ErrorTitle => App.GetString("ErrorTitle", "Ошибка");
+        private static string ValidationTitle => App.GetString("ValidationTitle", "Ошибка проверки");
+        private static string SuccessTitle => App.GetString("SuccessTitle", "Готово");
 
         public ObservableCollection<Order> Orders
         {
@@ -78,9 +83,26 @@ namespace ServiceCenter.ViewModels
             get => _selectedOrder;
             set
             {
+                if (ReferenceEquals(_selectedOrder, value))
+                {
+                    SynchronizeSelectedOrderState();
+                    LoadCurrentOrderWarehouseRequests();
+                    return;
+                }
+
+                if (_selectedOrder != null)
+                {
+                    _selectedOrder.PropertyChanged -= SelectedOrder_PropertyChanged;
+                }
+
                 SetProperty(ref _selectedOrder, value);
-                SelectedOrderStatus = value?.Status ?? OrderStatus.Assigned;
-                SelectedOrderMasterWorkCost = value?.MasterWorkCost ?? 0;
+
+                if (_selectedOrder != null)
+                {
+                    _selectedOrder.PropertyChanged += SelectedOrder_PropertyChanged;
+                }
+
+                SynchronizeSelectedOrderState();
                 LoadCurrentOrderWarehouseRequests();
             }
         }
@@ -172,7 +194,7 @@ namespace ServiceCenter.ViewModels
         {
             if (SelectedOrder == null)
             {
-                MessageBox.Show("Select an order.", "Validation error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Выберите заявку.", ValidationTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -183,7 +205,7 @@ namespace ServiceCenter.ViewModels
             LoadData();
             MessageBox.Show(
                 "Изменения по заявке сохранены. Уведомление клиенту отправляется в фоне.",
-                "Готово",
+                SuccessTitle,
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
         }
@@ -192,7 +214,7 @@ namespace ServiceCenter.ViewModels
         {
             if (SelectedOrder == null)
             {
-                MessageBox.Show("Выберите заявку, для которой нужны материалы.", "Ошибка проверки", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Выберите заявку, для которой нужны материалы.", ValidationTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -211,7 +233,7 @@ namespace ServiceCenter.ViewModels
             {
                 MessageBox.Show(
                     $"Не удалось открыть окно склада.{System.Environment.NewLine}{ex.Message}",
-                    "Ошибка",
+                    ErrorTitle,
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
@@ -232,6 +254,20 @@ namespace ServiceCenter.ViewModels
                 .ToList();
 
             ApplyMaterialRequestFilter();
+        }
+
+        private void SynchronizeSelectedOrderState()
+        {
+            SelectedOrderStatus = _selectedOrder?.Status ?? OrderStatus.Assigned;
+            SelectedOrderMasterWorkCost = _selectedOrder?.MasterWorkCost ?? 0;
+        }
+
+        private void SelectedOrder_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Order.Status) || e.PropertyName == nameof(Order.MasterWorkCost))
+            {
+                SynchronizeSelectedOrderState();
+            }
         }
 
         private void ApplyMaterialRequestFilter()

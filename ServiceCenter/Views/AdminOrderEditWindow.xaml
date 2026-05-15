@@ -75,10 +75,6 @@
                     <TextBlock Text="{DynamicResource ClientPhoneLabel}" Style="{StaticResource OrderFieldLabelStyle}"/>
                     <TextBlock Text="{Binding SelectedOrder.ContactPhone}" Style="{StaticResource OrderValueTextStyle}"/>
 
-                    <TextBlock Text="{DynamicResource DeliveryTypeLabel}" Style="{StaticResource OrderFieldLabelStyle}"/>
-                    <TextBlock Text="{Binding SelectedOrder.DeliveryMethodDisplay, TargetNullValue={StaticResource PickupText}}"
-                               Style="{StaticResource OrderValueTextStyle}"/>
-
                     <TextBlock Text="{DynamicResource PaymentMethodLabel}" Style="{StaticResource OrderFieldLabelStyle}"/>
                     <TextBlock Text="{Binding SelectedOrder.PaymentMethodDisplay}"
                                Style="{StaticResource OrderValueTextStyle}"/>
@@ -87,10 +83,6 @@
                 <StackPanel Grid.Column="2">
                     <TextBlock Text="{DynamicResource ClientEmailLabel}" Style="{StaticResource OrderFieldLabelStyle}"/>
                     <TextBlock Text="{Binding SelectedOrder.User.Email, TargetNullValue={StaticResource NotSpecifiedText}}"
-                               Style="{StaticResource OrderValueTextStyle}"/>
-
-                    <TextBlock Text="{DynamicResource CourierAddressAdminLabel}" Style="{StaticResource OrderFieldLabelStyle}"/>
-                    <TextBlock Text="{Binding SelectedOrder.DeliveryAddress, TargetNullValue={StaticResource NotRequiredText}}"
                                Style="{StaticResource OrderValueTextStyle}"/>
 
                     <TextBlock Text="{DynamicResource PaymentStatusLabel}" Style="{StaticResource OrderFieldLabelStyle}"/>

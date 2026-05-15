@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ServiceCenter.Utilities;
 
 namespace ServiceCenter.Models
@@ -75,7 +71,7 @@ namespace ServiceCenter.Models
         [NotMapped]
         public bool IsOnlinePayment => string.Equals(PaymentMethod, OnlinePaymentMethod, StringComparison.Ordinal);
         [NotMapped]
-        public bool CanShowOnlinePaymentButton => IsOnlinePayment && !IsOnlinePaymentCompleted;
+        public bool CanShowOnlinePaymentButton => IsOnlinePayment && !IsOnlinePaymentCompleted && EstimatedRepairCost > 0;
         [NotMapped]
         public bool CanBeCancelledByClient =>
             !IsOnlinePaymentCompleted &&
@@ -141,6 +137,7 @@ namespace ServiceCenter.Models
                 {
                     _estimatedPartsCost = value;
                     OnPropertyChanged(nameof(EstimatedPartsCost));
+                    OnPropertyChanged(nameof(CanShowOnlinePaymentButton));
                 }
             }
         }
@@ -154,6 +151,7 @@ namespace ServiceCenter.Models
                 {
                     _masterWorkCost = value;
                     OnPropertyChanged(nameof(MasterWorkCost));
+                    OnPropertyChanged(nameof(CanShowOnlinePaymentButton));
                 }
             }
         }
@@ -167,6 +165,7 @@ namespace ServiceCenter.Models
                 {
                     _estimatedRepairCost = value;
                     OnPropertyChanged(nameof(EstimatedRepairCost));
+                    OnPropertyChanged(nameof(CanShowOnlinePaymentButton));
                 }
             }
         }
@@ -231,8 +230,6 @@ namespace ServiceCenter.Models
                 }
             }
         }
-        public List<OrderItem> Items { get; set; } = new List<OrderItem>();
-
         public OrderStatus Status
         {
             get => _status;
@@ -256,18 +253,6 @@ namespace ServiceCenter.Models
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-    }
-
-    public class OrderItem
-    {
-        public int Id { get; set; }
-        public int OrderId { get; set; }
-        public Order Order { get; set; }
-        public int? ProductId { get; set; }
-        public int? ServiceId { get; set; }
-        public Product Product { get; set; }
-        public Service Service { get; set; }
-        public int Quantity { get; set; }
     }
 
     public enum OrderStatus
