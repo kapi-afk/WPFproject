@@ -1,0 +1,72 @@
+﻿<Window x:Class="ServiceCenter.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:ServiceCenter.ViewModels"
+        Background="{DynamicResource ContentBackgroundBrush}"
+        Foreground="{DynamicResource TextBrush}"
+        Title="{Binding WindowTitle}" Height="500" Width="900" WindowState="Maximized"
+        MinWidth="1220" MinHeight="760">
+
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+
+    <Grid Background="{DynamicResource ContentBackgroundBrush}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0"
+                Background="{DynamicResource NavBackgroundBrush}"
+                BorderBrush="{DynamicResource CardBorderBrush}"
+                BorderThickness="0,0,1,0"
+                Visibility="{Binding IsShellNavigationVisible, Converter={StaticResource BoolToVis}}">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="18"
+                                  ShadowDepth="2"
+                                  Opacity="0.14"
+                                  Color="#22000000"/>
+            </Border.Effect>
+            <StackPanel x:Name="NavPanel"
+                        Style="{StaticResource NavPanelStyle}">
+                <Grid Height="{Binding ActualHeight, ElementName=NavPanel}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0"
+                                Margin="0,10,0,0">
+                        <Button Style="{StaticResource NavButtonStyle}"
+                                Tag="pack://application:,,,/Assets/theme.png"
+                                Content="{Binding ThemeButtonText}"
+                                ToolTip="{Binding ThemeButtonToolTip}"
+                                Command="{Binding ChangeThemeCommand}"/>
+                        <Button Style="{StaticResource NavButtonStyle}"
+                                Tag="pack://application:,,,/Assets/language.png"
+                                Content="{DynamicResource ChangeLanguage}"
+                                Command="{Binding ChangeLanguageCommand}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1"
+                                Margin="0,0,0,28">
+                        <Separator Margin="14,10,14,10"
+                                   Opacity="0.7"
+                                   Visibility="{Binding IsAdminOrMasterAuthenticated, Converter={StaticResource BoolToVis}}"/>
+                        <Button Style="{StaticResource NavButtonStyle}"
+                                Tag="pack://application:,,,/Assets/profile.png"
+                                Content="{DynamicResource LogoutButton}"
+                                Command="{Binding LogoutCommand}"
+                                Visibility="{Binding IsAdminOrMasterAuthenticated, Converter={StaticResource BoolToVis}}"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <Frame Grid.Column="1"
+               Margin="0"
+               NavigationUIVisibility="Hidden"
+               Content="{Binding CurrentPage}" />
+    </Grid>
+</Window>

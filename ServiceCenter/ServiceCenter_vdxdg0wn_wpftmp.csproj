@@ -1,0 +1,262 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{26CB9FA4-1DD5-47C8-9639-C6156C642058}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>ServiceCenter</RootNamespace>
+    <AssemblyName>ServiceCenter</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>LOGO-WHITEpng.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Converters\BoolToVisConverter.cs" />
+    <Compile Include="Converters\ByteArrayToImageConverter.cs" />
+    <Compile Include="Converters\CatalogOptionConverter.cs" />
+    <Compile Include="Converters\HashHelper.cs" />
+    <Compile Include="Converters\OrderStatusBackgroundBrushConverter.cs" />
+    <Compile Include="Converters\OrderStatusConverter.cs" />
+    <Compile Include="Converters\OrderStatusForegroundBrushConverter.cs" />
+    <Compile Include="Converters\PasswordBoxConverter.cs" />
+    <Compile Include="Converters\SessionManager.cs" />
+    <Compile Include="Converters\UserRoleConverter.cs" />
+    <Compile Include="Models\Comment.cs" />
+    <Compile Include="Models\Items.cs" />
+    <Compile Include="Models\Order.cs" />
+    <Compile Include="Models\User.cs" />
+    <Compile Include="Models\WarehouseItem.cs" />
+    <Compile Include="Models\WarehouseRequest.cs" />
+    <Compile Include="Repositories\AppDbContext.cs" />
+    <Compile Include="Repositories\CommentRepository.cs" />
+    <Compile Include="Repositories\OrderRepository.cs" />
+    <Compile Include="Repositories\Repositories.cs" />
+    <Compile Include="Repositories\UserRepository.cs" />
+    <Compile Include="Repositories\WarehouseRepository.cs" />
+    <Compile Include="Repositories\WarehouseRequestRepository.cs" />
+    <Compile Include="Utilities\MasterAssignmentService.cs" />
+    <Compile Include="Utilities\OrderEmailService.cs" />
+    <Compile Include="Utilities\OrderPublicNumberService.cs" />
+    <Compile Include="ViewModels\BaseViewModel.cs" />
+    <Compile Include="ViewModels\LoginViewModel.cs" />
+    <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\RecoverViewModel.cs" />
+    <Compile Include="ViewModels\RegisterViewModel.cs" />
+    <Compile Include="ViewModels\RelayCommand.cs" />
+    <Compile Include="ViewModels\MasterWarehouseWindowViewModel.cs" />
+    <Compile Include="ViewModels\OnlinePaymentViewModel.cs" />
+    <Compile Include="ViewModels\ServiceAdminPanelViewModel.cs" />
+    <Compile Include="ViewModels\ServiceClientProfileViewModel.cs" />
+    <Compile Include="ViewModels\ServiceMasterPanelViewModel.cs" />
+    <Compile Include="Views\AdminOrderCreateWindow.xaml.cs">
+      <DependentUpon>AdminOrderCreateWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\AdminOrderEditWindow.xaml.cs">
+      <DependentUpon>AdminOrderEditWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\OnlinePaymentWindow.xaml.cs">
+      <DependentUpon>OnlinePaymentWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\UserCreateWindow.xaml.cs">
+      <DependentUpon>UserCreateWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\UserEditWindow.xaml.cs">
+      <DependentUpon>UserEditWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\MaterialRequestWindow.xaml.cs">
+      <DependentUpon>MaterialRequestWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WarehouseWindow.xaml.cs">
+      <DependentUpon>WarehouseWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WarehouseItemWindow.xaml.cs">
+      <DependentUpon>WarehouseItemWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\WarehouseRequestsWindow.xaml.cs">
+      <DependentUpon>WarehouseRequestsWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Pages\AdminPanelPage.xaml.cs">
+      <DependentUpon>AdminPanelPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Pages\CartPage.xaml.cs">
+      <DependentUpon>CartPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Pages\LoginPage.xaml.cs">
+      <DependentUpon>LoginPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Pages\ManagerPanelPage.xaml.cs">
+      <DependentUpon>ManagerPanelPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Pages\ProfilePage.xaml.cs">
+      <DependentUpon>ProfilePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Pages\RecoverPage.xaml.cs">
+      <DependentUpon>RecoverPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Pages\RegisterPage.xaml.cs">
+      <DependentUpon>RegisterPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Views\MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="ClassDiagram1.cd" />
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\Microsoft.Data.SqlClient.SNI.1.1.0\build\net46\Microsoft.Data.SqlClient.SNI.targets" Condition="Exists('..\packages\Microsoft.Data.SqlClient.SNI.1.1.0\build\net46\Microsoft.Data.SqlClient.SNI.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>Р”Р°РЅРЅС‹Р№ РїСЂРѕРµРєС‚ СЃСЃС‹Р»Р°РµС‚СЃСЏ РЅР° РїР°РєРµС‚С‹ NuGet, РѕС‚СЃСѓС‚СЃС‚РІСѓСЋС‰РёРµ РЅР° СЌС‚РѕРј РєРѕРјРїСЊСЋС‚РµСЂРµ. РСЃРїРѕР»СЊР·СѓР№С‚Рµ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ РїР°РєРµС‚РѕРІ NuGet, С‡С‚РѕР±С‹ СЃРєР°С‡Р°С‚СЊ РёС….  Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅСѓСЋ РёРЅС„РѕСЂРјР°С†РёСЋ СЃРј. РїРѕ Р°РґСЂРµСЃСѓ: http://go.microsoft.com/fwlink/?LinkID=322105. РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚ СЃР»РµРґСѓСЋС‰РёР№ С„Р°Р№Р»: {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Data.SqlClient.SNI.1.1.0\build\net46\Microsoft.Data.SqlClient.SNI.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Data.SqlClient.SNI.1.1.0\build\net46\Microsoft.Data.SqlClient.SNI.targets'))" />
+  </Target>
+  <ItemGroup>
+    <ReferencePath Include="D:\WPF_project\packages\BCrypt.Net-Next.4.0.3\lib\net472\BCrypt.Net-Next.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\MailKit.4.16.0\lib\net462\MailKit.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.Bcl.AsyncInterfaces.1.1.1\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.Bcl.HashCode.1.1.1\lib\net461\Microsoft.Bcl.HashCode.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\Microsoft.CSharp.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.Data.SqlClient.1.1.3\lib\net46\Microsoft.Data.SqlClient.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.EntityFrameworkCore.Abstractions.3.1.32\lib\netstandard2.0\Microsoft.EntityFrameworkCore.Abstractions.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.EntityFrameworkCore.3.1.32\lib\netstandard2.0\Microsoft.EntityFrameworkCore.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.EntityFrameworkCore.Relational.3.1.32\lib\netstandard2.0\Microsoft.EntityFrameworkCore.Relational.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.EntityFrameworkCore.SqlServer.3.1.32\lib\netstandard2.0\Microsoft.EntityFrameworkCore.SqlServer.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.Extensions.Caching.Abstractions.3.1.32\lib\netstandard2.0\Microsoft.Extensions.Caching.Abstractions.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.Extensions.Caching.Memory.3.1.32\lib\netstandard2.0\Microsoft.Extensions.Caching.Memory.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.Extensions.Configuration.Abstractions.3.1.32\lib\netstandard2.0\Microsoft.Extensions.Configuration.Abstractions.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.Extensions.Configuration.Binder.3.1.32\lib\netstandard2.0\Microsoft.Extensions.Configuration.Binder.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.Extensions.Configuration.3.1.32\lib\netstandard2.0\Microsoft.Extensions.Configuration.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.Extensions.DependencyInjection.Abstractions.3.1.32\lib\netstandard2.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.Extensions.DependencyInjection.3.1.32\lib\net461\Microsoft.Extensions.DependencyInjection.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.Extensions.Logging.Abstractions.3.1.32\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.Extensions.Logging.3.1.32\lib\netstandard2.0\Microsoft.Extensions.Logging.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.Extensions.Options.3.1.32\lib\netstandard2.0\Microsoft.Extensions.Options.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.Extensions.Primitives.3.1.32\lib\netstandard2.0\Microsoft.Extensions.Primitives.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.Identity.Client.3.0.8\lib\net45\Microsoft.Identity.Client.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.IdentityModel.JsonWebTokens.5.5.0\lib\net461\Microsoft.IdentityModel.JsonWebTokens.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.IdentityModel.Logging.5.5.0\lib\net461\Microsoft.IdentityModel.Logging.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.IdentityModel.Protocols.5.5.0\lib\net461\Microsoft.IdentityModel.Protocols.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.IdentityModel.Protocols.OpenIdConnect.5.5.0\lib\net461\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.IdentityModel.Tokens.5.5.0\lib\net461\Microsoft.IdentityModel.Tokens.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Microsoft.Xaml.Behaviors.Wpf.1.1.135\lib\net462\Microsoft.Xaml.Behaviors.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\MimeKit.4.16.0\lib\net462\MimeKit.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\mscorlib.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\Newtonsoft.Json.10.0.1\lib\net45\Newtonsoft.Json.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\PresentationCore.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\PresentationFramework.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\System.Collections.Immutable.1.7.1\lib\net461\System.Collections.Immutable.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\System.ComponentModel.Annotations.4.7.0\lib\net461\System.ComponentModel.Annotations.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.ComponentModel.DataAnnotations.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Core.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\Facades\System.Data.Common.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Data.DataSetExtensions.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Data.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\System.Diagnostics.DiagnosticSource.4.7.1\lib\net46\System.Diagnostics.DiagnosticSource.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Drawing.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.IdentityModel.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\System.IdentityModel.Tokens.Jwt.5.5.0\lib\net461\System.IdentityModel.Tokens.Jwt.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Net.Http.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Numerics.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\System.Runtime.CompilerServices.Unsafe.4.7.1\lib\net461\System.Runtime.CompilerServices.Unsafe.dll" />
+    <ReferencePath Include="D:\WPF_project\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Windows.Forms.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xaml.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xml.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xml.Linq.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\WindowsBase.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\Facades\netstandard.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\Views\AdminOrderCreateWindow.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\Views\AdminOrderEditWindow.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\Views\OnlinePaymentWindow.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\Views\UserCreateWindow.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\Views\UserEditWindow.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\Views\MaterialRequestWindow.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\Views\WarehouseWindow.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\Views\WarehouseItemWindow.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\Views\WarehouseRequestsWindow.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\Views\MainWindow.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\Views\Pages\AdminPanelPage.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\Views\Pages\CartPage.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\Views\Pages\LoginPage.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\Views\Pages\ManagerPanelPage.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\Views\Pages\ProfilePage.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\Views\Pages\RecoverPage.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\Views\Pages\RegisterPage.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\App.g.cs" />
+    <Compile Include="D:\WPF_project\ServiceCenter\obj\CodexCheck\Debug\GeneratedInternalTypeHelper.g.cs" />
+  </ItemGroup>
+</Project>

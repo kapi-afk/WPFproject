@@ -1,0 +1,44 @@
+﻿<Application x:Class="ServiceCenter.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:ServiceCenter.Converters"
+             StartupUri="Views/MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <conv:BoolToVisConverter x:Key="BoolToVis" />
+            <conv:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter" />
+            <conv:PasswordBoxConverter x:Key="PasswordBoxConverter" />
+            <conv:OrderStatusConverter x:Key="OrderStatusConverter" />
+            <conv:UserRoleConverter x:Key="UserRoleConverter" />
+            <conv:CatalogOptionConverter x:Key="CatalogOptionConverter" />
+            <conv:OrderStatusBackgroundBrushConverter x:Key="OrderStatusBackgroundBrushConverter" />
+            <conv:OrderStatusForegroundBrushConverter x:Key="OrderStatusForegroundBrushConverter" />
+            <DataTemplate x:Key="OrderStatusTemplate">
+                <TextBlock Text="{Binding Converter={StaticResource OrderStatusConverter}}" />
+            </DataTemplate>
+            <DataTemplate x:Key="OrderStatusBadgeTemplate">
+                <Border Width="140"
+                        Height="28"
+                        CornerRadius="14"
+                        Background="{Binding Converter={StaticResource OrderStatusBackgroundBrushConverter}}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Converter={StaticResource OrderStatusConverter}}"
+                               Foreground="{Binding Converter={StaticResource OrderStatusForegroundBrushConverter}}"
+                               FontWeight="SemiBold"
+                               FontSize="12"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               TextAlignment="Center"/>
+                </Border>
+            </DataTemplate>
+            <BitmapImage x:Key="DefaultProfileImage" UriSource="/Images/DefaultProfile.png" />
+            <BitmapImage x:Key="DefaultProductImage" UriSource="/Images/DefaultProduct.png" />
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/LightTheme.xaml" />
+                <ResourceDictionary Source="Styles/Styles.xaml" />
+                <ResourceDictionary Source="Localization/Strings.ru-RU.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

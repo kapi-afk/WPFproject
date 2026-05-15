@@ -1,0 +1,253 @@
+﻿<Page x:Class="ServiceCenter.Views.Pages.CartPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:vm="clr-namespace:ServiceCenter.ViewModels"
+      mc:Ignorable="d"
+      Title="CartPage"
+      Background="{DynamicResource ContentBackgroundBrush}">
+
+    <Page.DataContext>
+        <vm:ServiceClientProfileViewModel />
+    </Page.DataContext>
+
+    <Page.Resources>
+        <Style x:Key="OrderSingleLineTextBoxStyle"
+               TargetType="{x:Type TextBox}"
+               BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        </Style>
+        <Style x:Key="OrderComboBoxStyle"
+               TargetType="{x:Type ComboBox}"
+               BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        </Style>
+        <Style x:Key="RequiredOrderTextBoxStyle"
+               TargetType="{x:Type TextBox}"
+               BasedOn="{StaticResource OrderSingleLineTextBoxStyle}">
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="True">
+                    <Setter Property="BorderBrush" Value="#D13438"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="RequiredOrderMultiLineTextBoxStyle"
+               TargetType="{x:Type TextBox}"
+               BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="True">
+                    <Setter Property="BorderBrush" Value="#D13438"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="RequiredOrderComboBoxStyle"
+               TargetType="{x:Type ComboBox}"
+               BasedOn="{StaticResource OrderComboBoxStyle}">
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="True">
+                    <Setter Property="BorderBrush" Value="#D13438"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Page.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="18,18,18,28"
+              MaxWidth="1220"
+              HorizontalAlignment="Center">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Text="РќРѕРІР°СЏ Р·Р°СЏРІРєР° РЅР° СЂРµРјРѕРЅС‚"
+                       Style="{StaticResource PageTitleStyle}"/>
+
+            <Border Grid.Row="1"
+                    Style="{StaticResource DialogCardStyle}"
+                    Padding="28"
+                    Width="900"
+                    MaxWidth="900"
+                    HorizontalAlignment="Center">
+                <StackPanel>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0"
+                                    Grid.Column="0">
+                            <TextBlock Text="РўРёРї СѓСЃС‚СЂРѕР№СЃС‚РІР° *"
+                                       Style="{StaticResource FieldLabelStyle}"/>
+                            <ComboBox ItemsSource="{Binding DeviceTypes}"
+                                      SelectedItem="{Binding NewOrderDeviceType}"
+                                      Margin="0,0,0,12"
+                                      Style="{StaticResource OrderComboBoxStyle}"/>
+                            <TextBox Text="{Binding CustomDeviceType, UpdateSourceTrigger=PropertyChanged}"
+                                     Margin="0,0,0,12"
+                                     Visibility="{Binding IsCustomDeviceTypeVisible, Converter={StaticResource BoolToVis}}"
+                                     Style="{StaticResource RequiredOrderTextBoxStyle}"
+                                     Tag="{Binding IsNewOrderDeviceTypeInvalid}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="0"
+                                    Grid.Column="2">
+                            <TextBlock Text="РњРѕРґРµР»СЊ *"
+                                       Style="{StaticResource FieldLabelStyle}"/>
+                            <ComboBox ItemsSource="{Binding ModelOptions}"
+                                      SelectedItem="{Binding SelectedModelOption}"
+                                      Margin="0,0,0,8"
+                                      Style="{StaticResource RequiredOrderComboBoxStyle}"
+                                      Tag="{Binding IsNewOrderDeviceModelInvalid}"/>
+                            <TextBox Text="{Binding CustomModel, UpdateSourceTrigger=PropertyChanged}"
+                                     Margin="0,0,0,12"
+                                     Visibility="{Binding IsCustomModelVisible, Converter={StaticResource BoolToVis}}"
+                                     Style="{StaticResource RequiredOrderTextBoxStyle}"
+                                     Tag="{Binding IsNewOrderDeviceModelInvalid}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1"
+                                    Grid.Column="0">
+                            <TextBlock Text="Р‘СЂРµРЅРґ *"
+                                       Style="{StaticResource FieldLabelStyle}"/>
+                            <ComboBox ItemsSource="{Binding BrandOptions}"
+                                      SelectedItem="{Binding SelectedBrandOption}"
+                                      Margin="0,0,0,8"
+                                      Style="{StaticResource RequiredOrderComboBoxStyle}"
+                                      Tag="{Binding IsNewOrderDeviceBrandInvalid}"/>
+                            <TextBox Text="{Binding CustomBrand, UpdateSourceTrigger=PropertyChanged}"
+                                     Margin="0,0,0,12"
+                                     Visibility="{Binding IsCustomBrandVisible, Converter={StaticResource BoolToVis}}"
+                                     Style="{StaticResource RequiredOrderTextBoxStyle}"
+                                     Tag="{Binding IsNewOrderDeviceBrandInvalid}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1"
+                                    Grid.Column="2">
+                            <TextBlock Text="РќРµРёСЃРїСЂР°РІРЅРѕСЃС‚СЊ *"
+                                       Style="{StaticResource FieldLabelStyle}"/>
+                            <ComboBox ItemsSource="{Binding ProblemOptions}"
+                                      SelectedItem="{Binding SelectedProblemOption}"
+                                      Margin="0,0,0,8"
+                                      Style="{StaticResource RequiredOrderComboBoxStyle}"
+                                      Tag="{Binding IsNewOrderProblemDescriptionInvalid}"/>
+                            <TextBox Text="{Binding CustomProblemDescription, UpdateSourceTrigger=PropertyChanged}"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     Height="92"
+                                     Visibility="{Binding IsCustomProblemVisible, Converter={StaticResource BoolToVis}}"
+                                     Style="{StaticResource RequiredOrderMultiLineTextBoxStyle}"
+                                     Tag="{Binding IsNewOrderProblemDescriptionInvalid}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2"
+                                    Grid.Column="0">
+                            <TextBlock Text="РўРµР»РµС„РѕРЅ *"
+                                       Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox Text="{Binding NewOrderContactPhone, UpdateSourceTrigger=PropertyChanged}"
+                                     Margin="0,0,0,4"
+                                     ToolTip="РќР°РїСЂРёРјРµСЂ: +375 (29) 123-45-67"
+                                     Style="{StaticResource RequiredOrderTextBoxStyle}"
+                                     Tag="{Binding IsNewOrderContactPhoneInvalid}"/>
+                            <TextBlock Text="РќР°РїСЂРёРјРµСЂ: +375 (29) 123-45-67"
+                                       Style="{StaticResource InfoTextStyle}"
+                                       Margin="0,0,0,12"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2"
+                                    Grid.Column="2">
+                            <TextBlock Text="РЎРїРѕСЃРѕР± РѕРїР»Р°С‚С‹"
+                                       Style="{StaticResource FieldLabelStyle}"
+                                       Margin="0,0,0,4"/>
+                            <CheckBox Content="РћРЅР»Р°Р№РЅ-РѕРїР»Р°С‚Р°"
+                                      IsChecked="{Binding NewOrderIsOnlinePayment}"
+                                      FontSize="15"
+                                      Margin="0,6,0,6"/>
+                            <TextBlock Text="Р•СЃР»Рё С„Р»Р°Р¶РѕРє РЅРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅ, РѕРїР»Р°С‚Р° Р±СѓРґРµС‚ РЅР° РјРµСЃС‚Рµ."
+                                       Style="{StaticResource InfoTextStyle}"
+                                       Margin="0,0,0,12"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Border Style="{StaticResource InnerCardStyle}"
+                            Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Р¤РѕС‚Рѕ РЅРµРёСЃРїСЂР°РІРЅРѕСЃС‚Рё"
+                                       Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBlock Text="РќРµРѕР±СЏР·Р°С‚РµР»СЊРЅРѕ, РЅРѕ РїРѕРјРѕР¶РµС‚ РјР°СЃС‚РµСЂСѓ Р±С‹СЃС‚СЂРµРµ РїРѕРЅСЏС‚СЊ РїСЂРѕР±Р»РµРјСѓ."
+                                       Style="{StaticResource InfoTextStyle}"
+                                       Margin="0,4,0,12"/>
+
+                            <StackPanel Orientation="Horizontal"
+                                        Margin="0,0,0,10">
+                                <Button Content="Р”РѕР±Р°РІРёС‚СЊ С„РѕС‚Рѕ"
+                                        Command="{Binding SelectProblemPhotoCommand}"
+                                        Style="{StaticResource MediumPrimaryButtonStyle}"
+                                        Width="176"
+                                        Margin="0,0,10,0"/>
+                                <Button Content="РЈРґР°Р»РёС‚СЊ С„РѕС‚Рѕ"
+                                        Command="{Binding RemoveProblemPhotoCommand}"
+                                        Style="{StaticResource SmallSecondaryButtonStyle}"
+                                        Width="118"
+                                        Visibility="{Binding HasSelectedProblemPhoto, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+
+                            <TextBlock Text="{Binding NewOrderProblemPhotoStatus}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       Margin="0,0,0,10"/>
+
+                            <Border Background="{DynamicResource InputBackgroundBrush}"
+                                    BorderBrush="{DynamicResource CardBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    Padding="8"
+                                    Visibility="{Binding HasSelectedProblemPhoto, Converter={StaticResource BoolToVis}}">
+                                <Image Source="{Binding NewOrderProblemPhoto, Converter={StaticResource ByteArrayToImageConverter}}"
+                                       Height="150"
+                                       Stretch="Uniform"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="РљРѕРјРјРµРЅС‚Р°СЂРёР№"
+                               Style="{StaticResource FieldLabelStyle}"/>
+                    <TextBox Text="{Binding NewOrderClientComment, UpdateSourceTrigger=PropertyChanged}"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             Height="84"
+                             Margin="0,0,0,16"/>
+
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Left">
+                        <Button Content="РћС‚РїСЂР°РІРёС‚СЊ Р·Р°СЏРІРєСѓ"
+                                Command="{Binding CreateOrderCommand}"
+                                Style="{StaticResource MediumPrimaryButtonStyle}"
+                                MinWidth="190"
+                                Margin="0,0,10,0"/>
+                        <Button Content="РћС‚РјРµРЅР°"
+                                Command="{Binding CancelCreateOrderFormCommand}"
+                                Style="{StaticResource MediumSecondaryButtonStyle}"
+                                Width="96"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</Page>
